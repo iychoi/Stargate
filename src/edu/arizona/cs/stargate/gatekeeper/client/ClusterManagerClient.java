@@ -22,18 +22,39 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.client;
+
+import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
+import edu.arizona.cs.stargate.gatekeeper.response.GateKeeperLiveness;
+import java.io.IOException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
+public class ClusterManagerClient extends AClusterManagerAPI {
+    
+    private static final Log LOG = LogFactory.getLog(ClusterManagerClient.class);
+    
+    private GateKeeperClient gatekeeperClient;
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+    public ClusterManagerClient(GateKeeperClient gatekeeperClient) {
+        this.gatekeeperClient = gatekeeperClient;
+    }
+    
+    public String getPath(String path) {
+        return AClusterManagerAPI.PATH + path;
+    }
+    
+    @Override
+    public GateKeeperLiveness checkLive() {
+        try {
+            return (GateKeeperLiveness) this.gatekeeperClient.get(getPath(GateKeeperLiveness.PATH), GateKeeperLiveness.class);
+        } catch (IOException ex) {
+            LOG.error(ex);
+        }
+        return new GateKeeperLiveness(false);
     }
 }

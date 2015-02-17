@@ -24,51 +24,42 @@
 
 package edu.arizona.cs.stargate.common.cluster;
 
-import edu.arizona.cs.stargate.common.AJsonSerializable;
+import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.json.JSONObject;
 
 /**
  *
  * @author iychoi
  */
-public class ClusterNodeInfo extends AJsonSerializable {
+public class ClusterNodeInfo {
     
-    private String m_name;
-    private URI m_addr;
-    private boolean m_gatekeeper;
+    private String name;
+    private URI addr;
+    private boolean gatekeeper;
     
     ClusterNodeInfo() {
-        this.m_name = null;
-        this.m_addr = null;
-        this.m_gatekeeper = false;
+        this.name = null;
+        this.addr = null;
+        this.gatekeeper = false;
     }
     
     public static ClusterNodeInfo createInstance(File file) throws IOException {
-        ClusterNodeInfo nodeInfo = new ClusterNodeInfo();
-        nodeInfo.fromLocalFile(file);
-        return nodeInfo;
+        JsonSerializer serializer = new JsonSerializer();
+        return (ClusterNodeInfo) serializer.fromJsonFile(file, ClusterNodeInfo.class);
     }
     
-    public static ClusterNodeInfo createInstance(String json) {
-        ClusterNodeInfo nodeInfo = new ClusterNodeInfo();
-        nodeInfo.fromJson(json);
-        return nodeInfo;
-    }
-    
-    public static ClusterNodeInfo createInstance(JSONObject jsonobj) {
-        ClusterNodeInfo nodeInfo = new ClusterNodeInfo();
-        nodeInfo.fromJsonObj(jsonobj);
-        return nodeInfo;
+    public static ClusterNodeInfo createInstance(String json) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (ClusterNodeInfo) serializer.fromJson(json, ClusterNodeInfo.class);
     }
     
     public ClusterNodeInfo(ClusterNodeInfo that) {
-        this.m_name = that.m_name;
-        this.m_addr = that.m_addr;
-        this.m_gatekeeper = that.m_gatekeeper;
+        this.name = that.name;
+        this.addr = that.addr;
+        this.gatekeeper = that.gatekeeper;
     }
     
     public ClusterNodeInfo(String name, URI addr, boolean gatekeeper) {
@@ -94,39 +85,39 @@ public class ClusterNodeInfo extends AJsonSerializable {
     }
 
     public String getName() {
-        return this.m_name;
+        return this.name;
     }
     
     void setName(String name) {
-        this.m_name = name;
+        this.name = name;
     }
 
     public URI getAddr() {
-        return m_addr;
+        return addr;
     }
 
     void setAddr(URI m_addr) {
-        this.m_addr = m_addr;
+        this.addr = m_addr;
     }
     
     void setAddr(String m_addr) throws URISyntaxException {
-        this.m_addr = new URI(m_addr);
+        this.addr = new URI(m_addr);
     }
     
     public boolean getGatekeeper() {
-        return this.m_gatekeeper;
+        return this.gatekeeper;
     }
     
     void setGatekeeper(boolean gatekeeper) {
-        this.m_gatekeeper = gatekeeper;
+        this.gatekeeper = gatekeeper;
     }
     
     public boolean isEmpty() {
-        if(this.m_name == null || this.m_name.isEmpty()) {
+        if(this.name == null || this.name.isEmpty()) {
             return true;
         }
         
-        if(this.m_addr == null || this.m_addr.getHost().isEmpty()) {
+        if(this.addr == null || this.addr.getHost().isEmpty()) {
             return true;
         }
         
@@ -135,33 +126,7 @@ public class ClusterNodeInfo extends AJsonSerializable {
     
     @Override
     public String toString() {
-        String gkwk = this.m_gatekeeper ? "GK" : "WK";
-        return this.m_name + "(" + gkwk + ", " + this.m_addr.toString() + ")";
-    }
-    
-    @Override
-    public void fromJsonObj(JSONObject jsonobj) {
-        String name = jsonobj.getString("name");
-        String addr = jsonobj.getString("addr");
-        boolean gatekeeper = jsonobj.getBoolean("gatekeeper");
-        
-        try {
-            setName(name);
-            setAddr(addr);
-            setGatekeeper(gatekeeper);
-        } catch (URISyntaxException ex) {
-            throw new IllegalArgumentException("address is not in URI format");
-        }
-    }
-    
-    @Override
-    public JSONObject toJsonObj() {
-        JSONObject jsonobj = new JSONObject();
-        
-        jsonobj.put("name", this.m_name);
-        jsonobj.put("addr", this.m_addr.toString());
-        jsonobj.put("gatekeeper", this.m_gatekeeper);
-        
-        return jsonobj;
+        String gkwk = this.gatekeeper ? "GK" : "WK";
+        return this.name + "(" + gkwk + ", " + this.addr.toString() + ")";
     }
 }

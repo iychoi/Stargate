@@ -24,62 +24,55 @@
 
 package edu.arizona.cs.stargate.common.cluster;
 
-import edu.arizona.cs.stargate.common.AJsonSerializable;
+import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
  * @author iychoi
  */
-public class ClusterInfo extends AJsonSerializable {
+public class ClusterInfo {
     
     private static final Log LOG = LogFactory.getLog(ClusterInfo.class);
     
-    private Hashtable<String, ClusterNodeInfo> m_nodeTable = new Hashtable<String, ClusterNodeInfo>();
-    private ArrayList<IClusterConfigChangeEventHandler> m_configChangeEventHandlers = new ArrayList<IClusterConfigChangeEventHandler>();
+    private Map<String, ClusterNodeInfo> nodeTable = new HashMap<String, ClusterNodeInfo>();
     
-    private String m_name;
+    @JsonIgnore
+    private ArrayList<IClusterConfigChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigChangeEventHandler>();
+    
+    private String name;
     
     ClusterInfo() {
-        this.m_name = null;
+        this.name = null;
     }
     
     public static ClusterInfo createInstance(File file) throws IOException {
-        ClusterInfo clusterInfo = new ClusterInfo();
-        clusterInfo.fromLocalFile(file);
-        return clusterInfo;
+        JsonSerializer serializer = new JsonSerializer();
+        return (ClusterInfo) serializer.fromJsonFile(file, ClusterInfo.class);
     }
     
-    public static ClusterInfo createInstance(String json) {
-        ClusterInfo clusterInfo = new ClusterInfo();
-        clusterInfo.fromJson(json);
-        return clusterInfo;
-    }
-    
-    public static ClusterInfo createInstance(JSONObject jsonobj) {
-        ClusterInfo clusterInfo = new ClusterInfo();
-        clusterInfo.fromJsonObj(jsonobj);
-        return clusterInfo;
+    public static ClusterInfo createInstance(String json) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (ClusterInfo) serializer.fromJson(json, ClusterInfo.class);
     }
     
     public ClusterInfo(ClusterInfo that) {
-        this.m_name = that.m_name;
-        this.m_nodeTable.putAll(that.m_nodeTable);
-        this.m_configChangeEventHandlers.addAll(that.m_configChangeEventHandlers);
+        this.name = that.name;
+        this.nodeTable.putAll(that.nodeTable);
+        this.configChangeEventHandlers.addAll(that.configChangeEventHandlers);
     }
     
     public ClusterInfo(String name) {
-        this.m_name = name;
+        this.name = name;
     }
     
     public ClusterInfo(String name, ClusterNodeInfo[] node) throws NodeAlreadyAddedException {
@@ -87,7 +80,7 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("name is null or empty");
         }
         
-        this.m_name = name;
+        this.name = name;
         
         if(node != null) {
             for(ClusterNodeInfo nodeinfo : node) {
@@ -97,7 +90,7 @@ public class ClusterInfo extends AJsonSerializable {
     }
     
     public synchronized String getName() {
-        return this.m_name;
+        return this.name;
     }
     
     synchronized void setName(String name) {
@@ -105,15 +98,15 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        this.m_name = name;
+        this.name = name;
     }
     
     public synchronized int getNodeNumber() {
-        return this.m_nodeTable.keySet().size();
+        return this.nodeTable.keySet().size();
     }
     
     public synchronized Collection<ClusterNodeInfo> getAllNodeInfo() {
-        return Collections.unmodifiableCollection(this.m_nodeTable.values());
+        return Collections.unmodifiableCollection(this.nodeTable.values());
     }
     
     public synchronized ClusterNodeInfo getNodeInfo(String name) {
@@ -121,7 +114,7 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.m_nodeTable.get(name);
+        return this.nodeTable.get(name);
     }
     
     public synchronized boolean hasNodeInfo(String name) {
@@ -129,14 +122,12 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.m_nodeTable.containsKey(name);
+        return this.nodeTable.containsKey(name);
     }
     
     public synchronized ClusterNodeInfo getGatekeeperNodeInfo() {
-        Enumeration<String> keys = this.m_nodeTable.keys();
-        while(keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            ClusterNodeInfo node = this.m_nodeTable.get(key);
+        Collection<ClusterNodeInfo> values = this.nodeTable.values();
+        for(ClusterNodeInfo node : values) {
             if(node.getGatekeeper()) {
                 return node;
             }
@@ -145,13 +136,18 @@ public class ClusterInfo extends AJsonSerializable {
     }
     
     public synchronized void removeAllNode() {
-        Enumeration<String> keys = m_nodeTable.keys();
-        while(keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            ClusterNodeInfo node = m_nodeTable.get(key);
-            
-            removeNode(node);
+        ArrayList<String> keys = new ArrayList<String>();
+        
+        Collection<ClusterNodeInfo> values = this.nodeTable.values();
+        for(ClusterNodeInfo node : values) {
+            keys.add(node.getName());
         }
+        
+        for(String name : keys) {
+            removeNode(name);
+        }
+        
+        keys.clear();
     }
     
     public synchronized void addNode(ClusterNodeInfo node) throws NodeAlreadyAddedException {
@@ -159,35 +155,35 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("node is empty or null");
         }
         
-        if(this.m_nodeTable.containsKey(node.getName())) {
+        if(this.nodeTable.containsKey(node.getName())) {
             throw new NodeAlreadyAddedException("node " + node.getName() + "is already added");
         }
         
-        ClusterNodeInfo put = this.m_nodeTable.put(node.getName(), node);
+        ClusterNodeInfo put = this.nodeTable.put(node.getName(), node);
         if(put != null) {
             raiseEventForAddNode(put);
         }
     }
     
     public synchronized void addConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
-        this.m_configChangeEventHandlers.add(eventHandler);
+        this.configChangeEventHandlers.add(eventHandler);
     }
     
     public synchronized void removeConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
-        this.m_configChangeEventHandlers.remove(eventHandler);
+        this.configChangeEventHandlers.remove(eventHandler);
     }
     
     public synchronized void removeConfigChangeEventHandler(String handlerName) {
         ArrayList<IClusterConfigChangeEventHandler> toberemoved = new ArrayList<IClusterConfigChangeEventHandler>();
         
-        for(IClusterConfigChangeEventHandler handler : this.m_configChangeEventHandlers) {
+        for(IClusterConfigChangeEventHandler handler : this.configChangeEventHandlers) {
             if(handler.getName().equals(handlerName)) {
                 toberemoved.add(handler);
             }
         }
         
         for(IClusterConfigChangeEventHandler handler : toberemoved) {
-            this.m_configChangeEventHandlers.remove(handler);
+            this.configChangeEventHandlers.remove(handler);
         }
     }
 
@@ -204,7 +200,7 @@ public class ClusterInfo extends AJsonSerializable {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        ClusterNodeInfo removed = this.m_nodeTable.remove(name);
+        ClusterNodeInfo removed = this.nodeTable.remove(name);
         if(removed != null) {
             raiseEventForRemoveNode(removed);
         }
@@ -213,7 +209,7 @@ public class ClusterInfo extends AJsonSerializable {
     private synchronized void raiseEventForAddNode(ClusterNodeInfo node) {
         LOG.debug("node added : " + node.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.m_configChangeEventHandlers) {
+        for(IClusterConfigChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.addNode(this, node);
         }
     }
@@ -221,57 +217,18 @@ public class ClusterInfo extends AJsonSerializable {
     private synchronized void raiseEventForRemoveNode(ClusterNodeInfo node) {
         LOG.debug("node removed : " + node.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.m_configChangeEventHandlers) {
+        for(IClusterConfigChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.removeNode(this, node);
         }
     }
     
     @Override
     public String toString() {
-        return this.m_name;
-    }
-
-    @Override
-    public synchronized void fromJsonObj(JSONObject jsonobj) {
-        String name = jsonobj.getString("name");
-        JSONArray node = jsonobj.getJSONArray("node");
-        
-        this.m_configChangeEventHandlers.clear();
-        this.m_nodeTable.clear();
-        this.m_name = name;
-        
-        int len = node.length();
-        for(int i=0;i<len;i++) {
-            ClusterNodeInfo nodeInfo = ClusterNodeInfo.createInstance(node.getJSONObject(i));
-            try {
-                addNode(nodeInfo);
-            } catch (NodeAlreadyAddedException ex) {
-                LOG.error("failed to add node : " + nodeInfo.toString() + " -- ignored");
-            }
-        }
-    }
-
-    @Override
-    public synchronized JSONObject toJsonObj() {
-        JSONObject jsonobj = new JSONObject();
-        
-        jsonobj.put("name", this.m_name);
-        
-        JSONArray node = new JSONArray();
-        Enumeration<String> keys = this.m_nodeTable.keys();
-        while(keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            ClusterNodeInfo nodeInfo = this.m_nodeTable.get(key);
-            JSONObject nodeInfoJsonObj = nodeInfo.toJsonObj();
-            node.put(nodeInfoJsonObj);
-        }
-        
-        jsonobj.put("node", node);
-        return jsonobj;
+        return this.name;
     }
 
     public boolean isEmpty() {
-        if(this.m_name == null || this.m_name.isEmpty()) {
+        if(this.name == null || this.name.isEmpty()) {
             return true;
         }
         return false;

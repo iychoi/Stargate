@@ -22,18 +22,31 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.response;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+public class GateKeeperLiveness {
+    
+    public static final String PATH = "/cm";
+    
+    boolean live;
+    
+    public GateKeeperLiveness() {
+        this.live = false;
+    }
+    
+    public GateKeeperLiveness(boolean live) {
+        this.live = live;
+    }
+    
+    public void setLive(boolean live) {
+        this.live = live;
+    }
+    
+    public boolean getLive() {
+        return this.live;
     }
 }

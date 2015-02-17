@@ -22,18 +22,32 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.client;
+
+import java.net.URI;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+public class GateKeeperClientConfiguration {
+    public static final int DEFAULT_PORT = 11010;
+    
+    private URI uri;
+    
+    public GateKeeperClientConfiguration(URI uri) {
+        initialize(uri);
+    }
+    
+    private void initialize(URI uri) {
+        this.uri = uri;
+    }
+    
+    public void setURI(URI uri) {
+        this.uri = uri;
+    }
+    
+    public URI getURI() {
+        return this.uri;
     }
 }

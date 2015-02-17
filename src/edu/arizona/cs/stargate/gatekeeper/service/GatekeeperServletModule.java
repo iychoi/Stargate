@@ -22,18 +22,32 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.service;
+
+import com.google.inject.Singleton;
+import com.google.inject.servlet.ServletModule;
+import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import java.util.HashMap;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.eclipse.jetty.servlet.DefaultServlet;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
+public class GatekeeperServletModule extends ServletModule {
+    @Override
+    protected void configureServlets() {
+        bind(DefaultServlet.class).in(Singleton.class);
+        bind(ClusterManagerRestful.class).in(Singleton.class); 
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+        bind(MessageBodyReader.class).to(JacksonJsonProvider.class); 
+        bind(MessageBodyWriter.class).to(JacksonJsonProvider.class); 
+ 
+        HashMap <String, String> options = new HashMap<>();
+        options.put("com.sun.jersey.api.json.POJOMappingFeature", "true");
+        serve("/*").with(GuiceContainer.class, options);
     }
 }

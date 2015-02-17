@@ -22,18 +22,22 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.common;
+
+import java.io.IOException;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
+public class DataFormatter {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+    public static String toHTMLFormat(Object obj) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public static String toJSONFormat(Object obj) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return serializer.toJson(obj);
     }
 }

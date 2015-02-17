@@ -22,8 +22,11 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.cluster;
+package edu.arizona.cs.stargate.gatekeeper;
 
+import edu.arizona.cs.stargate.common.cluster.ClusterAlreadyAddedException;
+import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.cluster.IClusterConfigChangeEventHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

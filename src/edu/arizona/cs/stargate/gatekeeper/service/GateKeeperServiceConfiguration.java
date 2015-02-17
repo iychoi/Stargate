@@ -22,18 +22,34 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.service;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+public class GateKeeperServiceConfiguration {
+    public static final int DEFAULT_PORT = 11010;
+    
+    private int port;
+    
+    public GateKeeperServiceConfiguration() {
+        initialize(DEFAULT_PORT);
+    }
+    
+    public GateKeeperServiceConfiguration(int port) {
+        initialize(port);
+    }
+    
+    private void initialize(int port) {
+        this.port = port;
+    }
+    
+    public void setPort(int port) {
+        this.port = port;
+    }
+    
+    public int getPort() {
+        return this.port;
     }
 }

@@ -22,18 +22,47 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.service;
+
+import com.google.inject.Singleton;
+import edu.arizona.cs.stargate.common.DataFormatter;
+import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
+import edu.arizona.cs.stargate.gatekeeper.response.GateKeeperLiveness;
+import java.io.IOException;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
+@Path(AClusterManagerAPI.PATH)
+@Singleton
+public class ClusterManagerRestful extends AClusterManagerAPI {
+    
+    @GET
+    @Path(GateKeeperLiveness.PATH)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String responseCheckLiveText() {
+        try {
+            return DataFormatter.toJSONFormat(checkLive());
+        } catch (IOException ex) {
+            return "DataFormatter formatting error";
+        }
+    }
+    
+    @GET
+    @Path(GateKeeperLiveness.PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public GateKeeperLiveness responseCheckLiveJSON() {
+        return checkLive();
+    }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
+    @Override
+    public GateKeeperLiveness checkLive() {
+        //DUMMY
+        return new GateKeeperLiveness(true);
     }
 }

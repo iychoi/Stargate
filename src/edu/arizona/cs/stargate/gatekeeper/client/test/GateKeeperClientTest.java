@@ -22,18 +22,36 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.client.test;
+
+import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
+import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.response.GateKeeperLiveness;
+import java.net.URI;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
+public class GateKeeperClientTest {
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+        try {
+            String gatekeeperService = "http://localhost:11010";
+            if(args.length != 0) {
+                gatekeeperService = args[0];
+            }
+            
+            GateKeeperClientConfiguration conf = new GateKeeperClientConfiguration(new URI(gatekeeperService));
+            
+            GateKeeperClient instance = GateKeeperClient.getInstance(conf);
+            GateKeeperLiveness checkLive = instance.getClusterManagerClient().checkLive();
+            System.out.println("live : " + checkLive.getLive());
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

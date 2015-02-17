@@ -22,18 +22,28 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper.service.test;
+
+import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperService;
+import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
+public class GateKeeperServiceTest {
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+        try {
+            GateKeeperServiceConfiguration conf = new GateKeeperServiceConfiguration();
+            
+            GateKeeperService instance = GateKeeperService.getInstance(conf);
+            instance.start();
+            instance.join();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

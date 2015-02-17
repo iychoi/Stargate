@@ -22,18 +22,17 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate;
+package edu.arizona.cs.stargate.gatekeeper;
+
+import edu.arizona.cs.stargate.gatekeeper.response.GateKeeperLiveness;
 
 /**
  *
  * @author iychoi
  */
-public class Stargate {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        
-    }
+public abstract class AClusterManagerAPI {
+    
+    public static final String PATH = "/cm";
+    
+    public abstract GateKeeperLiveness checkLive();
 }
