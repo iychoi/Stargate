@@ -22,11 +22,12 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.client.test;
+package edu.arizona.cs.stargate.client.test;
 
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.response.GateKeeperLiveness;
+import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.net.URI;
 
 /**
@@ -39,7 +40,7 @@ public class GateKeeperClientTest {
      */
     public static void main(String[] args) {
         try {
-            String gatekeeperService = "http://localhost:11010";
+            String gatekeeperService = "http://localhost:" + StargateServiceConfiguration.DEFAULT_SERVICE_PORT;
             if(args.length != 0) {
                 gatekeeperService = args[0];
             }

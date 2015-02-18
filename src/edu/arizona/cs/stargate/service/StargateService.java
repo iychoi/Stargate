@@ -22,11 +22,10 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.service;
+package edu.arizona.cs.stargate.service;
 
-import com.google.inject.Guice;
-import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
+import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperService;
 import java.util.EnumSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,33 +37,53 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
  *
  * @author iychoi
  */
-public class GateKeeperService {
+public class StargateService {
+    private static final Log LOG = LogFactory.getLog(StargateService.class);
     
-    private static final Log LOG = LogFactory.getLog(GateKeeperService.class);
+    private static StargateService instance;
     
-    private static GateKeeperService instance;
+    private StargateServiceConfiguration config;
+    private Server jettyServer;
     
-    private GateKeeperServiceConfiguration config;
+    private GateKeeperService gatekeeperService;
     
-    public static GateKeeperService getInstance(GateKeeperServiceConfiguration config) {
-        synchronized (GateKeeperService.class) {
+    public static StargateService getInstance(StargateServiceConfiguration config) {
+        synchronized (StargateService.class) {
             if(instance == null) {
-                instance = new GateKeeperService(config);
+                instance = new StargateService(config);
             }
             return instance;
         }
     }
     
-    GateKeeperService(GateKeeperServiceConfiguration config) {
+    StargateService(StargateServiceConfiguration config) {
         this.config = config;
+        this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
     }
     
     public synchronized void start() throws Exception {
-        Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
+        //Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule()); 
+        this.gatekeeperService.start();
+        
+        this.jettyServer = new Server(this.config.getServicePort());
+        
+        // setting servlets
+        ServletContextHandler context = new ServletContextHandler(this.jettyServer, "/", ServletContextHandler.SESSIONS);
+        context.addFilter(GuiceFilter.class, "/*", EnumSet.<javax.servlet.DispatcherType>of(javax.servlet.DispatcherType.REQUEST, javax.servlet.DispatcherType.ASYNC));
+
+        context.addServlet(DefaultServlet.class, "/*");
+        
+        this.jettyServer.start();
+        LOG.info("Stargate service started on port " + this.config.getServicePort());
+    }
+    
+    public synchronized void join() throws InterruptedException {
+        this.jettyServer.join();
+        LOG.info("Stargate service stopped");
     }
     
     @Override
     public synchronized String toString() {
-        return "GateKeeperService";
+        return "StargateService";
     }
 }

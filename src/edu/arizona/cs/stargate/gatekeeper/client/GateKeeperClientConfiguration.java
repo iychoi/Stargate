@@ -24,6 +24,9 @@
 
 package edu.arizona.cs.stargate.gatekeeper.client;
 
+import edu.arizona.cs.stargate.common.JsonSerializer;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -31,23 +34,34 @@ import java.net.URI;
  * @author iychoi
  */
 public class GateKeeperClientConfiguration {
-    public static final int DEFAULT_PORT = 11010;
+    private URI serviceURI;
     
-    private URI uri;
+    public static GateKeeperClientConfiguration createInstance(File file) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (GateKeeperClientConfiguration) serializer.fromJsonFile(file, GateKeeperClientConfiguration.class);
+    }
+    
+    public static GateKeeperClientConfiguration createInstance(String json) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (GateKeeperClientConfiguration) serializer.fromJson(json, GateKeeperClientConfiguration.class);
+    }
+    
+    GateKeeperClientConfiguration() {
+    }
     
     public GateKeeperClientConfiguration(URI uri) {
         initialize(uri);
     }
     
     private void initialize(URI uri) {
-        this.uri = uri;
+        this.serviceURI = uri;
     }
     
-    public void setURI(URI uri) {
-        this.uri = uri;
+    public void setServiceURI(URI uri) {
+        this.serviceURI = uri;
     }
     
-    public URI getURI() {
-        return this.uri;
+    public URI getServiceURI() {
+        return this.serviceURI;
     }
 }

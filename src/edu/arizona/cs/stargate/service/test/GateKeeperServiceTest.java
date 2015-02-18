@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.service.test;
+package edu.arizona.cs.stargate.service.test;
 
-import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperService;
-import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
+import edu.arizona.cs.stargate.service.StargateService;
+import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 
 /**
  *
@@ -37,9 +37,9 @@ public class GateKeeperServiceTest {
      */
     public static void main(String[] args) {
         try {
-            GateKeeperServiceConfiguration conf = new GateKeeperServiceConfiguration();
+            StargateServiceConfiguration conf = new StargateServiceConfiguration();
             
-            GateKeeperService instance = GateKeeperService.getInstance(conf);
+            StargateService instance = StargateService.getInstance(conf);
             instance.start();
             instance.join();
         } catch (Exception ex) {

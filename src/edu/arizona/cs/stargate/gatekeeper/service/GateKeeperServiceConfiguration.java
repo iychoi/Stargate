@@ -24,32 +24,25 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
+import edu.arizona.cs.stargate.common.JsonSerializer;
+import java.io.File;
+import java.io.IOException;
+
 /**
  *
  * @author iychoi
  */
 public class GateKeeperServiceConfiguration {
-    public static final int DEFAULT_PORT = 11010;
+    public static GateKeeperServiceConfiguration createInstance(File file) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (GateKeeperServiceConfiguration) serializer.fromJsonFile(file, GateKeeperServiceConfiguration.class);
+    }
     
-    private int port;
+    public static GateKeeperServiceConfiguration createInstance(String json) throws IOException {
+        JsonSerializer serializer = new JsonSerializer();
+        return (GateKeeperServiceConfiguration) serializer.fromJson(json, GateKeeperServiceConfiguration.class);
+    }
     
     public GateKeeperServiceConfiguration() {
-        initialize(DEFAULT_PORT);
-    }
-    
-    public GateKeeperServiceConfiguration(int port) {
-        initialize(port);
-    }
-    
-    private void initialize(int port) {
-        this.port = port;
-    }
-    
-    public void setPort(int port) {
-        this.port = port;
-    }
-    
-    public int getPort() {
-        return this.port;
     }
 }

@@ -75,7 +75,7 @@ public class GateKeeperClient {
     }
     
     public Object post(String path, Object request, Class reply) throws IOException {
-        URI absURI = this.config.getURI().resolve(path);
+        URI absURI = this.config.getServiceURI().resolve(path);
         
         WebResource webResource = this.client.resource(absURI);
         ClientResponse response = webResource.accept("application/json").type("application/json").post(ClientResponse.class, request);
@@ -88,7 +88,7 @@ public class GateKeeperClient {
     }
     
     public Object get(String path, Class reply) throws IOException {
-        URI absURI = this.config.getURI().resolve(path);
+        URI absURI = this.config.getServiceURI().resolve(path);
         
         WebResource webResource = this.client.resource(absURI);
         ClientResponse response = webResource.accept("application/json").type("application/json").get(ClientResponse.class);
