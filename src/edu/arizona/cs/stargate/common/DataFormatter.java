@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.common;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Formatter;
 
 /**
@@ -48,5 +49,22 @@ public class DataFormatter {
             formatter.format("%02x", b);
         }
         return formatter.toString();
+    }
+    
+    public static byte[] hexToBytes(String hex) {
+        return hexToBytes(hex.toCharArray());
+    }
+    
+    public static byte[] hexToBytes(char[] hex) {
+        byte[] raw = new byte[hex.length / 2];
+        for (int src = 0, dst = 0; dst < raw.length; ++dst) {
+            int hi = Character.digit(hex[src++], 16);
+            int lo = Character.digit(hex[src++], 16);
+            if ((hi < 0) || (lo < 0)) {
+                throw new IllegalArgumentException();
+            }
+            raw[dst] = (byte) (hi << 4 | lo);
+        }
+        return raw;
     }
 }

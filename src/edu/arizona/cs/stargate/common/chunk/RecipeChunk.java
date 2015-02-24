@@ -73,19 +73,24 @@ public class RecipeChunk {
         this.hash = hash;
     }
 
-    @JsonProperty("hash")
+    @JsonIgnore
     public byte[] getHash() {
         return this.hash;
     }
     
-    @JsonIgnore
+    @JsonProperty("hash")
     public String getHashString() {
         return DataFormatter.toHexString(this.hash);
     }
     
-    @JsonProperty("hash")
+    @JsonIgnore
     void setHash(byte[] hash) {
         this.hash = hash;
+    }
+    
+    @JsonProperty("hash")
+    void setHash(String hash) {
+        this.hash = DataFormatter.hexToBytes(hash);
     }
 
     @JsonProperty("start")
@@ -118,6 +123,10 @@ public class RecipeChunk {
             return true;
         }
         return false;
+    }
+    
+    public boolean hasHash(String hash) {
+        return hasHash(DataFormatter.hexToBytes(hash));
     }
     
     @Override

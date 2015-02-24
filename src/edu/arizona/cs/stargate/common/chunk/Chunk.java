@@ -77,19 +77,24 @@ public class Chunk {
         this.hash = hash;
     }
 
-    @JsonProperty("hash")
+    @JsonIgnore
     public byte[] getHash() {
         return this.hash;
     }
     
-    @JsonIgnore
+    @JsonProperty("hash")
     public String getHashString() {
         return DataFormatter.toHexString(this.hash);
     }
     
-    @JsonProperty("hash")
+    @JsonIgnore
     public void setHash(byte[] hash) {
         this.hash = hash;
+    }
+    
+    @JsonProperty("hash")
+    public void setHash(String hash) {
+        this.hash = DataFormatter.hexToBytes(hash);
     }
 
     @JsonProperty("path")
@@ -149,6 +154,10 @@ public class Chunk {
             return true;
         }
         return false;
+    }
+    
+    public boolean hasHash(String hash) {
+        return hasHash(DataFormatter.hexToBytes(hash));
     }
     
     @Override
