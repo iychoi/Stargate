@@ -22,30 +22,32 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper;
+package edu.arizona.cs.stargate.common;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import java.util.Collection;
+import java.io.File;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AClusterManagerAPI {
+public class ResourceLocator {
     
-    public static final String PATH = "/cm";
-    public static final String GET_LOCAL_CLUSTER_INFO_PATH = "/local";
-    public static final String GET_REMOTE_CLUSTER_INFO_PATH = "/remote";
-    public static final String DELETE_REMOTE_CLUSTER_PATH = "/remote";
-    public static final String ADD_REMOTE_CLUSTER_PATH = "/remote";
+    public static final String DEFAULT_RESOURCE_LOCATION = ".";
+    private File resourceBase;
     
-    public abstract ClusterInfo getLocalClusterInfo() throws Exception;
+    public ResourceLocator() {
+        this.resourceBase = new File(DEFAULT_RESOURCE_LOCATION);
+    }
     
-    public abstract Collection<ClusterInfo> getRemoteClusterInfo() throws Exception;
+    public ResourceLocator(File f) {
+        this.resourceBase = f;
+    }
     
-    public abstract void addRemoteCluster(ClusterInfo cluster) throws Exception;
+    public File getResourceBase() {
+        return this.resourceBase;
+    }
     
-    public abstract void removeRemoteCluster(String name) throws Exception;
-    
-    public abstract void removeAllRemoteCluster() throws Exception;
+    public File getResourceLocation(String f) {
+        return new File(this.resourceBase, f);
+    }
 }

@@ -41,6 +41,7 @@ public class GatekeeperServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
         bind(DefaultServlet.class).in(Singleton.class);
+        bind(GateKeeperRestful.class).in(Singleton.class); 
         bind(ClusterManagerRestful.class).in(Singleton.class); 
 
         bind(MessageBodyReader.class).to(JacksonJsonProvider.class); 

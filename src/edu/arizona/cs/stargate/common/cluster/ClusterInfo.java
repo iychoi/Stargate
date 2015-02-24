@@ -35,6 +35,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -46,7 +47,6 @@ public class ClusterInfo {
     
     private Map<String, ClusterNodeInfo> nodeTable = new HashMap<String, ClusterNodeInfo>();
     
-    @JsonIgnore
     private ArrayList<IClusterConfigChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigChangeEventHandler>();
     
     private String name;
@@ -101,14 +101,17 @@ public class ClusterInfo {
         this.name = name;
     }
     
+    @JsonIgnore
     public synchronized int getNodeNumber() {
         return this.nodeTable.keySet().size();
     }
     
+    @JsonProperty("nodes")
     public synchronized Collection<ClusterNodeInfo> getAllNodeInfo() {
         return Collections.unmodifiableCollection(this.nodeTable.values());
     }
     
+    @JsonIgnore
     public synchronized ClusterNodeInfo getNodeInfo(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -117,6 +120,7 @@ public class ClusterInfo {
         return this.nodeTable.get(name);
     }
     
+    @JsonIgnore
     public synchronized boolean hasNodeInfo(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -125,6 +129,7 @@ public class ClusterInfo {
         return this.nodeTable.containsKey(name);
     }
     
+    @JsonIgnore
     public synchronized ClusterNodeInfo getGatekeeperNodeInfo() {
         Collection<ClusterNodeInfo> values = this.nodeTable.values();
         for(ClusterNodeInfo node : values) {
@@ -148,6 +153,13 @@ public class ClusterInfo {
         }
         
         keys.clear();
+    }
+    
+    @JsonProperty("nodes")
+    public synchronized void addNodeInfo(Collection<ClusterNodeInfo> nodes) throws NodeAlreadyAddedException {
+        for(ClusterNodeInfo node : nodes) {
+            addNode(node);
+        }
     }
     
     public synchronized void addNode(ClusterNodeInfo node) throws NodeAlreadyAddedException {
@@ -227,6 +239,7 @@ public class ClusterInfo {
         return this.name;
     }
 
+    @JsonIgnore
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
             return true;

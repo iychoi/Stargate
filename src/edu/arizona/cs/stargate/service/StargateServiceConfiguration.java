@@ -29,18 +29,24 @@ import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
  * @author iychoi
  */
 public class StargateServiceConfiguration {
-    public static final String DEFAULT_CONFIG_FILEPATH = "./config.json";
+    
+    public static final String DEFAULT_CONFIG_FILEPATH = "service.json";
+    
     public static final int DEFAULT_SERVICE_PORT = 11010;
     
     private int servicePort = DEFAULT_SERVICE_PORT;
     private GateKeeperServiceConfiguration gatekeeperServiceConfig;
-    private GateKeeperClientConfiguration gatekeeperClientConfig;
+    private ArrayList<GateKeeperClientConfiguration> gatekeeperClientConfigs = new ArrayList<GateKeeperClientConfiguration>();
     
     public static StargateServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -63,12 +69,19 @@ public class StargateServiceConfiguration {
         return this.servicePort;
     }
     
-    public void setGatekeeperClientConfiguration(GateKeeperClientConfiguration conf) {
-        this.gatekeeperClientConfig = conf;
+    public void addGatekeeperClientConfiguration(GateKeeperClientConfiguration conf) {
+        this.gatekeeperClientConfigs.add(conf);
     }
     
-    public GateKeeperClientConfiguration getGatekeeperClientConfiguration() {
-        return this.gatekeeperClientConfig;
+    public Collection<GateKeeperClientConfiguration> getGatekeeperClientConfigurations() {
+        return Collections.unmodifiableCollection(this.gatekeeperClientConfigs);
+    }
+    
+    @JsonProperty
+    public void setGatekeeperClientConfigurations(Collection<GateKeeperClientConfiguration> configurations) {
+        for(GateKeeperClientConfiguration conf : configurations) {
+            addGatekeeperClientConfiguration(conf);
+        }
     }
     
     public void setGatekeeperServiceConfiguration(GateKeeperServiceConfiguration conf) {

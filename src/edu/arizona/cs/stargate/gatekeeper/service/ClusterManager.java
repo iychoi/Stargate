@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper;
+package edu.arizona.cs.stargate.gatekeeper.service;
 
 import edu.arizona.cs.stargate.common.cluster.ClusterAlreadyAddedException;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;

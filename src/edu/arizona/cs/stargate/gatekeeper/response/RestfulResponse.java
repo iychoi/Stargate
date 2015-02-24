@@ -24,29 +24,44 @@
 
 package edu.arizona.cs.stargate.gatekeeper.response;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /**
  *
  * @author iychoi
  */
-public class GateKeeperLiveness {
+public class RestfulResponse<T> {
+    private T response;
+    private Exception exception;
     
-    public static final String PATH = "/cm";
     
-    boolean live;
-    
-    public GateKeeperLiveness() {
-        this.live = false;
+    public RestfulResponse() {
+        
     }
     
-    public GateKeeperLiveness(boolean live) {
-        this.live = live;
+    public RestfulResponse(T response) {
+        this.response = response;
     }
     
-    public void setLive(boolean live) {
-        this.live = live;
+    public RestfulResponse(Exception ex) {
+        this.exception = ex;
     }
     
-    public boolean getLive() {
-        return this.live;
+    @JsonProperty("response")
+    public void setResponse(T response) {
+        this.response = response;
+    }
+    
+    @JsonProperty("response")
+    public T getResponse() {
+        return this.response;
+    }
+    
+    public void setException(Exception ex) {
+        this.exception = ex;
+    }
+    
+    public Exception getException() {
+        return this.exception;
     }
 }

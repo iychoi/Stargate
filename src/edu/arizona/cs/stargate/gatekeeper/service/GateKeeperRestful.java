@@ -22,30 +22,46 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper;
+package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import java.util.Collection;
+import com.google.inject.Singleton;
+import edu.arizona.cs.stargate.common.DataFormatter;
+import edu.arizona.cs.stargate.gatekeeper.AGateKeeperAPI;
+import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
+import java.io.IOException;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AClusterManagerAPI {
+@Path(AGateKeeperAPI.PATH)
+@Singleton
+public class GateKeeperRestful extends AGateKeeperAPI {
+
+    @GET
+    @Path(AGateKeeperAPI.CHECK_LIVE_PATH)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String responseCheckLiveText() {
+        try {
+            return DataFormatter.toJSONFormat(responseCheckLiveJSON());
+        } catch (IOException ex) {
+            return "DataFormatter formatting error";
+        }
+    }
     
-    public static final String PATH = "/cm";
-    public static final String GET_LOCAL_CLUSTER_INFO_PATH = "/local";
-    public static final String GET_REMOTE_CLUSTER_INFO_PATH = "/remote";
-    public static final String DELETE_REMOTE_CLUSTER_PATH = "/remote";
-    public static final String ADD_REMOTE_CLUSTER_PATH = "/remote";
+    @GET
+    @Path(AGateKeeperAPI.CHECK_LIVE_PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestfulResponse<Boolean> responseCheckLiveJSON() {
+        return new RestfulResponse<Boolean>(checkLive());
+    }
     
-    public abstract ClusterInfo getLocalClusterInfo() throws Exception;
-    
-    public abstract Collection<ClusterInfo> getRemoteClusterInfo() throws Exception;
-    
-    public abstract void addRemoteCluster(ClusterInfo cluster) throws Exception;
-    
-    public abstract void removeRemoteCluster(String name) throws Exception;
-    
-    public abstract void removeAllRemoteCluster() throws Exception;
+    @Override
+    public boolean checkLive() {
+        return true;
+    }
 }

@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.gatekeeper.service;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
+import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import java.io.File;
 import java.io.IOException;
 
@@ -33,6 +34,9 @@ import java.io.IOException;
  * @author iychoi
  */
 public class GateKeeperServiceConfiguration {
+    
+    private ClusterInfo clusterInfo;
+    
     public static GateKeeperServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
         return (GateKeeperServiceConfiguration) serializer.fromJsonFile(file, GateKeeperServiceConfiguration.class);
@@ -44,5 +48,13 @@ public class GateKeeperServiceConfiguration {
     }
     
     public GateKeeperServiceConfiguration() {
+    }
+    
+    public ClusterInfo getClusterInfo() {
+        return this.clusterInfo;
+    }
+    
+    public void setClusterInfo(ClusterInfo clusterInfo) {
+        this.clusterInfo = clusterInfo;
     }
 }

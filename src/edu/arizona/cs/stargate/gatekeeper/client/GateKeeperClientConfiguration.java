@@ -34,7 +34,11 @@ import java.net.URI;
  * @author iychoi
  */
 public class GateKeeperClientConfiguration {
+    
+    private static final int MAX_RPC_THREADS = 10;
+    
     private URI serviceURI;
+    private int rpcThreads = MAX_RPC_THREADS;
     
     public static GateKeeperClientConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -63,5 +67,13 @@ public class GateKeeperClientConfiguration {
     
     public URI getServiceURI() {
         return this.serviceURI;
+    }
+    
+    public void setMaxRPCThreads(int threads) {
+        this.rpcThreads = threads;
+    }
+    
+    public int getMaxRPCThreads() {
+        return this.rpcThreads;
     }
 }

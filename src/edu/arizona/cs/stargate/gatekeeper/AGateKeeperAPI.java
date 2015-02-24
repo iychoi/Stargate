@@ -24,37 +24,13 @@
 
 package edu.arizona.cs.stargate.gatekeeper;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterAlreadyAddedException;
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import edu.arizona.cs.stargate.common.cluster.IClusterConfigChangeEventHandler;
-import java.util.Collection;
-
 /**
  *
  * @author iychoi
  */
-public abstract class AGateKeeperProtocol {
-    public abstract ClusterInfo getLocalClusterInfo();
+public abstract class AGateKeeperAPI {
+    public static final String PATH = "/";
+    public static final String CHECK_LIVE_PATH = "/liveness";
     
-    public abstract int getRemoteClusterNumber();
-    
-    public abstract Collection<ClusterInfo> getAllRemoteClusterInfo();
-    
-    public abstract ClusterInfo getRemoteClusterInfo(String name);
-    
-    public abstract boolean hasRemoteClusterInfo(String name);
-    
-    public abstract void removeAllRemoteCluster();
-    
-    public abstract void addRemoteCluster(ClusterInfo cluster) throws ClusterAlreadyAddedException;
-    
-    public abstract void addConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler);
-    
-    public abstract void removeConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler);
-    
-    public abstract void removeConfigChangeEventHandler(String handlerName);
-
-    public abstract void removeRemoteCluster(ClusterInfo cluster);
-    
-    public abstract void removeRemoteCluster(String name);
+    public abstract boolean checkLive();
 }

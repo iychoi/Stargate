@@ -26,13 +26,8 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Guice;
 import com.google.inject.Stage;
-import com.google.inject.servlet.GuiceFilter;
-import java.util.EnumSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 
 /**
  *
@@ -45,6 +40,7 @@ public class GateKeeperService {
     private static GateKeeperService instance;
     
     private GateKeeperServiceConfiguration config;
+    private ClusterManager clusterManager;
     
     public static GateKeeperService getInstance(GateKeeperServiceConfiguration config) {
         synchronized (GateKeeperService.class) {
@@ -56,11 +52,24 @@ public class GateKeeperService {
     }
     
     GateKeeperService(GateKeeperServiceConfiguration config) {
-        this.config = config;
+        if(config == null) {
+            this.config = new GateKeeperServiceConfiguration();
+        } else {
+            this.config = config;
+        }
     }
     
     public synchronized void start() throws Exception {
+        this.clusterManager = ClusterManager.getInstance();
+        if(this.config.getClusterInfo() != null) {
+            this.clusterManager.setLocalCluster(this.config.getClusterInfo());
+        }
+        
         Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
+    }
+    
+    public synchronized ClusterManager getClusterManager() {
+        return this.clusterManager;
     }
     
     @Override

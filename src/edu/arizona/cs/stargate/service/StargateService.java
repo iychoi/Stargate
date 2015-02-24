@@ -62,7 +62,6 @@ public class StargateService {
     }
     
     public synchronized void start() throws Exception {
-        //Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule()); 
         this.gatekeeperService.start();
         
         this.jettyServer = new Server(this.config.getServicePort());

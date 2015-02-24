@@ -24,14 +24,10 @@
 
 package edu.arizona.cs.stargate.gatekeeper.client;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.api.client.GenericType;
+import edu.arizona.cs.stargate.gatekeeper.AGateKeeperAPI;
+import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
-import java.net.URI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,22 +35,15 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class GateKeeperClient {
-    
-    /*
-    TODO: Add thread pool and future things to use async function
-    
-    ref : http://www.vogella.com/tutorials/JavaConcurrency/article.html
-    https://jersey.java.net/nonav/apidocs/1.9/jersey/com/sun/jersey/api/client/AsyncWebResource.html#get(java.lang.Class)
-    */
+public class GateKeeperClient extends AGateKeeperAPI {
     
     private static final Log LOG = LogFactory.getLog(GateKeeperClient.class);
     
     private static GateKeeperClient instance;
     
     private GateKeeperClientConfiguration config;
-    private ClientConfig clientConfig;
-    private Client client;
+    private GateKeeperRPCClient rpcClient;
+    private ClusterManagerClient clusterManagerClient;
     
     public static GateKeeperClient getInstance(GateKeeperClientConfiguration conf) {
         synchronized (GateKeeperClient.class) {
@@ -67,45 +56,49 @@ public class GateKeeperClient {
     
     GateKeeperClient(GateKeeperClientConfiguration conf) {
         this.config = conf;
-        
-        this.clientConfig = new DefaultClientConfig();
-        this.clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        
-        this.client = Client.create(this.clientConfig);
-    }
-    
-    public Object post(String path, Object request, Class reply) throws IOException {
-        URI absURI = this.config.getServiceURI().resolve(path);
-        
-        WebResource webResource = this.client.resource(absURI);
-        ClientResponse response = webResource.accept("application/json").type("application/json").post(ClientResponse.class, request);
-        
-        if(response.getStatus() != 200) {
-            throw new IOException("HTTP error code : " + response.getStatus());
-        }
-        
-        return response.getEntity(reply);
-    }
-    
-    public Object get(String path, Class reply) throws IOException {
-        URI absURI = this.config.getServiceURI().resolve(path);
-        
-        WebResource webResource = this.client.resource(absURI);
-        ClientResponse response = webResource.accept("application/json").type("application/json").get(ClientResponse.class);
-        
-        if(response.getStatus() != 200) {
-            throw new IOException("HTTP error code : " + response.getStatus());
-        }
-        
-        return response.getEntity(reply);
+        this.rpcClient = new GateKeeperRPCClient(conf);
+        this.clusterManagerClient = new ClusterManagerClient(this);
     }
     
     public ClusterManagerClient getClusterManagerClient() {
-        return new ClusterManagerClient(this);
+        return this.clusterManagerClient;
+    }
+    
+    public GateKeeperRPCClient getRPCClient() {
+        return this.rpcClient;
     }
     
     @Override
     public synchronized String toString() {
         return "GateKeeperClient";
+    }
+    
+    public void stop() {
+        this.rpcClient.stop();
+    }
+    
+    public String getResourcePath(String path) {
+        if(AGateKeeperAPI.PATH.endsWith("/") &&
+                path.startsWith("/")) {
+            return AGateKeeperAPI.PATH + path.substring(1);
+        }
+        return AGateKeeperAPI.PATH + path;
+    }
+
+    @Override
+    public boolean checkLive() {
+        RestfulResponse<Boolean> response;
+        try {
+            response = (RestfulResponse<Boolean>) this.rpcClient.get(getResourcePath(AGateKeeperAPI.CHECK_LIVE_PATH), new GenericType<RestfulResponse<Boolean>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            return false;
+        }
+        
+        if(response.getException() != null) {
+            return false;
+        } else {
+            return response.getResponse().booleanValue();
+        }
     }
 }

@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.common.cluster;
 
-import edu.arizona.cs.stargate.gatekeeper.ClusterManager;
+import edu.arizona.cs.stargate.gatekeeper.service.ClusterManager;
 
 /**
  *

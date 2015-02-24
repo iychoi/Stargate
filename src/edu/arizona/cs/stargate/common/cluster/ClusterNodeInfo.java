@@ -29,6 +29,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -92,10 +94,12 @@ public class ClusterNodeInfo {
         this.name = name;
     }
 
+    @JsonProperty("addr")
     public URI getAddr() {
         return addr;
     }
 
+    @JsonProperty("addr")
     void setAddr(URI m_addr) {
         this.addr = m_addr;
     }
@@ -112,6 +116,7 @@ public class ClusterNodeInfo {
         this.gatekeeper = gatekeeper;
     }
     
+    @JsonIgnore
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
             return true;
