@@ -50,7 +50,7 @@ public class GateKeeperClientConfiguration {
         return (GateKeeperClientConfiguration) serializer.fromJson(json, GateKeeperClientConfiguration.class);
     }
     
-    GateKeeperClientConfiguration() {
+    public GateKeeperClientConfiguration() {
     }
     
     public GateKeeperClientConfiguration(URI uri) {

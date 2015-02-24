@@ -107,12 +107,12 @@ public class ClusterInfo {
     }
     
     @JsonProperty("nodes")
-    public synchronized Collection<ClusterNodeInfo> getAllNodeInfo() {
+    public synchronized Collection<ClusterNodeInfo> getAllNode() {
         return Collections.unmodifiableCollection(this.nodeTable.values());
     }
     
     @JsonIgnore
-    public synchronized ClusterNodeInfo getNodeInfo(String name) {
+    public synchronized ClusterNodeInfo getNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
         }
@@ -121,7 +121,7 @@ public class ClusterInfo {
     }
     
     @JsonIgnore
-    public synchronized boolean hasNodeInfo(String name) {
+    public synchronized boolean hasNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
         }
@@ -156,7 +156,7 @@ public class ClusterInfo {
     }
     
     @JsonProperty("nodes")
-    public synchronized void addNodeInfo(Collection<ClusterNodeInfo> nodes) throws NodeAlreadyAddedException {
+    public synchronized void addNode(Collection<ClusterNodeInfo> nodes) throws NodeAlreadyAddedException {
         for(ClusterNodeInfo node : nodes) {
             addNode(node);
         }

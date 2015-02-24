@@ -49,39 +49,39 @@ public class GateKeeperClientTest {
             
             GateKeeperClientConfiguration conf = new GateKeeperClientConfiguration(new URI(gatekeeperService));
             
-            GateKeeperClient instance = GateKeeperClient.getInstance(conf);
-            boolean live = instance.checkLive();
+            GateKeeperClient client = new GateKeeperClient(conf);
+            boolean live = client.checkLive();
             System.out.println("live : " + live);
             
-            ClusterInfo localClusterInfo = instance.getClusterManagerClient().getLocalClusterInfo();
+            ClusterInfo localClusterInfo = client.getClusterManagerClient().getLocalClusterInfo();
             System.out.println("local cluster info : " + DataFormatter.toJSONFormat(localClusterInfo));
             
-            instance.getClusterManagerClient().removeAllRemoteCluster();
+            client.getClusterManagerClient().removeAllRemoteCluster();
             
-            Collection<ClusterInfo> remoteClusterInfo = instance.getClusterManagerClient().getRemoteClusterInfo();
+            Collection<ClusterInfo> remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             System.out.println("Adding remote cluster info");
             
             ClusterInfo remoteCluster1 = new ClusterInfo("remote1");
-            instance.getClusterManagerClient().addRemoteCluster(remoteCluster1);
+            client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
             
-            remoteClusterInfo = instance.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             ClusterInfo remoteCluster2 = new ClusterInfo("remote2");
-            instance.getClusterManagerClient().addRemoteCluster(remoteCluster2);
+            client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
             
-            remoteClusterInfo = instance.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
-            instance.getClusterManagerClient().removeAllRemoteCluster();
+            client.getClusterManagerClient().removeAllRemoteCluster();
             
-            remoteClusterInfo = instance.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             
-            instance.stop();
+            client.stop();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

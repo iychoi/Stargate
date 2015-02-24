@@ -100,12 +100,12 @@ public class ClusterNodeInfo {
     }
 
     @JsonProperty("addr")
-    void setAddr(URI m_addr) {
-        this.addr = m_addr;
+    void setAddr(URI addr) {
+        this.addr = addr;
     }
     
-    void setAddr(String m_addr) throws URISyntaxException {
-        this.addr = new URI(m_addr);
+    void setAddr(String addr) throws URISyntaxException {
+        this.addr = new URI(addr);
     }
     
     public boolean getGatekeeper() {

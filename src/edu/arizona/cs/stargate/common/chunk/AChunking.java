@@ -22,31 +22,18 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common;
+package edu.arizona.cs.stargate.common.chunk;
 
 import java.io.IOException;
-import java.util.Formatter;
+import java.net.URI;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 
 /**
  *
  * @author iychoi
  */
-public class DataFormatter {
-
-    public static String toHTMLFormat(Object obj) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    public static String toJSONFormat(Object obj) throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(obj);
-    }
-    
-    public static String toHexString(byte[] arr) {
-        Formatter formatter = new Formatter();
-        for (byte b : arr) {
-            formatter.format("%02x", b);
-        }
-        return formatter.toString();
-    }
+public abstract class AChunking {
+    public abstract Collection<Chunk> chunk(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
 }

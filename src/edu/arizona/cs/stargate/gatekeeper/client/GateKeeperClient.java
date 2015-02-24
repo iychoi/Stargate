@@ -39,22 +39,11 @@ public class GateKeeperClient extends AGateKeeperAPI {
     
     private static final Log LOG = LogFactory.getLog(GateKeeperClient.class);
     
-    private static GateKeeperClient instance;
-    
     private GateKeeperClientConfiguration config;
     private GateKeeperRPCClient rpcClient;
     private ClusterManagerClient clusterManagerClient;
     
-    public static GateKeeperClient getInstance(GateKeeperClientConfiguration conf) {
-        synchronized (GateKeeperClient.class) {
-            if(instance == null) {
-                instance = new GateKeeperClient(conf);
-            }
-            return instance;
-        }
-    }
-    
-    GateKeeperClient(GateKeeperClientConfiguration conf) {
+    public GateKeeperClient(GateKeeperClientConfiguration conf) {
         this.config = conf;
         this.rpcClient = new GateKeeperRPCClient(conf);
         this.clusterManagerClient = new ClusterManagerClient(this);
