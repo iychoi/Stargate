@@ -31,6 +31,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
@@ -41,7 +42,7 @@ public class Recipe {
     
     private URI resourcePath;
     private String hashAlgorithm;
-    private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
+    private ArrayList<RecipeChunkInfo> chunks = new ArrayList<RecipeChunkInfo>();
 
     Recipe() {
     }
@@ -56,19 +57,15 @@ public class Recipe {
         return (Recipe) serializer.fromJson(json, Recipe.class);
     }
     
-    public Recipe(File file, String hashAlgorithm, Collection<Chunk> chunks) {
-        this.resourcePath = file.getAbsoluteFile().toURI();
-        this.hashAlgorithm = hashAlgorithm;
-        for(Chunk chk : chunks) {
-            this.chunks.add(chk.toRecipeChunk());
-        }
+    public Recipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunkInfo> chunks) {
+        initializeRecipe(resourcePath, hashAlgorithm, chunks);
     }
-
-    public Recipe(URI resourcePath, String hashAlgorithm, Collection<Chunk> chunks) {
+    
+    private void initializeRecipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunkInfo> chunks) {
         this.resourcePath = resourcePath;
         this.hashAlgorithm = hashAlgorithm;
-        for(Chunk chk : chunks) {
-            this.chunks.add(chk.toRecipeChunk());
+        if(chunks != null) {
+            this.chunks.addAll(chunks);
         }
     }
     
@@ -92,14 +89,19 @@ public class Recipe {
         this.hashAlgorithm = hashAlgorithm;
     }
     
-    @JsonProperty("chunks")
-    public Collection<RecipeChunk> getChunks() {
+    @JsonProperty("chunkinfo")
+    public Collection<RecipeChunkInfo> getAllChunk() {
         return Collections.unmodifiableCollection(this.chunks);
     }
     
-    @JsonProperty("chunks")
-    void addChunk(Collection<RecipeChunk> chunks) {
+    @JsonProperty("chunkinfo")
+    void addChunk(Collection<RecipeChunkInfo> chunks) {
         this.chunks.addAll(chunks);
+    }
+    
+    @JsonIgnore
+    void addChunk(RecipeChunkInfo chunk) {
+        this.chunks.add(chunk);
     }
     
     public String toString() {

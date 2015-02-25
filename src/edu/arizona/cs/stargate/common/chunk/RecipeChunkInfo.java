@@ -36,42 +36,42 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class Chunk {
-    private URI resourcePath;
+public class RecipeChunkInfo {
     private long chunkStart;
     private int chunkLen;
     private byte[] hash;
     
-    Chunk() {
-        this.resourcePath = null;
+    RecipeChunkInfo() {
         this.chunkStart = -1;
         this.chunkLen = 0;
         this.hash = null;
     }
     
-    public static Chunk createInstance(File file) throws IOException {
+    public static ChunkInfo createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (Chunk) serializer.fromJsonFile(file, Chunk.class);
+        return (ChunkInfo) serializer.fromJsonFile(file, ChunkInfo.class);
     }
     
-    public static Chunk createInstance(String json) throws IOException {
+    public static ChunkInfo createInstance(String json) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (Chunk) serializer.fromJson(json, Chunk.class);
+        return (ChunkInfo) serializer.fromJson(json, ChunkInfo.class);
     }
     
-    public Chunk(Chunk that) {
-        this.resourcePath = that.resourcePath;
+    public RecipeChunkInfo(RecipeChunkInfo that) {
         this.chunkStart = that.chunkStart;
         this.chunkLen = that.chunkLen;
         this.hash = that.hash.clone();
     }
     
-    public Chunk(URI resourcePath, long chunkStart, int chunkLen, byte[] hash) {
-        initializeChunk(resourcePath, chunkStart, chunkLen, hash);
+    public RecipeChunkInfo(long chunkStart, int chunkLen, byte[] hash) {
+        initializeRecipeChunk(chunkStart, chunkLen, hash);
     }
     
-    private void initializeChunk(URI resourcePath, long chunkStart, int chunkLen, byte[] hash) {
-        this.resourcePath = resourcePath;
+    public RecipeChunkInfo(long chunkStart, int chunkLen) {
+        initializeRecipeChunk(chunkStart, chunkLen, null);
+    }
+    
+    private void initializeRecipeChunk(long chunkStart, int chunkLen, byte[] hash) {
         this.chunkStart = chunkStart;
         this.chunkLen = chunkLen;
         this.hash = hash;
@@ -84,6 +84,9 @@ public class Chunk {
     
     @JsonProperty("hash")
     public String getHashString() {
+        if(this.hash == null) {
+            return null;
+        }
         return DataFormatter.toHexString(this.hash);
     }
     
@@ -94,19 +97,12 @@ public class Chunk {
     
     @JsonProperty("hash")
     public void setHash(String hash) {
+        if(hash == null) {
+            this.hash = null;
+        }
         this.hash = DataFormatter.hexToBytes(hash);
     }
 
-    @JsonProperty("path")
-    public URI getResourcePath() {
-        return this.resourcePath;
-    }
-
-    @JsonProperty("path")
-    void setResourcePath(URI resourcePath) {
-        this.resourcePath = resourcePath;
-    }
-    
     @JsonProperty("start")
     public long getChunkStart() {
         return this.chunkStart;
@@ -132,14 +128,10 @@ public class Chunk {
         if(this.hash == null) {
             return false;
         }
-        
-        if(this.hash == null) {
-            return false;
-        }
-        
         return true;
     }
     
+    @JsonIgnore
     public boolean hasHash(byte[] hash) {
         if(this.hash == null) {
             return false;
@@ -156,16 +148,18 @@ public class Chunk {
         return false;
     }
     
+    @JsonIgnore
     public boolean hasHash(String hash) {
         return hasHash(DataFormatter.hexToBytes(hash));
     }
     
     @Override
     public String toString() {
-        return this.resourcePath.toString() + "(" + this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash) + ")";
+        return this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash);
     }
     
-    public RecipeChunk toRecipeChunk() {
-        return new RecipeChunk(this.chunkStart, this.chunkLen, this.hash);
+    @JsonIgnore
+    public ChunkInfo toChunk(URI resourcePath) {
+        return new ChunkInfo(resourcePath, this.chunkStart, this.chunkLen, this.hash);
     }
 }

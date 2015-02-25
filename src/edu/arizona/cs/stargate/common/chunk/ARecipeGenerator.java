@@ -27,13 +27,13 @@ package edu.arizona.cs.stargate.common.chunk;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AChunking {
-    public abstract Collection<Chunk> chunk(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+public abstract class ARecipeGenerator {
     public abstract Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException;
 }
