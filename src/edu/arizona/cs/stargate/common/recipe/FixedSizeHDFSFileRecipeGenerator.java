@@ -22,9 +22,8 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.chunk;
+package edu.arizona.cs.stargate.common.recipe;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,22 +35,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  *
  * @author iychoi
  */
-public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
+public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
 
     private static final int BUFFER_SIZE = 100*1024;
     private int chunkSize;
+    private Configuration hadoopConf;
     
-    public FixedSizeLocalFileRecipeGenerator(int chunkSize) {
+    public FixedSizeHDFSFileRecipeGenerator(Configuration hadoopConf, int chunkSize) {
         this.chunkSize = chunkSize;
+        this.hadoopConf = hadoopConf;
     }
     
-    private Collection<RecipeChunkInfo> chunk(File file, int chunkSize) throws IOException, NoSuchAlgorithmException {
-        long fileLen = file.length();
+    private Collection<RecipeChunkInfo> chunk(Path path, int chunkSize) throws IOException, NoSuchAlgorithmException {
+        FileSystem fs = path.getFileSystem(this.hadoopConf);
+        FileStatus fileStatus = fs.getFileStatus(path);
+        
+        long fileLen = fileStatus.getLen();
         
         List<RecipeChunkInfo> chunks = new ArrayList<RecipeChunkInfo>();
         int numChunks = (int) (fileLen / chunkSize);
@@ -71,13 +80,14 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
         return Collections.unmodifiableCollection(chunks);
     }
     
-    private void hash(File file, String hashAlgorithm, RecipeChunkInfo chunk) throws IOException, NoSuchAlgorithmException {
-        InputStream is = new FileInputStream(file);
+    private void hash(FileSystem fs, Path path, String hashAlgorithm, RecipeChunkInfo chunk) throws IOException, NoSuchAlgorithmException {
+        FSDataInputStream is = fs.open(path, BUFFER_SIZE);
+        
         long chunkStart = chunk.getChunkStart();
         int chunkSize = chunk.getChunkLen();
         
         if(chunkStart > 0) {
-            is.skip(chunkStart);
+            is.seek(chunkStart);
         }
         
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm);
@@ -99,8 +109,9 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
         dis.close();
     }
     
-    private Collection<RecipeChunkInfo> chunkAndHash(File file, String hashAlgorithm, int chunkSize) throws IOException, NoSuchAlgorithmException {
-        InputStream is = new FileInputStream(file);
+    private Collection<RecipeChunkInfo> chunkAndHash(Path path, String hashAlgorithm, int chunkSize) throws IOException, NoSuchAlgorithmException {
+        FileSystem fs = path.getFileSystem(this.hadoopConf);
+        FSDataInputStream is = fs.open(path, BUFFER_SIZE);
         
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm);
         DigestInputStream dis = new DigestInputStream(is, messageDigest);
@@ -142,42 +153,45 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
         // test hash algorithm
         MessageDigest md = MessageDigest.getInstance(hashAlgorithm);
         
-        File file = new File(resourcePath.normalize());
-        Collection<RecipeChunkInfo> chunks = chunkAndHash(file, hashAlgorithm, this.chunkSize);
+        Path path = new Path(resourcePath.normalize());
+        Collection<RecipeChunkInfo> chunks = chunkAndHash(path, hashAlgorithm, this.chunkSize);
         return new Recipe(resourcePath.normalize(), hashAlgorithm, chunks);
     }
     
-    public Recipe generateRecipe(File file, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
-        Collection<RecipeChunkInfo> chunks = chunkAndHash(file, hashAlgorithm, this.chunkSize);
-        URI resourceUri = file.toURI().normalize();
+    public Recipe generateRecipe(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+        Collection<RecipeChunkInfo> chunks = chunkAndHash(path, hashAlgorithm, this.chunkSize);
+        URI resourceUri = path.toUri().normalize();
         return new Recipe(resourceUri, hashAlgorithm, chunks);
     }
 
     @Override
     public Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
-        File file = new File(resourcePath.normalize());
-        Collection<RecipeChunkInfo> chunks = chunk(file, this.chunkSize);
+        Path path = new Path(resourcePath.normalize());
+        Collection<RecipeChunkInfo> chunks = chunk(path, this.chunkSize);
         return new Recipe(resourcePath, hashAlgorithm, chunks);
     }
     
-    public Recipe generateRecipeWithoutHash(File file, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
-        Collection<RecipeChunkInfo> chunks = chunk(file, this.chunkSize);
-        URI resourceUri = file.toURI().normalize();
+    public Recipe generateRecipeWithoutHash(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+        Collection<RecipeChunkInfo> chunks = chunk(path, this.chunkSize);
+        URI resourceUri = path.toUri().normalize();
         return new Recipe(resourceUri, hashAlgorithm, chunks);
     }
 
     @Override
     public void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException {
-        File file = new File(recipe.getResourcePath());
-        String hashAlgorithm = recipe.getHashAlgorithm();
-        
-        Collection<RecipeChunkInfo> chunks = recipe.getAllChunk();
-        for(RecipeChunkInfo chunk : chunks) {
-            if(!chunk.isHashed()) {
-                if(chunk.getChunkStart() >= 0) {
-                    if(chunk.getChunkLen() > 0) {
-                        // hash chunk
-                        hash(file, hashAlgorithm, chunk);
+        Path path = new Path(recipe.getResourcePath());
+        FileSystem fs = path.getFileSystem(this.hadoopConf);
+        if(fs.exists(path) && fs.isFile(path)) {
+            String hashAlgorithm = recipe.getHashAlgorithm();
+
+            Collection<RecipeChunkInfo> chunks = recipe.getAllChunk();
+            for(RecipeChunkInfo chunk : chunks) {
+                if(!chunk.isHashed()) {
+                    if(chunk.getChunkStart() >= 0) {
+                        if(chunk.getChunkLen() > 0) {
+                            // hash chunk
+                            hash(fs, path, hashAlgorithm, chunk);
+                        }
                     }
                 }
             }

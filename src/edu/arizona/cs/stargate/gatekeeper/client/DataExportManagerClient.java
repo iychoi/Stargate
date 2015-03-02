@@ -25,8 +25,8 @@
 package edu.arizona.cs.stargate.gatekeeper.client;
 
 import com.sun.jersey.api.client.GenericType;
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
+import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
 import java.util.Collection;
@@ -40,20 +40,20 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class ClusterManagerClient extends AClusterManagerAPI {
+public class DataExportManagerClient extends ADataExportManagerAPI {
     
-    private static final Log LOG = LogFactory.getLog(ClusterManagerClient.class);
+    private static final Log LOG = LogFactory.getLog(DataExportManagerClient.class);
     
     private GateKeeperClient gatekeeperClient;
     private GateKeeperRPCClient gatekeeperRPCClient;
 
-    public ClusterManagerClient(GateKeeperClient gatekeeperClient) {
+    public DataExportManagerClient(GateKeeperClient gatekeeperClient) {
         this.gatekeeperClient = gatekeeperClient;
         this.gatekeeperRPCClient = gatekeeperClient.getRPCClient();
     }
     
     public String getResourcePath(String path) {
-        return AClusterManagerAPI.PATH + path;
+        return ADataExportManagerAPI.PATH + path;
     }
     
     public String getResourcePath(String path, Map<String, String> params) {
@@ -62,14 +62,14 @@ public class ClusterManagerClient extends AClusterManagerAPI {
         for(Map.Entry<String, String> entry : entrySet) {
             sb.append(entry.getKey() + "=" + entry.getValue() + "&");
         }
-        return AClusterManagerAPI.PATH + path + "?" + sb.toString();
+        return ADataExportManagerAPI.PATH + path + "?" + sb.toString();
     }
     
     @Override
-    public ClusterInfo getLocalClusterInfo() throws Exception {
-        RestfulResponse<ClusterInfo> response;
+    public Collection<DataExportInfo> getDataExportInfo() throws Exception {
+        RestfulResponse<Collection<DataExportInfo>> response;
         try {
-            response = (RestfulResponse<ClusterInfo>) this.gatekeeperRPCClient.get(getResourcePath(AClusterManagerAPI.GET_LOCAL_CLUSTER_INFO_PATH), new GenericType<RestfulResponse<ClusterInfo>>(){});
+            response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -81,29 +81,12 @@ public class ClusterManagerClient extends AClusterManagerAPI {
             return response.getResponse();
         }
     }
-
+    
     @Override
-    public Collection<ClusterInfo> getRemoteClusterInfo() throws Exception {
-        RestfulResponse<Collection<ClusterInfo>> response;
-        try {
-            response = (RestfulResponse<Collection<ClusterInfo>>) this.gatekeeperRPCClient.get(getResourcePath(AClusterManagerAPI.GET_REMOTE_CLUSTER_INFO_PATH), new GenericType<RestfulResponse<Collection<ClusterInfo>>>(){});
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw ex;
-        }
-        
-        if(response.getException() != null) {
-            throw response.getException();
-        } else {
-            return response.getResponse();
-        }
-    }
-
-    @Override
-    public void addRemoteCluster(ClusterInfo cluster) throws Exception {
+    public void addDataExport(DataExportInfo info) throws Exception {
         RestfulResponse<Boolean> response;
         try {
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.post(getResourcePath(AClusterManagerAPI.ADD_REMOTE_CLUSTER_PATH), cluster, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.post(getResourcePath(ADataExportManagerAPI.ADD_DATA_EXPORT_PATH), info, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -115,12 +98,12 @@ public class ClusterManagerClient extends AClusterManagerAPI {
     }
 
     @Override
-    public void removeRemoteCluster(String name) throws Exception {
+    public void removeDataExport(String name) throws Exception {
         RestfulResponse<Boolean> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
             params.put("name", name);
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(AClusterManagerAPI.DELETE_REMOTE_CLUSTER_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -130,14 +113,14 @@ public class ClusterManagerClient extends AClusterManagerAPI {
             throw response.getException();
         }
     }
-    
+
     @Override
-    public void removeAllRemoteCluster() throws Exception {
+    public void removeAllDataExport() throws Exception {
         RestfulResponse<Boolean> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
             params.put("name", "*");
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(AClusterManagerAPI.DELETE_REMOTE_CLUSTER_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

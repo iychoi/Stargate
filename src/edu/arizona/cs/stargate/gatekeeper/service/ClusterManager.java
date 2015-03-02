@@ -24,14 +24,13 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterAlreadyAddedException;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import edu.arizona.cs.stargate.common.cluster.IClusterConfigChangeEventHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,9 +44,9 @@ public class ClusterManager {
     
     private static ClusterManager instance;
     
-    private Hashtable<String, ClusterInfo> m_remoteClusterTable = new Hashtable<String, ClusterInfo>();
-    private ArrayList<IClusterConfigChangeEventHandler> m_configChangeEventHandlers = new ArrayList<IClusterConfigChangeEventHandler>();
-    private ClusterInfo m_localCluster;
+    private Map<String, ClusterInfo> remoteClusterTable = new HashMap<String, ClusterInfo>();
+    private ArrayList<IClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigurationChangeEventHandler>();
+    private ClusterInfo localCluster;
     
     public static ClusterManager getInstance() {
         synchronized (ClusterManager.class) {
@@ -59,11 +58,11 @@ public class ClusterManager {
     }
     
     ClusterManager() {
-        this.m_localCluster = null;
+        this.localCluster = null;
     }
     
     public synchronized ClusterInfo getLocalClusterInfo() {
-        return this.m_localCluster;
+        return this.localCluster;
     }
     
     public synchronized void setLocalCluster(ClusterInfo cluster) {
@@ -71,16 +70,16 @@ public class ClusterManager {
             throw new IllegalArgumentException("cluster is null or empty");
         }
         
-        this.m_localCluster = cluster;
+        this.localCluster = cluster;
         raiseEventForSetLocalCluster(cluster);
     }
     
     public synchronized int getRemoteClusterNumber() {
-        return this.m_remoteClusterTable.keySet().size();
+        return this.remoteClusterTable.keySet().size();
     }
     
     public synchronized Collection<ClusterInfo> getAllRemoteClusterInfo() {
-        return Collections.unmodifiableCollection(this.m_remoteClusterTable.values());
+        return Collections.unmodifiableCollection(this.remoteClusterTable.values());
     }
     
     public synchronized ClusterInfo getRemoteClusterInfo(String name) {
@@ -88,7 +87,7 @@ public class ClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.m_remoteClusterTable.get(name);
+        return this.remoteClusterTable.get(name);
     }
     
     public synchronized boolean hasRemoteClusterInfo(String name) {
@@ -96,14 +95,13 @@ public class ClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.m_remoteClusterTable.containsKey(name);
+        return this.remoteClusterTable.containsKey(name);
     }
     
     public synchronized void removeAllRemoteCluster() {
-        Enumeration<String> keys = m_remoteClusterTable.keys();
-        while(keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            ClusterInfo cluster = m_remoteClusterTable.get(key);
+        Set<String> keys = this.remoteClusterTable.keySet();
+        for(String key : keys) {
+            ClusterInfo cluster = this.remoteClusterTable.get(key);
             
             removeRemoteCluster(cluster);
         }
@@ -114,35 +112,35 @@ public class ClusterManager {
             throw new IllegalArgumentException("cluster is empty or null");
         }
         
-        if(this.m_remoteClusterTable.containsKey(cluster.getName())) {
+        if(this.remoteClusterTable.containsKey(cluster.getName())) {
             throw new ClusterAlreadyAddedException("cluster " + cluster.getName() + "is already added");
         }
         
-        ClusterInfo put = this.m_remoteClusterTable.put(cluster.getName(), cluster);
+        ClusterInfo put = this.remoteClusterTable.put(cluster.getName(), cluster);
         if(put != null) {
             raiseEventForAddRemoteCluster(put);
         }
     }
     
-    public synchronized void addConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
-        this.m_configChangeEventHandlers.add(eventHandler);
+    public synchronized void addConfigChangeEventHandler(IClusterConfigurationChangeEventHandler eventHandler) {
+        this.configChangeEventHandlers.add(eventHandler);
     }
     
-    public synchronized void removeConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
-        this.m_configChangeEventHandlers.remove(eventHandler);
+    public synchronized void removeConfigChangeEventHandler(IClusterConfigurationChangeEventHandler eventHandler) {
+        this.configChangeEventHandlers.remove(eventHandler);
     }
     
     public synchronized void removeConfigChangeEventHandler(String handlerName) {
-        ArrayList<IClusterConfigChangeEventHandler> toberemoved = new ArrayList<IClusterConfigChangeEventHandler>();
+        ArrayList<IClusterConfigurationChangeEventHandler> toberemoved = new ArrayList<IClusterConfigurationChangeEventHandler>();
         
-        for(IClusterConfigChangeEventHandler handler : this.m_configChangeEventHandlers) {
+        for(IClusterConfigurationChangeEventHandler handler : this.configChangeEventHandlers) {
             if(handler.getName().equals(handlerName)) {
                 toberemoved.add(handler);
             }
         }
         
-        for(IClusterConfigChangeEventHandler handler : toberemoved) {
-            this.m_configChangeEventHandlers.remove(handler);
+        for(IClusterConfigurationChangeEventHandler handler : toberemoved) {
+            this.configChangeEventHandlers.remove(handler);
         }
     }
 
@@ -159,7 +157,7 @@ public class ClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        ClusterInfo removed = this.m_remoteClusterTable.remove(name);
+        ClusterInfo removed = this.remoteClusterTable.remove(name);
         if(removed != null) {
             raiseEventForRemoveRemoteCluster(removed);
         }
@@ -168,7 +166,7 @@ public class ClusterManager {
     private synchronized void raiseEventForAddRemoteCluster(ClusterInfo cluster) {
         LOG.debug("remoted cluster added : " + cluster.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.m_configChangeEventHandlers) {
+        for(IClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.addRemoteCluster(this, cluster);
         }
     }
@@ -176,7 +174,7 @@ public class ClusterManager {
     private synchronized void raiseEventForRemoveRemoteCluster(ClusterInfo cluster) {
         LOG.debug("remoted cluster removed : " + cluster.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.m_configChangeEventHandlers) {
+        for(IClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.removeRemoteCluster(this, cluster);
         }
     }
@@ -184,13 +182,13 @@ public class ClusterManager {
     private synchronized void raiseEventForSetLocalCluster(ClusterInfo cluster) {
         LOG.debug("local cluster set : " + cluster.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.m_configChangeEventHandlers) {
+        for(IClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.setLocalCluster(this, cluster);
         }
     }
     
     @Override
     public synchronized String toString() {
-        return "ClusterManager : " + this.m_localCluster.toString();
+        return "ClusterManager : " + this.localCluster.toString();
     }
 }

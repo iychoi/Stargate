@@ -47,7 +47,7 @@ public class ClusterInfo {
     
     private Map<String, ClusterNodeInfo> nodeTable = new HashMap<String, ClusterNodeInfo>();
     
-    private ArrayList<IClusterConfigChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigChangeEventHandler>();
+    private ArrayList<IClusterInfoChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterInfoChangeEventHandler>();
     
     private String name;
     
@@ -177,24 +177,24 @@ public class ClusterInfo {
         }
     }
     
-    public synchronized void addConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
+    public synchronized void addConfigChangeEventHandler(IClusterInfoChangeEventHandler eventHandler) {
         this.configChangeEventHandlers.add(eventHandler);
     }
     
-    public synchronized void removeConfigChangeEventHandler(IClusterConfigChangeEventHandler eventHandler) {
+    public synchronized void removeConfigChangeEventHandler(IClusterInfoChangeEventHandler eventHandler) {
         this.configChangeEventHandlers.remove(eventHandler);
     }
     
     public synchronized void removeConfigChangeEventHandler(String handlerName) {
-        ArrayList<IClusterConfigChangeEventHandler> toberemoved = new ArrayList<IClusterConfigChangeEventHandler>();
+        ArrayList<IClusterInfoChangeEventHandler> toberemoved = new ArrayList<IClusterInfoChangeEventHandler>();
         
-        for(IClusterConfigChangeEventHandler handler : this.configChangeEventHandlers) {
+        for(IClusterInfoChangeEventHandler handler : this.configChangeEventHandlers) {
             if(handler.getName().equals(handlerName)) {
                 toberemoved.add(handler);
             }
         }
         
-        for(IClusterConfigChangeEventHandler handler : toberemoved) {
+        for(IClusterInfoChangeEventHandler handler : toberemoved) {
             this.configChangeEventHandlers.remove(handler);
         }
     }
@@ -221,7 +221,7 @@ public class ClusterInfo {
     private synchronized void raiseEventForAddNode(ClusterNodeInfo node) {
         LOG.debug("node added : " + node.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.configChangeEventHandlers) {
+        for(IClusterInfoChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.addNode(this, node);
         }
     }
@@ -229,7 +229,7 @@ public class ClusterInfo {
     private synchronized void raiseEventForRemoveNode(ClusterNodeInfo node) {
         LOG.debug("node removed : " + node.toString());
         
-        for(IClusterConfigChangeEventHandler handler: this.configChangeEventHandlers) {
+        for(IClusterInfoChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.removeNode(this, node);
         }
     }

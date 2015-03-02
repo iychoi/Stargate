@@ -26,8 +26,9 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
+import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
 import java.util.Collection;
@@ -46,81 +47,55 @@ import javax.ws.rs.core.MediaType;
  */
 @Path(AClusterManagerAPI.PATH)
 @Singleton
-public class ClusterManagerRestful extends AClusterManagerAPI {
+public class DataExportManagerRestful extends ADataExportManagerAPI {
     @GET
-    @Path(AClusterManagerAPI.GET_LOCAL_CLUSTER_INFO_PATH)
+    @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetLocalClusterInfoText() {
+    public String responseGetDataExportInfoText() {
         try {
-            return DataFormatter.toJSONFormat(responseGetLocalClusterInfoJSON());
+            return DataFormatter.toJSONFormat(responseGetDataExportInfoJSON());
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(AClusterManagerAPI.GET_LOCAL_CLUSTER_INFO_PATH)
+    @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<ClusterInfo> responseGetLocalClusterInfoJSON() {
+    public RestfulResponse<Collection<DataExportInfo>> responseGetDataExportInfoJSON() {
         try {
-            return new RestfulResponse<ClusterInfo>(getLocalClusterInfo());
+            return new RestfulResponse<Collection<DataExportInfo>>(getDataExportInfo());
         } catch(Exception ex) {
-            return new RestfulResponse<ClusterInfo>(ex);
-        }
-    }
-
-    @Override
-    public ClusterInfo getLocalClusterInfo() throws Exception {
-        ClusterManager cm = ClusterManager.getInstance();
-        return cm.getLocalClusterInfo();
-    }
-
-    @GET
-    @Path(AClusterManagerAPI.GET_REMOTE_CLUSTER_INFO_PATH)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetRemoteClusterInfoText() {
-        try {
-            return DataFormatter.toJSONFormat(responseGetRemoteClusterInfoJSON());
-        } catch (IOException ex) {
-            return "DataFormatter formatting error";
-        }
-    }
-    
-    @GET
-    @Path(AClusterManagerAPI.GET_REMOTE_CLUSTER_INFO_PATH)
-    @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<ClusterInfo>> responseGetRemoteClusterInfoJSON() {
-        try {
-            return new RestfulResponse<Collection<ClusterInfo>>(getRemoteClusterInfo());
-        } catch(Exception ex) {
-            return new RestfulResponse<Collection<ClusterInfo>>(ex);
+            return new RestfulResponse<Collection<DataExportInfo>>(ex);
         }
     }
     
     @Override
-    public Collection<ClusterInfo> getRemoteClusterInfo() throws Exception {
-        ClusterManager cm = ClusterManager.getInstance();
-        return cm.getAllRemoteClusterInfo();
+    public Collection<DataExportInfo> getDataExportInfo() throws Exception {
+        DataExportManager dem = DataExportManager.getInstance();
+        return dem.getAllDataExportInfo();
     }
+
+    
     
     @POST
-    @Path(AClusterManagerAPI.ADD_REMOTE_CLUSTER_PATH)
+    @Path(ADataExportManagerAPI.ADD_DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseAddRemoteClusterText(ClusterInfo clusterInfo) {
+    public String responseAddDataExportText(DataExportInfo dataExportInfo) {
         try {
-            return DataFormatter.toJSONFormat(responseAddRemoteClusterJSON(clusterInfo));
+            return DataFormatter.toJSONFormat(responseAddDataExportJSON(dataExportInfo));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @POST
-    @Path(AClusterManagerAPI.ADD_REMOTE_CLUSTER_PATH)
+    @Path(ADataExportManagerAPI.ADD_DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseAddRemoteClusterJSON(ClusterInfo clusterInfo) {
+    public RestfulResponse<Boolean> responseAddDataExportJSON(DataExportInfo dataExportInfo) {
         try {
-            if(clusterInfo != null) {
-                addRemoteCluster(clusterInfo);
+            if(dataExportInfo != null) {
+                addDataExport(dataExportInfo);
                 return new RestfulResponse<Boolean>(true);
             } else {
                 return new RestfulResponse<Boolean>(false);
@@ -131,36 +106,36 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     }
     
     @Override
-    public void addRemoteCluster(ClusterInfo cluster) throws ClusterAlreadyAddedException {
-        ClusterManager cm = ClusterManager.getInstance();
-        cm.addRemoteCluster(cluster);
+    public void addDataExport(DataExportInfo info) throws Exception {
+        DataExportManager dem = DataExportManager.getInstance();
+        dem.addDataExport(info);
     }
     
     @DELETE
-    @Path(AClusterManagerAPI.DELETE_REMOTE_CLUSTER_PATH)
+    @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseDeleteRemoteClusterText(
+    public String responseDeleteDataExportText(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            return DataFormatter.toJSONFormat(responseDeleteRemoteClusterJSON(name));
+            return DataFormatter.toJSONFormat(responseDeleteDataExportJSON(name));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @DELETE
-    @Path(AClusterManagerAPI.DELETE_REMOTE_CLUSTER_PATH)
+    @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseDeleteRemoteClusterJSON(
+    public RestfulResponse<Boolean> responseDeleteDataExportJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
             if(name != null) {
                 if(name.equals("*")) {
-                    removeAllRemoteCluster();
+                    removeAllDataExport();
                 } else {
-                    removeRemoteCluster(name);
+                    removeDataExport(name);
                 }
                 return new RestfulResponse<Boolean>(true);
             } else {
@@ -170,16 +145,16 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
             return new RestfulResponse<Boolean>(ex);
         }
     }
-    
+
     @Override
-    public void removeAllRemoteCluster() {
-        ClusterManager cm = ClusterManager.getInstance();
-        cm.removeAllRemoteCluster();
+    public void removeDataExport(String name) throws Exception {
+        DataExportManager dem = DataExportManager.getInstance();
+        dem.removeDataExport(name);
     }
 
     @Override
-    public void removeRemoteCluster(String name) {
-        ClusterManager cm = ClusterManager.getInstance();
-        cm.removeRemoteCluster(name);
+    public void removeAllDataExport() throws Exception {
+        DataExportManager dem = DataExportManager.getInstance();
+        dem.removeAllDataExport();
     }
 }

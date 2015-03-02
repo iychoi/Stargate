@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.chunk;
+package edu.arizona.cs.stargate.common.recipe;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.File;

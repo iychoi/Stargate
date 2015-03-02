@@ -24,19 +24,12 @@
 
 package edu.arizona.cs.stargate.common.cluster;
 
-import edu.arizona.cs.stargate.gatekeeper.service.ClusterManager;
-
 /**
  *
  * @author iychoi
  */
-public interface IClusterConfigChangeEventHandler {
+public interface IClusterInfoChangeEventHandler {
     public String getName();
-    
-    public void setLocalCluster(ClusterManager manager, ClusterInfo cluster);
-    
-    public void addRemoteCluster(ClusterManager manager, ClusterInfo cluster);
-    public void removeRemoteCluster(ClusterManager manager, ClusterInfo cluster);
     
     public void addNode(ClusterInfo cluster, ClusterNodeInfo node);
     public void removeNode(ClusterInfo cluster, ClusterNodeInfo node);

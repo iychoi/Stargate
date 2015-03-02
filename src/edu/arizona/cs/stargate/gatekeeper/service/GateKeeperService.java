@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Guice;
 import com.google.inject.Stage;
+import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,6 +42,8 @@ public class GateKeeperService {
     
     private GateKeeperServiceConfiguration config;
     private ClusterManager clusterManager;
+    private DataExportManager dataExportManager;
+    private RecipeManager recipeManager;
     
     public static GateKeeperService getInstance(GateKeeperServiceConfiguration config) {
         synchronized (GateKeeperService.class) {
@@ -65,11 +68,45 @@ public class GateKeeperService {
             this.clusterManager.setLocalCluster(this.config.getClusterInfo());
         }
         
+        this.dataExportManager = DataExportManager.getInstance();
+        this.dataExportManager.addDataExport(this.config.getDataExport());
+        
+        this.recipeManager = RecipeManager.getInstance();
+        this.recipeManager.setRecipePath(this.config.getRecipePath());
+        
+        addDataExportListener();
+        
         Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
+    }
+    
+    private void addDataExportListener() {
+        this.dataExportManager.addConfigChangeEventHandler(new IDataExportConfigurationChangeEventHandler(){
+
+            @Override
+            public String getName() {
+                return "GateKeeperService";
+            }
+
+            @Override
+            public void addDataExport(DataExportManager manager, DataExportInfo info) {
+                // pass to RecipeManager
+                recipeManager.prepareRecipe(info);
+            }
+
+            @Override
+            public void removeDataExport(DataExportManager manager, DataExportInfo info) {
+                // pass to RecipeManager
+                recipeManager.removeRecipe(info);
+            }
+        });
     }
     
     public synchronized ClusterManager getClusterManager() {
         return this.clusterManager;
+    }
+    
+    public synchronized DataExportManager getDataExportManager() {
+        return this.dataExportManager;
     }
     
     @Override

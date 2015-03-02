@@ -22,11 +22,11 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.test;
+package edu.arizona.cs.stargate.common.recipe.test;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
-import edu.arizona.cs.stargate.common.chunk.FixedSizeLocalFileRecipeGenerator;
-import edu.arizona.cs.stargate.common.chunk.Recipe;
+import edu.arizona.cs.stargate.common.recipe.FixedSizeLocalFileRecipeGenerator;
+import edu.arizona.cs.stargate.common.recipe.Recipe;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -75,7 +75,7 @@ public class LocalFileRecipeTest {
             }
             
             JsonSerializer serializer = new JsonSerializer(true);
-            FixedSizeLocalFileRecipeGenerator gen = new FixedSizeLocalFileRecipeGenerator(1024);
+            FixedSizeLocalFileRecipeGenerator gen = new FixedSizeLocalFileRecipeGenerator(1024*1024);
             for(File f : files) {
                 //Recipe recipe = gen.generateRecipe(f, "SHA-1");
                 Recipe recipe = gen.generateRecipeWithoutHash(f, "SHA-1");

@@ -22,27 +22,18 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.cluster;
+package edu.arizona.cs.stargate.common.recipe;
+
+import java.io.IOException;
+import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 
 /**
  *
  * @author iychoi
  */
-public class ClusterAlreadyAddedException extends Exception {
-
-    public ClusterAlreadyAddedException() {
-        super();
-    }
-
-    public ClusterAlreadyAddedException(String string) {
-        super(string);
-    }
-
-    public ClusterAlreadyAddedException(String string, Throwable thrwbl) {
-        super(string, thrwbl);
-    }
-
-    public ClusterAlreadyAddedException(Throwable thrwbl) {
-        super(thrwbl);
-    }
+public abstract class ARecipeGenerator {
+    public abstract Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException;
 }

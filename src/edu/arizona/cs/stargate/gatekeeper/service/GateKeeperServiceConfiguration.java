@@ -26,8 +26,14 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -36,6 +42,8 @@ import java.io.IOException;
 public class GateKeeperServiceConfiguration {
     
     private ClusterInfo clusterInfo;
+    private ArrayList<DataExportInfo> dataExports = new ArrayList<DataExportInfo>();
+    private File recipePath;
     
     public static GateKeeperServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -50,11 +58,47 @@ public class GateKeeperServiceConfiguration {
     public GateKeeperServiceConfiguration() {
     }
     
+    @JsonProperty("cluster")
     public ClusterInfo getClusterInfo() {
         return this.clusterInfo;
     }
     
+    @JsonProperty("cluster")
     public void setClusterInfo(ClusterInfo clusterInfo) {
         this.clusterInfo = clusterInfo;
+    }
+    
+    @JsonProperty("export")
+    public Collection<DataExportInfo> getDataExport() {
+        return Collections.unmodifiableCollection(this.dataExports);
+    }
+    
+    @JsonProperty("export")
+    public void addDataExport(Collection<DataExportInfo> info) {
+        this.dataExports.addAll(info);
+    }
+    
+    public void addDataExport(DataExportInfo info) {
+        this.dataExports.add(info);
+    }
+    
+    @JsonIgnore
+    public File getRecipePath() {
+        return this.recipePath;
+    }
+    
+    @JsonProperty("recipePath")
+    public String getRecipePathString() {
+        return this.recipePath.getPath();
+    }
+    
+    @JsonIgnore
+    public void setRecipePath(File recipePath) {
+        this.recipePath = recipePath;
+    }
+    
+    @JsonProperty("recipePath")
+    public void setRecipePath(String recipePath) {
+        this.recipePath = new File(recipePath);
     }
 }
