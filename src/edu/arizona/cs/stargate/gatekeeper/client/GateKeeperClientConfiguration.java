@@ -24,6 +24,8 @@
 
 package edu.arizona.cs.stargate.gatekeeper.client;
 
+import edu.arizona.cs.stargate.common.ConfigurationImmutableException;
+import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +35,7 @@ import java.net.URI;
  *
  * @author iychoi
  */
-public class GateKeeperClientConfiguration {
+public class GateKeeperClientConfiguration extends ImmutableConfiguration {
     
     private static final int MAX_RPC_THREADS = 10;
     
@@ -62,6 +64,8 @@ public class GateKeeperClientConfiguration {
     }
     
     public void setServiceURI(URI uri) {
+        super.verifyMutable();
+        
         this.serviceURI = uri;
     }
     
@@ -70,6 +74,8 @@ public class GateKeeperClientConfiguration {
     }
     
     public void setMaxRPCThreads(int threads) {
+        super.verifyMutable();
+        
         this.rpcThreads = threads;
     }
     

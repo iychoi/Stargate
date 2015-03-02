@@ -59,6 +59,7 @@ public class GateKeeperService {
             this.config = new GateKeeperServiceConfiguration();
         } else {
             this.config = config;
+            this.config.setImmutable();
         }
     }
     
@@ -71,8 +72,7 @@ public class GateKeeperService {
         this.dataExportManager = DataExportManager.getInstance();
         this.dataExportManager.addDataExport(this.config.getDataExport());
         
-        this.recipeManager = RecipeManager.getInstance();
-        this.recipeManager.setRecipePath(this.config.getRecipePath());
+        this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration());
         
         addDataExportListener();
         
@@ -99,6 +99,10 @@ public class GateKeeperService {
                 recipeManager.removeRecipe(info);
             }
         });
+    }
+    
+    public GateKeeperServiceConfiguration getConfiguration() {
+        return this.config;
     }
     
     public synchronized ClusterManager getClusterManager() {

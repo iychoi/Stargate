@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
+import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
@@ -32,18 +33,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
  * @author iychoi
  */
-public class GateKeeperServiceConfiguration {
+public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     
     private ClusterInfo clusterInfo;
     private ArrayList<DataExportInfo> dataExports = new ArrayList<DataExportInfo>();
-    private File recipePath;
+    
+    private RecipeManagerConfiguration recipeManagerConfiguration;
     
     public static GateKeeperServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -65,6 +66,8 @@ public class GateKeeperServiceConfiguration {
     
     @JsonProperty("cluster")
     public void setClusterInfo(ClusterInfo clusterInfo) {
+        super.verifyMutable();
+        
         this.clusterInfo = clusterInfo;
     }
     
@@ -75,30 +78,33 @@ public class GateKeeperServiceConfiguration {
     
     @JsonProperty("export")
     public void addDataExport(Collection<DataExportInfo> info) {
+        super.verifyMutable();
+        
         this.dataExports.addAll(info);
     }
     
     public void addDataExport(DataExportInfo info) {
+        super.verifyMutable();
+        
         this.dataExports.add(info);
     }
     
-    @JsonIgnore
-    public File getRecipePath() {
-        return this.recipePath;
+    @JsonProperty("recipeManager")
+    public RecipeManagerConfiguration getRecipeManagerConfiguration() {
+        return this.recipeManagerConfiguration;
     }
     
-    @JsonProperty("recipePath")
-    public String getRecipePathString() {
-        return this.recipePath.getPath();
+    @JsonProperty("recipeManager")
+    public void setRecipeManagerConfiguration(RecipeManagerConfiguration config) {
+        super.verifyMutable();
+        
+        this.recipeManagerConfiguration = config;
     }
     
-    @JsonIgnore
-    public void setRecipePath(File recipePath) {
-        this.recipePath = recipePath;
-    }
-    
-    @JsonProperty("recipePath")
-    public void setRecipePath(String recipePath) {
-        this.recipePath = new File(recipePath);
+    @Override
+    public void setImmutable() {
+        super.setImmutable();
+        
+        this.recipeManagerConfiguration.setImmutable();
     }
 }

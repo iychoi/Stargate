@@ -41,6 +41,9 @@ import java.net.URISyntaxException;
  * @author iychoi
  */
 public class GateKeeperServiceTest {
+    
+    
+    
     public static void makeDummyServiceConf(File f) throws IOException {
         try {
             StargateServiceConfiguration serviceConf = new StargateServiceConfiguration();
@@ -51,7 +54,7 @@ public class GateKeeperServiceTest {
             clusterInfo.addNode(new ClusterNodeInfo("node2", "http://111.111.111.2"));
             clusterInfo.addNode(new ClusterNodeInfo("node3", "http://111.111.111.3"));
             clusterInfo.addNode(new ClusterNodeInfo("node4", "http://111.111.111.4"));
-
+            
             gatekeeperConf.setClusterInfo(clusterInfo);
             serviceConf.setGatekeeperServiceConfiguration(gatekeeperConf);
             

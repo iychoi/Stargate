@@ -24,9 +24,7 @@
 
 package edu.arizona.cs.stargate.common.recipe;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;

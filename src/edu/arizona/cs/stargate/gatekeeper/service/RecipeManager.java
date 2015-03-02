@@ -24,12 +24,25 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.common.DataFormatter;
+import edu.arizona.cs.stargate.common.recipe.MemoryRecipeStore;
+import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.common.recipe.ARecipeGenerator;
+import edu.arizona.cs.stargate.common.recipe.ARecipeStore;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
-import java.io.File;
+import edu.arizona.cs.stargate.common.recipe.RecipeGeneratorFactory;
+import java.io.IOException;
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,39 +55,90 @@ public class RecipeManager {
     
     private static RecipeManager instance;
     
-    //TODO: Need a background thread for preparing Recipe
+    private RecipeManagerConfiguration config;
+    private BlockingQueue<Recipe> pendingRecipes = new LinkedBlockingQueue<Recipe>();
+    private Map<URI, Boolean> removedRecipes = new HashMap<URI, Boolean>();
+    private ARecipeStore recipeStore;
     
-    public static RecipeManager getInstance() {
+    // check message and start hashing
+    private ScheduledExecutorService backgroundWorker;
+    
+    public static RecipeManager getInstance(RecipeManagerConfiguration config) {
         synchronized (RecipeManager.class) {
             if(instance == null) {
-                instance = new RecipeManager();
+                instance = new RecipeManager(config);
             }
             return instance;
         }
     }
     
-    RecipeManager() {
+    RecipeManager(RecipeManagerConfiguration config) {
+        if(config == null) {
+            this.config = new RecipeManagerConfiguration();
+        } else {
+            this.config = config;
+            this.config.setImmutable();
+        }
         
+        this.backgroundWorker = Executors.newSingleThreadScheduledExecutor();
+        this.backgroundWorker.scheduleAtFixedRate(new BackgroundWorker(), 0, 1, TimeUnit.MINUTES);
+        this.recipeStore = new MemoryRecipeStore();
+    }
+    
+    public RecipeManagerConfiguration getConfiguration() {
+        return this.config;
+    }
+    
+    public synchronized void prepareRecipe(DataExportInfo info) {
+        Collection<DataExportEntry> entries = info.getAllExportEntry();
+        for(DataExportEntry entry : entries) {
+            prepareRecipe(entry.getResourcePath());
+        }
     }
     
     public synchronized void prepareRecipe(URI resourceUri) {
-        //TODO: Create a recipe for a resource
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            if(!this.recipeStore.hasRecipe(resourceUri)) {
+                ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(resourceUri, this.config.getChunkSize());
+                Recipe recipe = recipeGenerator.generateRecipeWithoutHash(resourceUri, this.config.getHashAlgorithm());
+                this.pendingRecipes.offer(recipe);
+                this.recipeStore.store(recipe);
+            }
+        } catch(Exception ex) {
+            LOG.error(ex);
+        }
     }
     
     public synchronized Recipe getRecipe(URI resourceUri) {
-        //TODO: Check existing recipe
-        // if there's no existing recipe, create
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Recipe recipe = this.recipeStore.get(resourceUri);
+        if(recipe == null) {
+            prepareRecipe(resourceUri);
+            return this.recipeStore.get(resourceUri);
+        } else {
+            return recipe;
+        }
+    }
+    
+    public synchronized void removeRecipe(DataExportInfo info) {
+        Collection<DataExportEntry> entries = info.getAllExportEntry();
+        for(DataExportEntry entry : entries) {
+            removeRecipe(entry.getResourcePath());
+        }
+    }
+    
+    public synchronized void removeRecipe(URI resourceUri) {
+        this.recipeStore.remove(resourceUri);
+        if(!this.removedRecipes.containsKey(resourceUri)) {
+            this.removedRecipes.put(resourceUri, true);
+        }
     }
     
     public synchronized ChunkInfo findChunk(String hash) {
-        return findChunk(DataFormatter.hexToBytes(hash));
+        return this.recipeStore.find(hash);
     }
     
     public synchronized ChunkInfo findChunk(byte[] hash) {
-        //TODO: Find chunk that has a hash
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.        
+        return this.recipeStore.find(hash);
     }
     
     @Override
@@ -82,15 +146,36 @@ public class RecipeManager {
         return "RecipeManager";
     }
 
-    void setRecipePath(File recipePath) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    void prepareRecipe(DataExportInfo info) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    void removeRecipe(DataExportInfo info) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private class BackgroundWorker implements Runnable {
+        
+        private int chunkSize;
+        
+        public BackgroundWorker() {
+            chunkSize = config.getChunkSize();
+        }
+        
+        @Override
+        public void run() {
+            try {
+                while(true) {
+                    try {
+                        Recipe recipe = pendingRecipes.take();
+                        if(removedRecipes.containsKey(recipe.getResourcePath())) {
+                            removedRecipes.remove(recipe.getResourcePath());
+                        } else {
+                            ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
+                            recipeGenerator.hashRecipe(recipe);
+                            recipeStore.notifyRecipeHashed(recipe);
+                        }
+                    } catch (IOException ex) {
+                        LOG.error(ex);
+                    } catch (NoSuchAlgorithmException ex) {
+                        LOG.error(ex);
+                    }
+                }
+            } catch (InterruptedException ex) {
+                LOG.debug("BackgroundWorker thread is interrupted");
+            }
+        }
     }
 }

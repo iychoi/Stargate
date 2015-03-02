@@ -22,19 +22,27 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.recipe;
-
-import java.io.IOException;
-import java.net.URI;
-import java.security.NoSuchAlgorithmException;
+package edu.arizona.cs.stargate.common;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ARecipeGenerator {
-    
-    public abstract Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
-    public abstract Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
-    public abstract void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException;
+public class ConfigurationImmutableException extends RuntimeException {
+
+    public ConfigurationImmutableException() {
+        super();
+    }
+
+    public ConfigurationImmutableException(String string) {
+        super(string);
+    }
+
+    public ConfigurationImmutableException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
+    }
+
+    public ConfigurationImmutableException(Throwable thrwbl) {
+        super(thrwbl);
+    }
 }

@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.service;
 
+import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
@@ -38,7 +39,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class StargateServiceConfiguration {
+public class StargateServiceConfiguration extends ImmutableConfiguration {
     
     public static final String DEFAULT_CONFIG_FILEPATH = "service.json";
     
@@ -62,6 +63,8 @@ public class StargateServiceConfiguration {
     }
     
     public void setServicePort(int port) {
+        super.verifyMutable();
+        
         this.servicePort = port;
     }
     
@@ -70,6 +73,8 @@ public class StargateServiceConfiguration {
     }
     
     public void addGatekeeperClientConfiguration(GateKeeperClientConfiguration conf) {
+        super.verifyMutable();
+        
         this.gatekeeperClientConfigs.add(conf);
     }
     
@@ -79,16 +84,30 @@ public class StargateServiceConfiguration {
     
     @JsonProperty
     public void setGatekeeperClientConfigurations(Collection<GateKeeperClientConfiguration> configurations) {
+        super.verifyMutable();
+        
         for(GateKeeperClientConfiguration conf : configurations) {
             addGatekeeperClientConfiguration(conf);
         }
     }
     
     public void setGatekeeperServiceConfiguration(GateKeeperServiceConfiguration conf) {
+        super.verifyMutable();
+        
         this.gatekeeperServiceConfig = conf;
     }
     
     public GateKeeperServiceConfiguration getGatekeeperServiceConfiguration() {
         return this.gatekeeperServiceConfig;
+    }
+    
+    @Override
+    public void setImmutable() {
+        super.setImmutable();
+        
+        this.gatekeeperServiceConfig.setImmutable();
+        for(GateKeeperClientConfiguration conf : this.gatekeeperClientConfigs) {
+            conf.setImmutable();
+        }
     }
 }
