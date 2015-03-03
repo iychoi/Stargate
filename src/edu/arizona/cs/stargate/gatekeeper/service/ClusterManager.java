@@ -99,11 +99,16 @@ public class ClusterManager {
     }
     
     public synchronized void removeAllRemoteCluster() {
+        ArrayList<String> toberemoved = new ArrayList<String>();
         Set<String> keys = this.remoteClusterTable.keySet();
-        for(String key : keys) {
+        toberemoved.addAll(keys);
+        
+        for(String key : toberemoved) {
             ClusterInfo cluster = this.remoteClusterTable.get(key);
-            
-            removeRemoteCluster(cluster);
+
+            if(cluster != null) {
+                removeRemoteCluster(cluster);
+            }
         }
     }
     

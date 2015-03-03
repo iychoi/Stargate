@@ -80,11 +80,16 @@ public class DataExportManager {
     }
     
     public synchronized void removeAllDataExport() {
+        ArrayList<String> toberemoved = new ArrayList<String>();
         Set<String> keys = this.dataExportTable.keySet();
-        for(String key : keys) {
+        toberemoved.addAll(keys);
+        
+        for(String key : toberemoved) {
             DataExportInfo info = this.dataExportTable.get(key);
-            
-            removeDataExport(info);
+
+            if(info != null) {
+                removeDataExport(info);
+            }
         }
     }
     

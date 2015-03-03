@@ -26,10 +26,13 @@ package edu.arizona.cs.stargate.client.test;
 
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 /**
@@ -37,23 +40,51 @@ import java.util.Collection;
  * @author iychoi
  */
 public class GateKeeperClientTest {
+    
+    private GateKeeperClientConfiguration clientConfig;
+    private GateKeeperClient client;
+    
+    public void prepareClient(URI gatekeeperServiceURL) {
+        try {
+            this.clientConfig = new GateKeeperClientConfiguration(gatekeeperServiceURL);
+            this.client = new GateKeeperClient(this.clientConfig);
+            
+            testCheckLive();
+            testClusterInfo();
+            //testDataExport();
+            
+            client.stop();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        String gatekeeperServiceURL = "http://localhost:" + StargateServiceConfiguration.DEFAULT_SERVICE_PORT;
+        if(args.length != 0) {
+            gatekeeperServiceURL = args[0];
+        }
+        
+        GateKeeperClientTest test = new GateKeeperClientTest();
         try {
-            String gatekeeperService = "http://localhost:" + StargateServiceConfiguration.DEFAULT_SERVICE_PORT;
-            if(args.length != 0) {
-                gatekeeperService = args[0];
-            }
-            
-            GateKeeperClientConfiguration conf = new GateKeeperClientConfiguration(new URI(gatekeeperService));
-            
-            GateKeeperClient client = new GateKeeperClient(conf);
-            boolean live = client.checkLive();
-            System.out.println("live : " + live);
-            
-            ClusterInfo localClusterInfo = client.getClusterManagerClient().getLocalClusterInfo();
+            test.prepareClient(new URI(gatekeeperServiceURL));
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void testCheckLive() {
+        boolean live = this.client.checkLive();
+        System.out.println("live : " + live);
+    }
+
+    private void testClusterInfo() {
+        try {
+            ClusterInfo localClusterInfo = this.client.getClusterManagerClient().getLocalClusterInfo();
             System.out.println("local cluster info : " + DataFormatter.toJSONFormat(localClusterInfo));
             
             client.getClusterManagerClient().removeAllRemoteCluster();
@@ -79,9 +110,19 @@ public class GateKeeperClientTest {
             
             remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
-            
-            
-            client.stop();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void testDataExport() {
+        try {
+            Collection<DataExportInfo> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
+            System.out.println("data export info : " + DataFormatter.toJSONFormat(dataExportInfo));
+        } catch (IOException ex) {
+            ex.printStackTrace();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

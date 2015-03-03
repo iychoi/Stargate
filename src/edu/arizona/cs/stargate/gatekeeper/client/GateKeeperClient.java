@@ -42,15 +42,27 @@ public class GateKeeperClient extends AGateKeeperAPI {
     private GateKeeperClientConfiguration config;
     private GateKeeperRPCClient rpcClient;
     private ClusterManagerClient clusterManagerClient;
+    private DataExportManagerClient dataExportManagerClient;
+    private RecipeManagerClient recipeManagerClient;
     
     public GateKeeperClient(GateKeeperClientConfiguration conf) {
         this.config = conf;
         this.rpcClient = new GateKeeperRPCClient(conf);
         this.clusterManagerClient = new ClusterManagerClient(this);
+        this.dataExportManagerClient = new DataExportManagerClient(this);
+        this.recipeManagerClient = new RecipeManagerClient(this);
     }
     
     public ClusterManagerClient getClusterManagerClient() {
         return this.clusterManagerClient;
+    }
+    
+    public DataExportManagerClient getDataExportManagerClient() {
+        return this.dataExportManagerClient;
+    }
+    
+    public RecipeManagerClient getRecipeManagerClient() {
+        return this.recipeManagerClient;
     }
     
     public GateKeeperRPCClient getRPCClient() {

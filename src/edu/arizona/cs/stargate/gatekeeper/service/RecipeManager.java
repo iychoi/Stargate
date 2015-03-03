@@ -93,8 +93,10 @@ public class RecipeManager {
     
     public synchronized void prepareRecipe(DataExportInfo info) {
         Collection<DataExportEntry> entries = info.getAllExportEntry();
-        for(DataExportEntry entry : entries) {
-            prepareRecipe(entry.getResourcePath());
+        if(entries != null) {
+            for(DataExportEntry entry : entries) {
+                prepareRecipe(entry.getResourcePath());
+            }
         }
     }
     
@@ -123,8 +125,10 @@ public class RecipeManager {
     
     public synchronized void removeRecipe(DataExportInfo info) {
         Collection<DataExportEntry> entries = info.getAllExportEntry();
-        for(DataExportEntry entry : entries) {
-            removeRecipe(entry.getResourcePath());
+        if(entries != null) {
+            for(DataExportEntry entry : entries) {
+                removeRecipe(entry.getResourcePath());
+            }
         }
     }
     
