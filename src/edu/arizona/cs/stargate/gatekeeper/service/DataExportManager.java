@@ -105,7 +105,7 @@ public class DataExportManager {
         }
         
         if(this.dataExportTable.containsKey(info.getName())) {
-            throw new DataExportAlreadyAddedException("data export " + info.getName() + "is already added");
+            throw new DataExportAlreadyAddedException("data export " + info.getName() + " is already added");
         }
         
         DataExportInfo put = this.dataExportTable.put(info.getName(), info);

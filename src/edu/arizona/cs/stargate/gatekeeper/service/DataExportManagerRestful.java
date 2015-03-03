@@ -26,12 +26,15 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
+import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
-import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
+import edu.arizona.cs.stargate.common.recipe.ChunkReaderFactory;
 import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +46,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,7 +57,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-@Path(AClusterManagerAPI.PATH)
+@Path(ADataExportManagerAPI.PATH)
 @Singleton
 public class DataExportManagerRestful extends ADataExportManagerAPI {
     
@@ -185,6 +191,55 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     public void removeAllDataExport() throws Exception {
         DataExportManager dem = getDataExportManager();
         dem.removeAllDataExport();
+    }
+    
+    @GET
+    @Path(ADataExportManagerAPI.GET_DATA_CHUNK_PATH)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response responseGetDataChunk(
+            @DefaultValue("null") @QueryParam("name") String name,
+            @DefaultValue("null") @QueryParam("path") String path,
+            @DefaultValue("0") @QueryParam("offset") long offset,
+            @DefaultValue("0") @QueryParam("len") int len
+    ) throws Exception {
+        if(name != null && path != null && len > 0) {
+            
+            final InputStream is = getDataChunk(name, path, offset, len);
+            
+            StreamingOutput stream = new StreamingOutput() {
+
+                @Override
+                public void write(OutputStream out) throws IOException, WebApplicationException {
+                    try {
+                        int buffersize = 100 * 1024;
+                        byte[] buffer = new byte[buffersize];
+
+                        int read = 0;
+                        while ((read = is.read(buffer)) > 0) {
+                            out.write(buffer, 0, read);
+                        }
+                        is.close();
+
+                    } catch (Exception ex) {
+                        throw new WebApplicationException(ex);
+                    }
+                }
+
+            };
+            
+            return Response.ok(stream).header("content-disposition", "attachment; filename = " + path).build();
+        } else {
+            throw new Exception("invalid parameter");
+        }
+    }
+    
+    @Override
+    public InputStream getDataChunk(String name, String path, long offset, int len) throws Exception {
+        DataExportManager dem = getDataExportManager();
+        DataExportInfo info = dem.getDataExportInfo(name);
+        DataExportEntry entry = info.getExportEntry(path);
+
+        return ChunkReaderFactory.getChunkReader(entry.getResourcePath(), offset, len);
     }
     
     private DataExportManager getDataExportManager() {

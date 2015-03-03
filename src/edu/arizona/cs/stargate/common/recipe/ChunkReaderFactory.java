@@ -24,48 +24,50 @@
 
 package edu.arizona.cs.stargate.common.recipe;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  *
  * @author iychoi
  */
-public class RecipeGeneratorFactory {
+public class ChunkReaderFactory {
+    private static final Log LOG = LogFactory.getLog(ChunkReaderFactory.class);
     
-    private static final Log LOG = LogFactory.getLog(RecipeGeneratorFactory.class);
+    private static final int BUFFER_SIZE = 100*1024;
     
-    private static FixedSizeHDFSFileRecipeGenerator cachedFixedSizeHDFSFileRecipeGenerator;
-    private static FixedSizeLocalFileRecipeGenerator cachedFixedSizeLocalFileRecipeGenerator;
-    
-    public static ARecipeGenerator getRecipeGenerator(URI resourceUri, int chunkSize) throws IOException {
+    public static ChunkReader getChunkReader(URI resourceUri, long offset, int size) throws IOException {
         if(resourceUri.getScheme().equalsIgnoreCase("hdfs") || resourceUri.getScheme().equalsIgnoreCase("dfs")) {
-            return getFixedSizeHDFSFileRecipeGenerator(chunkSize);
+            return getHDFSFileChunkReader(resourceUri, offset, size);
         } else if(resourceUri.getScheme().equalsIgnoreCase("file")) {
-            return getFixedSizeLocalFileRecipeGenerator(chunkSize);
+            return getLocalFileChunkReader(resourceUri, offset, size);
         }
         
         throw new IOException("Unknown resource scheme");
     }
     
-    public static FixedSizeHDFSFileRecipeGenerator getFixedSizeHDFSFileRecipeGenerator(int chunkSize) {
-        synchronized(RecipeGeneratorFactory.class) {
-            if(cachedFixedSizeHDFSFileRecipeGenerator == null) {
-                cachedFixedSizeHDFSFileRecipeGenerator = new FixedSizeHDFSFileRecipeGenerator(new Configuration(), chunkSize);
-            }
-            return cachedFixedSizeHDFSFileRecipeGenerator;
-        }
+    public static ChunkReader getHDFSFileChunkReader(URI resourceUri, long offset, int size) throws IOException {
+        Path path = new Path(resourceUri.normalize());
+        FileSystem fs = path.getFileSystem(new Configuration());
+        FSDataInputStream is = fs.open(path, BUFFER_SIZE);
+        
+        return new ChunkReader(is, offset, size);
     }
 
-    public static FixedSizeLocalFileRecipeGenerator getFixedSizeLocalFileRecipeGenerator(int chunkSize) {
-        synchronized(RecipeGeneratorFactory.class) {
-            if(cachedFixedSizeLocalFileRecipeGenerator == null) {
-                cachedFixedSizeLocalFileRecipeGenerator = new FixedSizeLocalFileRecipeGenerator(chunkSize);
-            }
-            return cachedFixedSizeLocalFileRecipeGenerator;
-        }
+    public static ChunkReader getLocalFileChunkReader(URI resourceUri, long offset, int size) throws FileNotFoundException, IOException {
+        File file = new File(resourceUri);
+        InputStream is = new FileInputStream(file);
+        
+        return new ChunkReader(is, offset, size);
     }
 }

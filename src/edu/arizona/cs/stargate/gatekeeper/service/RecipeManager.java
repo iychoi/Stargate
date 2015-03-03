@@ -103,6 +103,7 @@ public class RecipeManager {
     public synchronized void prepareRecipe(URI resourceUri) {
         try {
             if(!this.recipeStore.hasRecipe(resourceUri)) {
+                LOG.info("Preparing a new recipe of " + resourceUri.toASCIIString());
                 ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(resourceUri, this.config.getChunkSize());
                 Recipe recipe = recipeGenerator.generateRecipeWithoutHash(resourceUri, this.config.getHashAlgorithm());
                 this.pendingRecipes.offer(recipe);
@@ -176,6 +177,7 @@ public class RecipeManager {
                         //if(removedRecipes.containsKey(recipe.getResourcePath())) {
                         //    removedRecipes.remove(recipe.getResourcePath());
                         //} else {
+                            LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
                             ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
                             recipeGenerator.hashRecipe(recipe);
                             recipeStore.notifyRecipeHashed(recipe);

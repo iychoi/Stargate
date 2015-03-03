@@ -26,11 +26,14 @@ package edu.arizona.cs.stargate.client.test;
 
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.common.recipe.Recipe;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -51,7 +54,7 @@ public class GateKeeperClientTest {
             
             testCheckLive();
             testClusterInfo();
-            //testDataExport();
+            testDataExport();
             
             client.stop();
         } catch (Exception ex) {
@@ -87,28 +90,28 @@ public class GateKeeperClientTest {
             ClusterInfo localClusterInfo = this.client.getClusterManagerClient().getLocalClusterInfo();
             System.out.println("local cluster info : " + DataFormatter.toJSONFormat(localClusterInfo));
             
-            client.getClusterManagerClient().removeAllRemoteCluster();
+            this.client.getClusterManagerClient().removeAllRemoteCluster();
             
-            Collection<ClusterInfo> remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
+            Collection<ClusterInfo> remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             System.out.println("Adding remote cluster info");
             
             ClusterInfo remoteCluster1 = new ClusterInfo("remote1");
-            client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
+            this.client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
             
-            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             ClusterInfo remoteCluster2 = new ClusterInfo("remote2");
-            client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
+            this.client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
             
-            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
-            client.getClusterManagerClient().removeAllRemoteCluster();
+            this.client.getClusterManagerClient().removeAllRemoteCluster();
             
-            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -119,8 +122,53 @@ public class GateKeeperClientTest {
 
     private void testDataExport() {
         try {
+            this.client.getDataExportManagerClient().removeAllDataExport();
+            
             Collection<DataExportInfo> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
             System.out.println("data export info : " + DataFormatter.toJSONFormat(dataExportInfo));
+            
+            DataExportInfo info = new DataExportInfo("test");
+            DataExportEntry entry = new DataExportEntry("/aaa/bbb", "file:///home/iychoi/NetBeansProjects/Stargate/libs/hadoop-core-0.20.2-cdh3u5.jar");
+            info.addExportEntry(entry);
+            this.client.getDataExportManagerClient().addDataExport(info);
+            
+            dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
+            System.out.println("data export info : " + DataFormatter.toJSONFormat(dataExportInfo));
+            
+            for(DataExportInfo dei : dataExportInfo) {
+                for(DataExportEntry dee : dei.getAllExportEntry()) {
+                    // check recipe
+                    Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dee.getResourcePath());
+                    System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
+                    System.out.println(DataFormatter.toJSONFormat(recipe));
+                }
+            }
+            
+            
+            // retest
+            Thread.sleep(3000);
+            for(DataExportInfo dei : dataExportInfo) {
+                for(DataExportEntry dee : dei.getAllExportEntry()) {
+                    // check recipe
+                    Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dee.getResourcePath());
+                    System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
+                    System.out.println(DataFormatter.toJSONFormat(recipe));
+                }
+            }
+            
+            // downloadtest
+            Thread.sleep(3000);
+            byte[] buffer = new byte[100*1024];
+            for(DataExportInfo dei : dataExportInfo) {
+                for(DataExportEntry dee : dei.getAllExportEntry()) {
+                    // check recipe
+                    InputStream is = this.client.getDataExportManagerClient().getDataChunk("test", dee.getVirtualPath(), 0, 1024);
+                    System.out.println("reading first 1024KB from " + dee.getVirtualPath());
+                    is.read(buffer);
+                    
+                    System.out.println(new String(buffer));
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (Exception ex) {

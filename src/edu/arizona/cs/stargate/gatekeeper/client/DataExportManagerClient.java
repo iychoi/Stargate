@@ -29,6 +29,7 @@ import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -155,6 +156,21 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
         
         if(response.getException() != null) {
             throw response.getException();
+        }
+    }
+
+    @Override
+    public InputStream getDataChunk(String name, String path, long offset, int len) throws Exception {
+        try {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("name", name);
+            params.put("path", path);
+            params.put("offset", Long.toString(offset));
+            params.put("len", Integer.toString(len));
+            return this.gatekeeperRPCClient.download(getResourcePath(ADataExportManagerAPI.GET_DATA_CHUNK_PATH, params));
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
         }
     }
 }

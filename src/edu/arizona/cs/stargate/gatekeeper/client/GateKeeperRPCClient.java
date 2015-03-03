@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -65,7 +66,7 @@ public class GateKeeperRPCClient {
         URI absURI = this.config.getServiceURI().resolve(path);
         
         AsyncWebResource webResource = this.client.asyncResource(absURI);
-        Future<ClientResponse> future = webResource.accept("application/json").type("application/json").post(ClientResponse.class, request);
+        Future<ClientResponse> future = (Future<ClientResponse>) webResource.accept("application/json").type("application/json").post(ClientResponse.class, request);
         
         // wait for completition
         try {
@@ -107,7 +108,7 @@ public class GateKeeperRPCClient {
         URI absURI = this.config.getServiceURI().resolve(path);
         
         AsyncWebResource webResource = this.client.asyncResource(absURI);
-        Future<ClientResponse> future = webResource.accept("application/json").type("application/json").delete(ClientResponse.class);
+        Future<ClientResponse> future = (Future<ClientResponse>) webResource.accept("application/json").type("application/json").delete(ClientResponse.class);
         
         // wait for completition
         try {
@@ -117,6 +118,27 @@ public class GateKeeperRPCClient {
             }
 
             return response.getEntity(generic);
+        } catch (InterruptedException ex) {
+            throw new IOException(ex);
+        } catch (ExecutionException ex) {
+            throw new IOException(ex);
+        }
+    }
+    
+    public InputStream download(String path) throws IOException {
+        URI absURI = this.config.getServiceURI().resolve(path);
+        
+        AsyncWebResource webResource = this.client.asyncResource(absURI);
+        Future<ClientResponse> future = (Future<ClientResponse>) webResource.accept("application/octet-stream").type("application/json").get(ClientResponse.class);
+        
+        // wait for completition
+        try {
+            ClientResponse response = future.get();
+            if(response.getStatus() != 200) {
+                throw new IOException("HTTP error code : " + response.getStatus());
+            }
+
+            return response.getEntityInputStream();
         } catch (InterruptedException ex) {
             throw new IOException(ex);
         } catch (ExecutionException ex) {

@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.gatekeeper;
 
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import java.io.InputStream;
 import java.util.Collection;
 
 /**
@@ -37,6 +38,7 @@ public abstract class ADataExportManagerAPI {
     public static final String GET_DATA_EXPORT_INFO_PATH = "/export";
     public static final String DELETE_DATA_EXPORT_PATH = "/export";
     public static final String ADD_DATA_EXPORT_PATH = "/export";
+    public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
     public abstract Collection<DataExportInfo> getAllDataExportInfo() throws Exception;
     
@@ -47,4 +49,6 @@ public abstract class ADataExportManagerAPI {
     public abstract void removeDataExport(String name) throws Exception;
     
     public abstract void removeAllDataExport() throws Exception;
+    
+    public abstract InputStream getDataChunk(String name, String path, long offset, int len) throws Exception;
 }

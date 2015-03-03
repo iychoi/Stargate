@@ -111,21 +111,21 @@ public class DataExportInfo {
     }
     
     @JsonIgnore
-    public synchronized DataExportEntry getExportEntry(String mountPath) {
-        if(mountPath == null || mountPath.isEmpty()) {
-            throw new IllegalArgumentException("mountPath is empty or null");
+    public synchronized DataExportEntry getExportEntry(String virtualPath) {
+        if(virtualPath == null || virtualPath.isEmpty()) {
+            throw new IllegalArgumentException("virtualPath is empty or null");
         }
         
-        return this.mappingTable.get(mountPath);
+        return this.mappingTable.get(virtualPath);
     }
     
     @JsonIgnore
-    public synchronized boolean hasExportEntry(String mountPath) {
-        if(mountPath == null || mountPath.isEmpty()) {
-            throw new IllegalArgumentException("mountPath is empty or null");
+    public synchronized boolean hasExportEntry(String virtualPath) {
+        if(virtualPath == null || virtualPath.isEmpty()) {
+            throw new IllegalArgumentException("virtualPath is empty or null");
         }
         
-        return this.mappingTable.containsKey(mountPath);
+        return this.mappingTable.containsKey(virtualPath);
     }
     
     public synchronized void removeAllExportEntry() {
@@ -133,7 +133,7 @@ public class DataExportInfo {
         
         Collection<DataExportEntry> values = this.mappingTable.values();
         for(DataExportEntry entry : values) {
-            keys.add(entry.getMountPath());
+            keys.add(entry.getVirtualPath());
         }
         
         for(String name : keys) {
@@ -155,13 +155,13 @@ public class DataExportInfo {
             throw new IllegalArgumentException("entry is empty or null");
         }
         
-        if(this.mappingTable.containsKey(entry.getMountPath())) {
-            throw new DataExportEntryAlreadyAddedException("entry " + entry.getMountPath() + "is already added");
+        if(this.mappingTable.containsKey(entry.getVirtualPath())) {
+            throw new DataExportEntryAlreadyAddedException("entry " + entry.getVirtualPath() + "is already added");
         }
         
-        DataExportEntry put = this.mappingTable.put(entry.getMountPath(), entry);
-        if(put != null) {
-            raiseEventForAddExportEntry(put);
+        DataExportEntry deEntry = this.mappingTable.put(entry.getVirtualPath(), entry);
+        if(deEntry != null) {
+            raiseEventForAddExportEntry(deEntry);
         }
     }
     
@@ -192,15 +192,15 @@ public class DataExportInfo {
             throw new IllegalArgumentException("entry is empty or null");
         }
         
-        removeExportEntry(entry.getMountPath());
+        removeExportEntry(entry.getVirtualPath());
     }
     
-    public synchronized void removeExportEntry(String mountPath) {
-        if(mountPath == null || mountPath.isEmpty()) {
-            throw new IllegalArgumentException("mountPath is empty or null");
+    public synchronized void removeExportEntry(String virtualPath) {
+        if(virtualPath == null || virtualPath.isEmpty()) {
+            throw new IllegalArgumentException("virtualPath is empty or null");
         }
         
-        DataExportEntry removed = this.mappingTable.remove(mountPath);
+        DataExportEntry removed = this.mappingTable.remove(virtualPath);
         if(removed != null) {
             raiseEventForRemoveExportEntry(removed);
         }

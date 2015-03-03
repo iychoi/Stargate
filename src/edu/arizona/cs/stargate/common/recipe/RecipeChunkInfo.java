@@ -99,8 +99,9 @@ public class RecipeChunkInfo {
     public void setHash(String hash) {
         if(hash == null) {
             this.hash = null;
+        } else {
+            this.hash = DataFormatter.hexToBytes(hash);
         }
-        this.hash = DataFormatter.hexToBytes(hash);
     }
 
     @JsonProperty("start")

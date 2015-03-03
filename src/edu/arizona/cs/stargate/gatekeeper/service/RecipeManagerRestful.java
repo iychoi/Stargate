@@ -28,7 +28,6 @@ import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
-import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
@@ -48,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-@Path(AClusterManagerAPI.PATH)
+@Path(ARecipeManagerAPI.PATH)
 @Singleton
 public class RecipeManagerRestful extends ARecipeManagerAPI {
     

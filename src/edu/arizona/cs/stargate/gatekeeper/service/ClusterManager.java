@@ -118,7 +118,7 @@ public class ClusterManager {
         }
         
         if(this.remoteClusterTable.containsKey(cluster.getName())) {
-            throw new ClusterAlreadyAddedException("cluster " + cluster.getName() + "is already added");
+            throw new ClusterAlreadyAddedException("cluster " + cluster.getName() + " is already added");
         }
         
         ClusterInfo put = this.remoteClusterTable.put(cluster.getName(), cluster);

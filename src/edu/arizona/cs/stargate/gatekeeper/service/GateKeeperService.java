@@ -123,12 +123,12 @@ public class GateKeeperService {
         return this.dataExportManager;
     }
     
+    public synchronized RecipeManager getRecipeManager() {
+        return this.recipeManager;
+    }
+    
     @Override
     public synchronized String toString() {
         return "GateKeeperService";
-    }
-
-    RecipeManager getRecipeManager() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

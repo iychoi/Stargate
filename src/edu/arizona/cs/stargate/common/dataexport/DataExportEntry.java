@@ -72,6 +72,21 @@ public class DataExportEntry {
         setMountPath(mountPath);
         setResourceUri(resourceUri);
     }
+    
+    private String buildVirtualPath(String mountPath, URI resourceUri) {
+        String path = resourceUri.normalize().getPath();
+        int idx = path.lastIndexOf("/");
+        String filename = path;
+        if(idx >= 0) {
+            filename = path.substring(idx+1, path.length());
+        }
+        
+        if(mountPath.endsWith("/")) {
+            return mountPath + filename;
+        } else {
+            return mountPath + "/" + filename;
+        }
+    }
 
     @JsonProperty("mount")
     public String getMountPath() {
@@ -95,6 +110,11 @@ public class DataExportEntry {
     
     void setResourceUri(String resourcePath) throws URISyntaxException {
         this.resourcePath = new URI(resourcePath);
+    }
+    
+    @JsonIgnore
+    public String getVirtualPath() {
+        return buildVirtualPath(this.mountPath, this.resourcePath);
     }
     
     @JsonIgnore
