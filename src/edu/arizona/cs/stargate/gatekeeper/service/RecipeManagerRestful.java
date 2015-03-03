@@ -26,20 +26,17 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
-import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
+import edu.arizona.cs.stargate.common.recipe.Recipe;
 import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
-import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
+import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.net.URI;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -53,118 +50,99 @@ import org.apache.commons.logging.LogFactory;
  */
 @Path(AClusterManagerAPI.PATH)
 @Singleton
-public class DataExportManagerRestful extends ADataExportManagerAPI {
+public class RecipeManagerRestful extends ARecipeManagerAPI {
     
-    private static final Log LOG = LogFactory.getLog(DataExportManagerRestful.class);
+    private static final Log LOG = LogFactory.getLog(RecipeManagerRestful.class);
     
     @GET
-    @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
+    @Path(ARecipeManagerAPI.GET_RECIPE_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetDataExportInfoText(
+    public String responseGetRecipeText(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            return DataFormatter.toJSONFormat(responseGetDataExportInfoJSON(name));
+            return DataFormatter.toJSONFormat(responseGetRecipeJSON(name));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
+    @Path(ARecipeManagerAPI.GET_RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<DataExportInfo>> responseGetDataExportInfoJSON(
+    public RestfulResponse<Recipe> responseGetRecipeJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            if(name != null) {
-                if(name.equals("*")) {
-                    return new RestfulResponse<Collection<DataExportInfo>>(getAllDataExportInfo());
-                } else {
-                    DataExportInfo info = getDataExportInfo(name);
-                    List<DataExportInfo> dataExportInfo = new ArrayList<DataExportInfo>();
-                    dataExportInfo.add(info);
-                    
-                    return new RestfulResponse<Collection<DataExportInfo>>(Collections.unmodifiableCollection(dataExportInfo));
-                }
-            } else {
-                return new RestfulResponse<Collection<DataExportInfo>>(new Exception("invalid parameter"));
-            }
+            return new RestfulResponse<Recipe>(getRecipe(new URI(name)));
         } catch(Exception ex) {
-            return new RestfulResponse<Collection<DataExportInfo>>(ex);
+            return new RestfulResponse<Recipe>(ex);
         }
     }
     
     @Override
-    public DataExportInfo getDataExportInfo(String name) throws Exception {
-        DataExportManager dem = getDataExportManager();
-        return dem.getDataExportInfo(name);
+    public Recipe getRecipe(URI resourceURI) throws Exception {
+        RecipeManager rm = getRecipeManager();
+        return rm.getRecipe(resourceURI);
     }
     
-    @Override
-    public Collection<DataExportInfo> getAllDataExportInfo() throws Exception {
-        DataExportManager dem = getDataExportManager();
-        return dem.getAllDataExportInfo();
-    }
-    
-    @POST
-    @Path(ADataExportManagerAPI.ADD_DATA_EXPORT_PATH)
+    @GET
+    @Path(ARecipeManagerAPI.GET_CHUNK_INFO_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseAddDataExportText(DataExportInfo dataExportInfo) {
+    public String responseGetChunkInfoText(
+            @DefaultValue("null") @QueryParam("hash") String hash
+    ) {
         try {
-            return DataFormatter.toJSONFormat(responseAddDataExportJSON(dataExportInfo));
+            return DataFormatter.toJSONFormat(responseGetChunkInfoJSON(hash));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
-    @POST
-    @Path(ADataExportManagerAPI.ADD_DATA_EXPORT_PATH)
+    @GET
+    @Path(ARecipeManagerAPI.GET_CHUNK_INFO_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseAddDataExportJSON(DataExportInfo dataExportInfo) {
+    public RestfulResponse<ChunkInfo> responseGetChunkInfoJSON(
+            @DefaultValue("null") @QueryParam("hash") String hash
+    ) {
         try {
-            if(dataExportInfo != null) {
-                addDataExport(dataExportInfo);
-                return new RestfulResponse<Boolean>(true);
-            } else {
-                return new RestfulResponse<Boolean>(false);
-            }
+            return new RestfulResponse<ChunkInfo>(getChunkInfo(hash));
         } catch(Exception ex) {
-            return new RestfulResponse<Boolean>(ex);
+            return new RestfulResponse<ChunkInfo>(ex);
         }
     }
     
     @Override
-    public void addDataExport(DataExportInfo info) throws Exception {
-        DataExportManager dem = getDataExportManager();
-        dem.addDataExport(info);
+    public ChunkInfo getChunkInfo(String hash) throws Exception {
+        RecipeManager rm = getRecipeManager();
+        return rm.findChunk(hash);
     }
     
     @DELETE
-    @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
+    @Path(ARecipeManagerAPI.DELETE_RECIPE_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseDeleteDataExportText(
+    public String responseDeleteRecipeText(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            return DataFormatter.toJSONFormat(responseDeleteDataExportJSON(name));
+            return DataFormatter.toJSONFormat(responseDeleteRecipeJSON(name));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @DELETE
-    @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
+    @Path(ARecipeManagerAPI.DELETE_RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseDeleteDataExportJSON(
+    public RestfulResponse<Boolean> responseDeleteRecipeJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
             if(name != null) {
                 if(name.equals("*")) {
-                    removeAllDataExport();
+                    removeAllRecipe();
                 } else {
-                    removeDataExport(name);
+                    removeRecipe(new URI(name));
                 }
                 return new RestfulResponse<Boolean>(true);
             } else {
@@ -174,23 +152,23 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
             return new RestfulResponse<Boolean>(ex);
         }
     }
-
-    @Override
-    public void removeDataExport(String name) throws Exception {
-        DataExportManager dem = getDataExportManager();
-        dem.removeDataExport(name);
-    }
-
-    @Override
-    public void removeAllDataExport() throws Exception {
-        DataExportManager dem = getDataExportManager();
-        dem.removeAllDataExport();
-    }
     
-    private DataExportManager getDataExportManager() {
+    @Override
+    public void removeRecipe(URI resourceURI) throws Exception {
+        RecipeManager rm = getRecipeManager();
+        rm.removeRecipe(resourceURI);
+    }
+
+    @Override
+    public void removeAllRecipe() throws Exception {
+        RecipeManager rm = getRecipeManager();
+        rm.removeAllRecipe();
+    }
+
+    private RecipeManager getRecipeManager() {
         try {
             GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getDataExportManager();
+            return gatekeeperService.getRecipeManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

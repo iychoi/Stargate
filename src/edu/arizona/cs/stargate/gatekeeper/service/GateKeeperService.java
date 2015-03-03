@@ -27,6 +27,7 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 import com.google.inject.Guice;
 import com.google.inject.Stage;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,6 +55,15 @@ public class GateKeeperService {
         }
     }
     
+    public static GateKeeperService getInstance() throws ServiceNotStartedException {
+        synchronized (GateKeeperService.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("GateKeeper service is not started");
+            }
+            return instance;
+        }
+    }
+    
     GateKeeperService(GateKeeperServiceConfiguration config) {
         if(config == null) {
             this.config = new GateKeeperServiceConfiguration();
@@ -70,11 +80,11 @@ public class GateKeeperService {
         }
         
         this.dataExportManager = DataExportManager.getInstance();
-        this.dataExportManager.addDataExport(this.config.getDataExport());
-        
         this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration());
         
         addDataExportListener();
+        
+        this.dataExportManager.addDataExport(this.config.getDataExport());
         
         Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
     }
@@ -116,5 +126,9 @@ public class GateKeeperService {
     @Override
     public synchronized String toString() {
         return "GateKeeperService";
+    }
+
+    RecipeManager getRecipeManager() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

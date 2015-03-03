@@ -22,28 +22,28 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.recipe;
+package edu.arizona.cs.stargate.gatekeeper;
 
+import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
+import edu.arizona.cs.stargate.common.recipe.Recipe;
 import java.net.URI;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ARecipeStore {
-    public abstract void store(Recipe recipe);
+public abstract class ARecipeManagerAPI {
     
-    public abstract void notifyRecipeHashed(Recipe recipe);
+    public static final String PATH = "/rcp";
+    public static final String GET_RECIPE_PATH = "/recipe";
+    public static final String DELETE_RECIPE_PATH = "/recipe";
+    public static final String GET_CHUNK_INFO_PATH = "/chunk";
     
-    public abstract boolean hasRecipe(URI resourceUri);
-
-    public abstract Recipe get(URI resourceUri);
-
-    public abstract void remove(URI resourceUri);
+    public abstract Recipe getRecipe(URI resourceURI) throws Exception;
     
-    public abstract void removeAll();
-
-    public abstract ChunkInfo find(byte[] hash);
+    public abstract void removeRecipe(URI resourceURI) throws Exception;
     
-    public abstract ChunkInfo find(String hash);
+    public abstract void removeAllRecipe() throws Exception;
+    
+    public abstract ChunkInfo getChunkInfo(String hash) throws Exception;
 }

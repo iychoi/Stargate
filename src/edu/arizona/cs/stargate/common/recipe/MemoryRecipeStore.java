@@ -29,6 +29,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -66,6 +67,13 @@ public class MemoryRecipeStore extends ARecipeStore {
     @Override
     public synchronized void remove(URI resourceUri) {
         this.recipeTable.remove(resourceUri);
+        makeConsistentHashes();
+    }
+    
+    @Override
+    public void removeAll() {
+        this.recipeTable.clear();
+        this.hashes.clear();
     }
 
     @Override
@@ -78,12 +86,24 @@ public class MemoryRecipeStore extends ARecipeStore {
         return this.hashes.get(hash);
     }
 
-    private void storeAllHashes(Recipe recipe) {
+    private synchronized void storeAllHashes(Recipe recipe) {
         Collection<RecipeChunkInfo> chunks = recipe.getAllChunk();
         for(RecipeChunkInfo chunk : chunks) {
             if(chunk.isHashed()) {
-                this.hashes.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
+                if(!this.hashes.containsKey(chunk.getHashString())) {
+                    this.hashes.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
+                }
             }
+        }
+    }
+    
+    private synchronized void makeConsistentHashes() {
+        this.hashes.clear();
+        
+        Set<URI> uris = this.recipeTable.keySet();
+        for(URI resourceUri : uris) {
+            Recipe recipe = this.recipeTable.get(uris);
+            storeAllHashes(recipe);
         }
     }
 }

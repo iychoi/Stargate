@@ -89,12 +89,12 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
         this.dataExports.add(info);
     }
     
-    @JsonProperty("recipeManager")
+    @JsonProperty("recipe")
     public RecipeManagerConfiguration getRecipeManagerConfiguration() {
         return this.recipeManagerConfiguration;
     }
     
-    @JsonProperty("recipeManager")
+    @JsonProperty("recipe")
     public void setRecipeManagerConfiguration(RecipeManagerConfiguration config) {
         super.verifyMutable();
         

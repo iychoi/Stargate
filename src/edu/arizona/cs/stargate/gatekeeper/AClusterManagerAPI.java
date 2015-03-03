@@ -41,7 +41,9 @@ public abstract class AClusterManagerAPI {
     
     public abstract ClusterInfo getLocalClusterInfo() throws Exception;
     
-    public abstract Collection<ClusterInfo> getRemoteClusterInfo() throws Exception;
+    public abstract Collection<ClusterInfo> getAllRemoteClusterInfo() throws Exception;
+    
+    public abstract ClusterInfo getRemoteClusterInfo(String name) throws Exception;
     
     public abstract void addRemoteCluster(ClusterInfo cluster) throws Exception;
     

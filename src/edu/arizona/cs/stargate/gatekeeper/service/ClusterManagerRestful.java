@@ -29,8 +29,12 @@ import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.gatekeeper.AClusterManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
+import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -39,6 +43,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
@@ -47,6 +53,9 @@ import javax.ws.rs.core.MediaType;
 @Path(AClusterManagerAPI.PATH)
 @Singleton
 public class ClusterManagerRestful extends AClusterManagerAPI {
+    
+    private static final Log LOG = LogFactory.getLog(ClusterManagerRestful.class);
+    
     @GET
     @Path(AClusterManagerAPI.GET_LOCAL_CLUSTER_INFO_PATH)
     @Produces(MediaType.TEXT_PLAIN)
@@ -71,16 +80,18 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
 
     @Override
     public ClusterInfo getLocalClusterInfo() throws Exception {
-        ClusterManager cm = ClusterManager.getInstance();
+        ClusterManager cm = getClusterManager();
         return cm.getLocalClusterInfo();
     }
 
     @GET
     @Path(AClusterManagerAPI.GET_REMOTE_CLUSTER_INFO_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetRemoteClusterInfoText() {
+    public String responseGetRemoteClusterInfoText(
+            @DefaultValue("null") @QueryParam("name") String name
+    ) {
         try {
-            return DataFormatter.toJSONFormat(responseGetRemoteClusterInfoJSON());
+            return DataFormatter.toJSONFormat(responseGetRemoteClusterInfoJSON(name));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
@@ -89,17 +100,37 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     @GET
     @Path(AClusterManagerAPI.GET_REMOTE_CLUSTER_INFO_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<ClusterInfo>> responseGetRemoteClusterInfoJSON() {
+    public RestfulResponse<Collection<ClusterInfo>> responseGetRemoteClusterInfoJSON(
+            @DefaultValue("null") @QueryParam("name") String name
+    ) {
         try {
-            return new RestfulResponse<Collection<ClusterInfo>>(getRemoteClusterInfo());
+            if(name != null) {
+                if(name.equals("*")) {
+                    return new RestfulResponse<Collection<ClusterInfo>>(getAllRemoteClusterInfo());
+                } else {
+                    ClusterInfo info = getRemoteClusterInfo(name);
+                    List<ClusterInfo> clusterInfo = new ArrayList<ClusterInfo>();
+                    clusterInfo.add(info);
+                    
+                    return new RestfulResponse<Collection<ClusterInfo>>(Collections.unmodifiableCollection(clusterInfo));
+                }
+            } else {
+                return new RestfulResponse<Collection<ClusterInfo>>(new Exception("invalid parameter"));
+            }
         } catch(Exception ex) {
             return new RestfulResponse<Collection<ClusterInfo>>(ex);
         }
     }
     
     @Override
-    public Collection<ClusterInfo> getRemoteClusterInfo() throws Exception {
-        ClusterManager cm = ClusterManager.getInstance();
+    public ClusterInfo getRemoteClusterInfo(String name) throws Exception {
+        ClusterManager cm = getClusterManager();
+        return cm.getRemoteClusterInfo(name);
+    }
+    
+    @Override
+    public Collection<ClusterInfo> getAllRemoteClusterInfo() throws Exception {
+        ClusterManager cm = getClusterManager();
         return cm.getAllRemoteClusterInfo();
     }
     
@@ -123,7 +154,7 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
                 addRemoteCluster(clusterInfo);
                 return new RestfulResponse<Boolean>(true);
             } else {
-                return new RestfulResponse<Boolean>(false);
+                return new RestfulResponse<Boolean>(new Exception("invalid parameter"));
             }
         } catch(Exception ex) {
             return new RestfulResponse<Boolean>(ex);
@@ -132,7 +163,7 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     
     @Override
     public void addRemoteCluster(ClusterInfo cluster) throws ClusterAlreadyAddedException {
-        ClusterManager cm = ClusterManager.getInstance();
+        ClusterManager cm = getClusterManager();
         cm.addRemoteCluster(cluster);
     }
     
@@ -164,7 +195,7 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
                 }
                 return new RestfulResponse<Boolean>(true);
             } else {
-                return new RestfulResponse<Boolean>(false);
+                return new RestfulResponse<Boolean>(new Exception("invalid parameter"));
             }
         } catch(Exception ex) {
             return new RestfulResponse<Boolean>(ex);
@@ -173,13 +204,23 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     
     @Override
     public void removeAllRemoteCluster() {
-        ClusterManager cm = ClusterManager.getInstance();
+        ClusterManager cm = getClusterManager();
         cm.removeAllRemoteCluster();
     }
 
     @Override
     public void removeRemoteCluster(String name) {
-        ClusterManager cm = ClusterManager.getInstance();
+        ClusterManager cm = getClusterManager();
         cm.removeRemoteCluster(name);
+    }
+    
+    private ClusterManager getClusterManager() {
+        try {
+            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
+            return gatekeeperService.getClusterManager();
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
+            return null;
+        }
     }
 }

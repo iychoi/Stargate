@@ -22,28 +22,27 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.common.recipe;
-
-import java.net.URI;
+package edu.arizona.cs.stargate.service;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ARecipeStore {
-    public abstract void store(Recipe recipe);
-    
-    public abstract void notifyRecipeHashed(Recipe recipe);
-    
-    public abstract boolean hasRecipe(URI resourceUri);
+public class ServiceNotStartedException extends Exception {
 
-    public abstract Recipe get(URI resourceUri);
+    public ServiceNotStartedException() {
+        super();
+    }
 
-    public abstract void remove(URI resourceUri);
-    
-    public abstract void removeAll();
+    public ServiceNotStartedException(String string) {
+        super(string);
+    }
 
-    public abstract ChunkInfo find(byte[] hash);
-    
-    public abstract ChunkInfo find(String hash);
+    public ServiceNotStartedException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
+    }
+
+    public ServiceNotStartedException(Throwable thrwbl) {
+        super(thrwbl);
+    }
 }

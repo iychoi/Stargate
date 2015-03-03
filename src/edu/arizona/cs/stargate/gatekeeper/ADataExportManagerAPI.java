@@ -38,7 +38,9 @@ public abstract class ADataExportManagerAPI {
     public static final String DELETE_DATA_EXPORT_PATH = "/export";
     public static final String ADD_DATA_EXPORT_PATH = "/export";
     
-    public abstract Collection<DataExportInfo> getDataExportInfo() throws Exception;
+    public abstract Collection<DataExportInfo> getAllDataExportInfo() throws Exception;
+    
+    public abstract DataExportInfo getDataExportInfo(String name) throws Exception;
     
     public abstract void addDataExport(DataExportInfo info) throws Exception;
     

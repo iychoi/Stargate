@@ -31,6 +31,7 @@ import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
@@ -66,10 +67,12 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
     }
     
     @Override
-    public Collection<DataExportInfo> getDataExportInfo() throws Exception {
+    public Collection<DataExportInfo> getAllDataExportInfo() throws Exception {
         RestfulResponse<Collection<DataExportInfo>> response;
         try {
-            response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("name", "*");
+            response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH, params), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -79,6 +82,30 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
             throw response.getException();
         } else {
             return response.getResponse();
+        }
+    }
+    
+    @Override
+    public DataExportInfo getDataExportInfo(String name) throws Exception {
+        RestfulResponse<Collection<DataExportInfo>> response;
+        try {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("name", name);
+            response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH, params), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw response.getException();
+        } else {
+            Collection<DataExportInfo> dataExportInfo = response.getResponse();
+            Iterator<DataExportInfo> iterator = dataExportInfo.iterator();
+            if(iterator.hasNext()) {
+                return iterator.next();
+            }
+            return null;
         }
     }
     

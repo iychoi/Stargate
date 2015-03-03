@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -54,10 +52,14 @@ public class RecipeManager {
     private static final Log LOG = LogFactory.getLog(RecipeManager.class);
     
     private static RecipeManager instance;
+
+    static RecipeManager getInstance() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
     private RecipeManagerConfiguration config;
     private BlockingQueue<Recipe> pendingRecipes = new LinkedBlockingQueue<Recipe>();
-    private Map<URI, Boolean> removedRecipes = new HashMap<URI, Boolean>();
+    //private Map<URI, Boolean> removedRecipes = new HashMap<URI, Boolean>();
     private ARecipeStore recipeStore;
     
     // check message and start hashing
@@ -128,9 +130,16 @@ public class RecipeManager {
     
     public synchronized void removeRecipe(URI resourceUri) {
         this.recipeStore.remove(resourceUri);
-        if(!this.removedRecipes.containsKey(resourceUri)) {
-            this.removedRecipes.put(resourceUri, true);
-        }
+        //if(!this.removedRecipes.containsKey(resourceUri)) {
+        //    this.removedRecipes.put(resourceUri, true);
+        //}
+    }
+    
+    public synchronized void removeAllRecipe() {
+        this.recipeStore.removeAll();
+        //if(!this.removedRecipes.containsKey(resourceUri)) {
+        //    this.removedRecipes.put(resourceUri, true);
+        //}
     }
     
     public synchronized ChunkInfo findChunk(String hash) {
@@ -160,13 +169,13 @@ public class RecipeManager {
                 while(true) {
                     try {
                         Recipe recipe = pendingRecipes.take();
-                        if(removedRecipes.containsKey(recipe.getResourcePath())) {
-                            removedRecipes.remove(recipe.getResourcePath());
-                        } else {
+                        //if(removedRecipes.containsKey(recipe.getResourcePath())) {
+                        //    removedRecipes.remove(recipe.getResourcePath());
+                        //} else {
                             ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
                             recipeGenerator.hashRecipe(recipe);
                             recipeStore.notifyRecipeHashed(recipe);
-                        }
+                        //}
                     } catch (IOException ex) {
                         LOG.error(ex);
                     } catch (NoSuchAlgorithmException ex) {

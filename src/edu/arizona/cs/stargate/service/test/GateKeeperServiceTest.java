@@ -30,6 +30,7 @@ import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.service.RecipeManagerConfiguration;
 import edu.arizona.cs.stargate.service.StargateService;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.File;
@@ -56,6 +57,13 @@ public class GateKeeperServiceTest {
             clusterInfo.addNode(new ClusterNodeInfo("node4", "http://111.111.111.4"));
             
             gatekeeperConf.setClusterInfo(clusterInfo);
+            
+            RecipeManagerConfiguration recipeConfiguration = new RecipeManagerConfiguration();
+            recipeConfiguration.setChunkSize(1024*1024);
+            recipeConfiguration.setHashAlgorithm("SHA-1");
+            
+            gatekeeperConf.setRecipeManagerConfiguration(recipeConfiguration);
+            
             serviceConf.setGatekeeperServiceConfiguration(gatekeeperConf);
             
             JsonSerializer serializer = new JsonSerializer(true);
@@ -65,7 +73,7 @@ public class GateKeeperServiceTest {
         }
     }
     
-    public static StargateServiceConfiguration getServiceConf(File f) throws IOException {
+    public static StargateServiceConfiguration getServiceConfiguration(File f) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
         StargateServiceConfiguration conf = (StargateServiceConfiguration) serializer.fromJsonFile(f, StargateServiceConfiguration.class);
         return conf;
@@ -83,7 +91,7 @@ public class GateKeeperServiceTest {
                 makeDummyServiceConf(configFile);
             }
             
-            StargateServiceConfiguration conf = getServiceConf(configFile);
+            StargateServiceConfiguration conf = getServiceConfiguration(configFile);
             
             StargateService instance = StargateService.getInstance(conf);
             instance.start();

@@ -56,6 +56,15 @@ public class StargateService {
         }
     }
     
+    public static StargateService getInstance() throws ServiceNotStartedException {
+        synchronized (StargateService.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("Stargate service is not started");
+            }
+            return instance;
+        }
+    }
+    
     StargateService(StargateServiceConfiguration config) {
         this.config = config;
         this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());

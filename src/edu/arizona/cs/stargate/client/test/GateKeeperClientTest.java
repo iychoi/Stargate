@@ -58,7 +58,7 @@ public class GateKeeperClientTest {
             
             client.getClusterManagerClient().removeAllRemoteCluster();
             
-            Collection<ClusterInfo> remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
+            Collection<ClusterInfo> remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             System.out.println("Adding remote cluster info");
@@ -66,18 +66,18 @@ public class GateKeeperClientTest {
             ClusterInfo remoteCluster1 = new ClusterInfo("remote1");
             client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
             
-            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             ClusterInfo remoteCluster2 = new ClusterInfo("remote2");
             client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
             
-            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             client.getClusterManagerClient().removeAllRemoteCluster();
             
-            remoteClusterInfo = client.getClusterManagerClient().getRemoteClusterInfo();
+            remoteClusterInfo = client.getClusterManagerClient().getAllRemoteClusterInfo();
             System.out.println("remote cluster info : " + DataFormatter.toJSONFormat(remoteClusterInfo));
             
             

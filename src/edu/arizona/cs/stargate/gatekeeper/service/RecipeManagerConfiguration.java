@@ -38,34 +38,9 @@ public class RecipeManagerConfiguration extends ImmutableConfiguration {
     private static final int DEFAULT_CHUNK_SIZE = 1024*1024;
     private static final String DEFAULT_HASH_ALGORITHM = "SHA-1";
     
-    private File recipePath;
     private int chunkSize = DEFAULT_CHUNK_SIZE;
     private boolean immutable = false;
     private String hashAlgorithm = DEFAULT_HASH_ALGORITHM;
-    
-    @JsonIgnore
-    public File getRecipePath() {
-        return this.recipePath;
-    }
-    
-    @JsonProperty("recipePath")
-    public String getRecipePathString() {
-        return this.recipePath.getPath();
-    }
-    
-    @JsonIgnore
-    public void setRecipePath(File recipePath) {
-        super.verifyMutable();
-        
-        this.recipePath = recipePath;
-    }
-    
-    @JsonProperty("recipePath")
-    public void setRecipePath(String recipePath) {
-        super.verifyMutable();
-        
-        this.recipePath = new File(recipePath);
-    }
     
     @JsonProperty("chunkSize")
     public int getChunkSize() {
