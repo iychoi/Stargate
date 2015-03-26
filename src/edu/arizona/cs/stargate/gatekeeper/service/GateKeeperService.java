@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Guice;
 import com.google.inject.Stage;
+import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import org.apache.commons.logging.Log;
@@ -42,7 +43,8 @@ public class GateKeeperService {
     private static GateKeeperService instance;
     
     private GateKeeperServiceConfiguration config;
-    private ClusterManager clusterManager;
+    private LocalClusterManager localClusterManager;
+    private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
     private RecipeManager recipeManager;
     
@@ -74,10 +76,16 @@ public class GateKeeperService {
     }
     
     public synchronized void start() throws Exception {
-        this.clusterManager = ClusterManager.getInstance();
+        this.localClusterManager = LocalClusterManager.getInstance();
         if(this.config.getClusterInfo() != null) {
-            this.clusterManager.setLocalCluster(this.config.getClusterInfo());
+            this.localClusterManager.setName(this.config.getClusterInfo().getName());
+            try {
+            this.localClusterManager.addNode(this.config.getClusterInfo().getAllNode());
+            } catch (NodeAlreadyAddedException ex) {
+                LOG.error(ex);
+            }
         }
+        this.remoteClusterManager = RemoteClusterManager.getInstance();
         
         this.dataExportManager = DataExportManager.getInstance();
         this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration());
@@ -115,8 +123,12 @@ public class GateKeeperService {
         return this.config;
     }
     
-    public synchronized ClusterManager getClusterManager() {
-        return this.clusterManager;
+    public synchronized LocalClusterManager getLocalClusterManager() {
+        return this.localClusterManager;
+    }
+    
+    public synchronized RemoteClusterManager getRemoteClusterManager() {
+        return this.remoteClusterManager;
     }
     
     public synchronized DataExportManager getDataExportManager() {

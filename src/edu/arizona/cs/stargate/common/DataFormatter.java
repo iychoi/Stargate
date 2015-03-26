@@ -25,7 +25,6 @@
 package edu.arizona.cs.stargate.common;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Formatter;
 
 /**

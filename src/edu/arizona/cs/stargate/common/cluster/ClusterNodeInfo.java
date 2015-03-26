@@ -40,12 +40,10 @@ public class ClusterNodeInfo {
     
     private String name;
     private URI addr;
-    private boolean gatekeeper;
     
     ClusterNodeInfo() {
         this.name = null;
         this.addr = null;
-        this.gatekeeper = false;
     }
     
     public static ClusterNodeInfo createInstance(File file) throws IOException {
@@ -61,29 +59,19 @@ public class ClusterNodeInfo {
     public ClusterNodeInfo(ClusterNodeInfo that) {
         this.name = that.name;
         this.addr = that.addr;
-        this.gatekeeper = that.gatekeeper;
-    }
-    
-    public ClusterNodeInfo(String name, URI addr, boolean gatekeeper) {
-        initializeClusterNodeInfo(name, addr, gatekeeper);
     }
     
     public ClusterNodeInfo(String name, URI addr) {
-        initializeClusterNodeInfo(name, addr, false);
+        initializeClusterNodeInfo(name, addr);
     }
     
     public ClusterNodeInfo(String name, String addr) throws URISyntaxException {
-        initializeClusterNodeInfo(name, new URI(addr), false);
+        initializeClusterNodeInfo(name, new URI(addr));
     }
     
-    public ClusterNodeInfo(String name, String addr, boolean gatekeeper) throws URISyntaxException {
-        initializeClusterNodeInfo(name, new URI(addr), gatekeeper);
-    }
-    
-    private void initializeClusterNodeInfo(String name, URI addr, boolean gatekeeper) {
+    private void initializeClusterNodeInfo(String name, URI addr) {
         setName(name);
         setAddr(addr);
-        setGatekeeper(gatekeeper);
     }
 
     public String getName() {
@@ -108,14 +96,6 @@ public class ClusterNodeInfo {
         this.addr = new URI(addr);
     }
     
-    public boolean getGatekeeper() {
-        return this.gatekeeper;
-    }
-    
-    void setGatekeeper(boolean gatekeeper) {
-        this.gatekeeper = gatekeeper;
-    }
-    
     @JsonIgnore
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
@@ -131,7 +111,6 @@ public class ClusterNodeInfo {
     
     @Override
     public String toString() {
-        String gkwk = this.gatekeeper ? "GK" : "WK";
-        return this.name + "(" + gkwk + ", " + this.addr.toString() + ")";
+        return this.name + "(" + this.addr.toString() + ")";
     }
 }

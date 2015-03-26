@@ -24,7 +24,9 @@
 
 package edu.arizona.cs.stargate.service.test;
 
+import edu.arizona.cs.stargate.cache.service.DistributedCacheServiceConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
+import edu.arizona.cs.stargate.common.Namer;
 import edu.arizona.cs.stargate.common.ResourceLocator;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
@@ -36,22 +38,27 @@ import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 /**
  *
  * @author iychoi
  */
 public class GateKeeperServiceTest {
-    
-    
-    
     public static void makeDummyServiceConf(File f) throws IOException {
         try {
             StargateServiceConfiguration serviceConf = new StargateServiceConfiguration();
+            serviceConf.setServiceName("Stargate1");
+            
+            DistributedCacheServiceConfiguration dhtConf = new DistributedCacheServiceConfiguration();
+            dhtConf.setMyHostAddr("localhost:10111");
+            
+            serviceConf.setDistributedCacheServiceConfiguration(dhtConf);
+            
             GateKeeperServiceConfiguration gatekeeperConf = new GateKeeperServiceConfiguration();
             
             ClusterInfo clusterInfo = new ClusterInfo("local");
-            clusterInfo.addNode(new ClusterNodeInfo("node1", "http://111.111.111.1", true));
+            clusterInfo.addNode(new ClusterNodeInfo("node1", "http://111.111.111.1"));
             clusterInfo.addNode(new ClusterNodeInfo("node2", "http://111.111.111.2"));
             clusterInfo.addNode(new ClusterNodeInfo("node3", "http://111.111.111.3"));
             clusterInfo.addNode(new ClusterNodeInfo("node4", "http://111.111.111.4"));
@@ -86,8 +93,15 @@ public class GateKeeperServiceTest {
     public static void main(String[] args) {
         try {
             ResourceLocator rl = new ResourceLocator();
-            File configFile = rl.getResourceLocation(StargateServiceConfiguration.DEFAULT_CONFIG_FILEPATH);
-            if(!configFile.exists()) {
+            
+            File configFile;
+            if(args.length != 0) {
+                configFile = rl.getResourceLocation(args[0]);
+            } else {
+                configFile = rl.getResourceLocation(StargateServiceConfiguration.DEFAULT_CONFIG_FILEPATH);
+            }
+            
+            if (!configFile.exists()) {
                 makeDummyServiceConf(configFile);
             }
             
@@ -95,6 +109,32 @@ public class GateKeeperServiceTest {
             
             StargateService instance = StargateService.getInstance(conf);
             instance.start();
+            
+            //Thread.sleep(5000);
+            
+            Map<String, String> dCache = instance.getDistributedCacheService().getDistributedMap("TestHash");
+            //for(int i=0;i<100;i++) {
+                String key = "test";
+                dCache.put(key, conf.getDistributedCacheServiceConfiguration().getMyHostAddr());
+                
+                String value = dCache.get(key);
+                if(value != null) {
+                    System.out.println("found value of key (" + key + ")> " + value);
+                } else {
+                    System.out.println("found value of key (" + key + ")> null");
+                }
+                
+                String rkey = Namer.generateRandomString(20);
+                dCache.put(rkey, conf.getDistributedCacheServiceConfiguration().getMyHostAddr());
+                
+                String rvalue = dCache.get(rkey);
+                if(rvalue != null) {
+                    System.out.println("found value of key (" + rkey + ")> " + rvalue);
+                } else {
+                    System.out.println("found value of key (" + key + ")> null");
+                }
+            //}
+            
             instance.join();
         } catch (Exception ex) {
             ex.printStackTrace();

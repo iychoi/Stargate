@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -45,11 +43,8 @@ public class ClusterInfo {
     
     private static final Log LOG = LogFactory.getLog(ClusterInfo.class);
     
-    private Map<String, ClusterNodeInfo> nodeTable = new HashMap<String, ClusterNodeInfo>();
-    
-    private ArrayList<IClusterInfoChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterInfoChangeEventHandler>();
-    
     private String name;
+    private Map<String, ClusterNodeInfo> nodes = new HashMap<String, ClusterNodeInfo>();
     
     ClusterInfo() {
         this.name = null;
@@ -67,8 +62,7 @@ public class ClusterInfo {
     
     public ClusterInfo(ClusterInfo that) {
         this.name = that.name;
-        this.nodeTable.putAll(that.nodeTable);
-        this.configChangeEventHandlers.addAll(that.configChangeEventHandlers);
+        this.nodes.putAll(that.nodes);
     }
     
     public ClusterInfo(String name) {
@@ -93,7 +87,7 @@ public class ClusterInfo {
         return this.name;
     }
     
-    synchronized void setName(String name) {
+    public synchronized void setName(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
         }
@@ -101,49 +95,34 @@ public class ClusterInfo {
         this.name = name;
     }
     
-    @JsonIgnore
-    public synchronized int getNodeNumber() {
-        return this.nodeTable.keySet().size();
+    public synchronized int getNodeCount() {
+        return this.nodes.size();
     }
     
-    @JsonProperty("nodes")
     public synchronized Collection<ClusterNodeInfo> getAllNode() {
-        return Collections.unmodifiableCollection(this.nodeTable.values());
+        return Collections.unmodifiableCollection(this.nodes.values());
     }
     
-    @JsonIgnore
     public synchronized ClusterNodeInfo getNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.nodeTable.get(name);
+        return this.nodes.get(name);
     }
     
-    @JsonIgnore
     public synchronized boolean hasNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.nodeTable.containsKey(name);
-    }
-    
-    @JsonIgnore
-    public synchronized ClusterNodeInfo getGatekeeperNodeInfo() {
-        Collection<ClusterNodeInfo> values = this.nodeTable.values();
-        for(ClusterNodeInfo node : values) {
-            if(node.getGatekeeper()) {
-                return node;
-            }
-        }
-        return null;
+        return this.nodes.containsKey(name);
     }
     
     public synchronized void removeAllNode() {
         ArrayList<String> keys = new ArrayList<String>();
         
-        Collection<ClusterNodeInfo> values = this.nodeTable.values();
+        Collection<ClusterNodeInfo> values = this.nodes.values();
         for(ClusterNodeInfo node : values) {
             keys.add(node.getName());
         }
@@ -155,7 +134,6 @@ public class ClusterInfo {
         keys.clear();
     }
     
-    @JsonProperty("nodes")
     public synchronized void addNode(Collection<ClusterNodeInfo> nodes) throws NodeAlreadyAddedException {
         for(ClusterNodeInfo node : nodes) {
             addNode(node);
@@ -167,38 +145,13 @@ public class ClusterInfo {
             throw new IllegalArgumentException("node is empty or null");
         }
         
-        if(this.nodeTable.containsKey(node.getName())) {
+        if(this.nodes.containsKey(node.getName())) {
             throw new NodeAlreadyAddedException("node " + node.getName() + "is already added");
         }
         
-        ClusterNodeInfo put = this.nodeTable.put(node.getName(), node);
-        if(put != null) {
-            raiseEventForAddNode(put);
-        }
+        this.nodes.put(node.getName(), node);
     }
     
-    public synchronized void addConfigChangeEventHandler(IClusterInfoChangeEventHandler eventHandler) {
-        this.configChangeEventHandlers.add(eventHandler);
-    }
-    
-    public synchronized void removeConfigChangeEventHandler(IClusterInfoChangeEventHandler eventHandler) {
-        this.configChangeEventHandlers.remove(eventHandler);
-    }
-    
-    public synchronized void removeConfigChangeEventHandler(String handlerName) {
-        ArrayList<IClusterInfoChangeEventHandler> toberemoved = new ArrayList<IClusterInfoChangeEventHandler>();
-        
-        for(IClusterInfoChangeEventHandler handler : this.configChangeEventHandlers) {
-            if(handler.getName().equals(handlerName)) {
-                toberemoved.add(handler);
-            }
-        }
-        
-        for(IClusterInfoChangeEventHandler handler : toberemoved) {
-            this.configChangeEventHandlers.remove(handler);
-        }
-    }
-
     public synchronized void removeNode(ClusterNodeInfo node) {
         if(node == null || node.isEmpty()) {
             throw new IllegalArgumentException("node is empty or null");
@@ -212,26 +165,7 @@ public class ClusterInfo {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        ClusterNodeInfo removed = this.nodeTable.remove(name);
-        if(removed != null) {
-            raiseEventForRemoveNode(removed);
-        }
-    }
-
-    private synchronized void raiseEventForAddNode(ClusterNodeInfo node) {
-        LOG.debug("node added : " + node.toString());
-        
-        for(IClusterInfoChangeEventHandler handler: this.configChangeEventHandlers) {
-            handler.addNode(this, node);
-        }
-    }
-    
-    private synchronized void raiseEventForRemoveNode(ClusterNodeInfo node) {
-        LOG.debug("node removed : " + node.toString());
-        
-        for(IClusterInfoChangeEventHandler handler: this.configChangeEventHandlers) {
-            handler.removeNode(this, node);
-        }
+        this.nodes.remove(name);
     }
     
     @Override
@@ -239,7 +173,6 @@ public class ClusterInfo {
         return this.name;
     }
 
-    @JsonIgnore
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
             return true;

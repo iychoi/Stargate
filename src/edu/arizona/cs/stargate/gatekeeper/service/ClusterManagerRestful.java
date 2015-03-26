@@ -80,8 +80,8 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
 
     @Override
     public ClusterInfo getLocalClusterInfo() throws Exception {
-        ClusterManager cm = getClusterManager();
-        return cm.getLocalClusterInfo();
+        LocalClusterManager lcm = getLocalClusterManager();
+        return lcm.getClusterInfo();
     }
 
     @GET
@@ -124,14 +124,14 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     
     @Override
     public ClusterInfo getRemoteClusterInfo(String name) throws Exception {
-        ClusterManager cm = getClusterManager();
-        return cm.getRemoteClusterInfo(name);
+        RemoteClusterManager rcm = getRemoteClusterManager();
+        return rcm.getClusterInfo(name);
     }
     
     @Override
     public Collection<ClusterInfo> getAllRemoteClusterInfo() throws Exception {
-        ClusterManager cm = getClusterManager();
-        return cm.getAllRemoteClusterInfo();
+        RemoteClusterManager rcm = getRemoteClusterManager();
+        return rcm.getAllClusterInfo();
     }
     
     @POST
@@ -163,8 +163,8 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     
     @Override
     public void addRemoteCluster(ClusterInfo cluster) throws ClusterAlreadyAddedException {
-        ClusterManager cm = getClusterManager();
-        cm.addRemoteCluster(cluster);
+        RemoteClusterManager rcm = getRemoteClusterManager();
+        rcm.addCluster(cluster);
     }
     
     @DELETE
@@ -204,20 +204,30 @@ public class ClusterManagerRestful extends AClusterManagerAPI {
     
     @Override
     public void removeAllRemoteCluster() {
-        ClusterManager cm = getClusterManager();
-        cm.removeAllRemoteCluster();
+        RemoteClusterManager rcm = getRemoteClusterManager();
+        rcm.removeAllCluster();
     }
 
     @Override
     public void removeRemoteCluster(String name) {
-        ClusterManager cm = getClusterManager();
-        cm.removeRemoteCluster(name);
+        RemoteClusterManager rcm = getRemoteClusterManager();
+        rcm.removeCluster(name);
     }
     
-    private ClusterManager getClusterManager() {
+    private RemoteClusterManager getRemoteClusterManager() {
         try {
             GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getClusterManager();
+            return gatekeeperService.getRemoteClusterManager();
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
+            return null;
+        }
+    }
+
+    private LocalClusterManager getLocalClusterManager() {
+        try {
+            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
+            return gatekeeperService.getLocalClusterManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

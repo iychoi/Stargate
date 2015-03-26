@@ -33,8 +33,6 @@ import edu.arizona.cs.stargate.common.cluster.*;
 public interface IClusterConfigurationChangeEventHandler {
     public String getName();
     
-    public void setLocalCluster(ClusterManager manager, ClusterInfo cluster);
-    
-    public void addRemoteCluster(ClusterManager manager, ClusterInfo cluster);
-    public void removeRemoteCluster(ClusterManager manager, ClusterInfo cluster);
+    public void addNode(LocalClusterManager manager, ClusterNodeInfo node);
+    public void removeNode(LocalClusterManager manager, ClusterNodeInfo node);
 }

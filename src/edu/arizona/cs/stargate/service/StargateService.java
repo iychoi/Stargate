@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.service;
 
 import com.google.inject.servlet.GuiceFilter;
+import edu.arizona.cs.stargate.cache.service.DistributedCacheService;
 import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperService;
 import java.util.EnumSet;
 import org.apache.commons.logging.Log;
@@ -45,9 +46,10 @@ public class StargateService {
     private StargateServiceConfiguration config;
     private Server jettyServer;
     
+    private DistributedCacheService distributedCacheService;
     private GateKeeperService gatekeeperService;
     
-    public static StargateService getInstance(StargateServiceConfiguration config) {
+    public static StargateService getInstance(StargateServiceConfiguration config) throws Exception {
         synchronized (StargateService.class) {
             if(instance == null) {
                 instance = new StargateService(config);
@@ -65,12 +67,22 @@ public class StargateService {
         }
     }
     
-    StargateService(StargateServiceConfiguration config) {
+    StargateService(StargateServiceConfiguration config) throws Exception {
         this.config = config;
+        this.distributedCacheService = DistributedCacheService.getInstance(config.getDistributedCacheServiceConfiguration());
         this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
     }
     
+    public synchronized DistributedCacheService getDistributedCacheService() {
+        return this.distributedCacheService;
+    }
+    
+    public synchronized GateKeeperService getGateKeeperService() {
+        return this.gatekeeperService;
+    }
+    
     public synchronized void start() throws Exception {
+        this.distributedCacheService.start();
         this.gatekeeperService.start();
         
         this.jettyServer = new Server(this.config.getServicePort());
