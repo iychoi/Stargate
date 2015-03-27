@@ -32,12 +32,14 @@ import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.service.LocalClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.service.RecipeManagerConfiguration;
 import edu.arizona.cs.stargate.service.StargateService;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -110,30 +112,12 @@ public class GateKeeperServiceTest {
             StargateService instance = StargateService.getInstance(conf);
             instance.start();
             
-            //Thread.sleep(5000);
-            
-            Map<String, String> dCache = instance.getDistributedCacheService().getDistributedMap("TestHash");
-            //for(int i=0;i<100;i++) {
-                String key = "test";
-                dCache.put(key, conf.getDistributedCacheServiceConfiguration().getMyHostAddr());
-                
-                String value = dCache.get(key);
-                if(value != null) {
-                    System.out.println("found value of key (" + key + ")> " + value);
-                } else {
-                    System.out.println("found value of key (" + key + ")> null");
-                }
-                
-                String rkey = Namer.generateRandomString(20);
-                dCache.put(rkey, conf.getDistributedCacheServiceConfiguration().getMyHostAddr());
-                
-                String rvalue = dCache.get(rkey);
-                if(rvalue != null) {
-                    System.out.println("found value of key (" + rkey + ")> " + rvalue);
-                } else {
-                    System.out.println("found value of key (" + key + ")> null");
-                }
-            //}
+            LocalClusterManager localClusterManager = instance.getGateKeeperService().getLocalClusterManager();
+            Collection<ClusterNodeInfo> allNode = localClusterManager.getAllNode();
+            System.out.println("Cluster Name : " + localClusterManager.getName());
+            for(ClusterNodeInfo node : allNode) {
+                System.out.println("Node : " + node.getName() + " / " + node.getAddr().toASCIIString());
+            }
             
             instance.join();
         } catch (Exception ex) {

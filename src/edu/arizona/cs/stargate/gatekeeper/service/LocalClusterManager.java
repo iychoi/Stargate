@@ -134,7 +134,7 @@ public class LocalClusterManager {
         }
         
         if(this.nodes.containsKey(node.getName())) {
-            throw new NodeAlreadyAddedException("node " + node.getName() + "is already added");
+            throw new NodeAlreadyAddedException("node " + node.getName() + " is already added");
         }
         
         ClusterNodeInfo nodeAdded = this.nodes.put(node.getName(), node);

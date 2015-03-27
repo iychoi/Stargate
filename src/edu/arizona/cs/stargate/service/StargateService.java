@@ -73,6 +73,10 @@ public class StargateService {
         this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
     }
     
+    public synchronized StargateServiceConfiguration getConfiguration() {
+        return this.config;
+    }
+    
     public synchronized DistributedCacheService getDistributedCacheService() {
         return this.distributedCacheService;
     }

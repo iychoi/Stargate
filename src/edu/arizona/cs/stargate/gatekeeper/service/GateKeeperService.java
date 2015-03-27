@@ -26,9 +26,18 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Guice;
 import com.google.inject.Stage;
+import edu.arizona.cs.stargate.common.IPUtils;
+import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
+import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
+import edu.arizona.cs.stargate.service.StargateService;
+import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -77,14 +86,8 @@ public class GateKeeperService {
     
     public synchronized void start() throws Exception {
         this.localClusterManager = LocalClusterManager.getInstance();
-        if(this.config.getClusterInfo() != null) {
-            this.localClusterManager.setName(this.config.getClusterInfo().getName());
-            try {
-            this.localClusterManager.addNode(this.config.getClusterInfo().getAllNode());
-            } catch (NodeAlreadyAddedException ex) {
-                LOG.error(ex);
-            }
-        }
+        registerLocalClusterInfo(this.config.getClusterInfo());
+        
         this.remoteClusterManager = RemoteClusterManager.getInstance();
         
         this.dataExportManager = DataExportManager.getInstance();
@@ -95,6 +98,73 @@ public class GateKeeperService {
         this.dataExportManager.addDataExport(this.config.getDataExport());
         
         Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
+    }
+    
+    private void registerLocalClusterInfo(ClusterInfo clusterInfo) {
+        // name
+        if(this.localClusterManager.getName() == null || this.localClusterManager.getName().isEmpty()) {
+            if(clusterInfo != null && clusterInfo.getName() != null) {
+                this.localClusterManager.setName(this.config.getClusterInfo().getName());
+            } else {
+                try {
+                    // name
+                    StargateServiceConfiguration stargateConfig = StargateService.getInstance().getConfiguration();
+                    this.localClusterManager.setName(stargateConfig.getServiceName());
+                } catch (ServiceNotStartedException ex) {
+                    LOG.error(ex);
+                }
+            }
+        }
+        
+        // node
+        if(clusterInfo != null) {
+            try {
+                Collection<ClusterNodeInfo> nodes = this.config.getClusterInfo().getAllNode();
+                if(nodes != null) {
+                    this.localClusterManager.addNode(nodes);
+                }
+            } catch (NodeAlreadyAddedException ex) {
+                LOG.error(ex);
+            }
+        } else {
+            try {
+                // autogenerate?
+                StargateServiceConfiguration stargateConfig = StargateService.getInstance().getConfiguration();
+                String IPAddress = getGoodIPAddress();
+                URI hostUri = new URI("http://" + IPAddress + ":" + stargateConfig.getServicePort());
+                ClusterNodeInfo node = new ClusterNodeInfo(IPAddress + ":" + stargateConfig.getServicePort(), hostUri);
+                this.localClusterManager.addNode(node);
+            } catch (NodeAlreadyAddedException ex) {
+                LOG.error(ex);
+            } catch (ServiceNotStartedException ex) {
+                LOG.error(ex);
+            } catch (URISyntaxException ex) {
+                LOG.error(ex);
+            }
+        }
+    }
+    
+    private String getGoodIPAddress() {
+        Collection<ClusterNodeInfo> nodes = this.localClusterManager.getAllNode();
+        if(nodes.size() > 0) {
+            Collection<String> localAddresses = IPUtils.getIPAddresses();
+            Iterator<ClusterNodeInfo> iterator = nodes.iterator();
+            while(iterator.hasNext()) {
+                ClusterNodeInfo node = iterator.next();
+                URI addr = node.getAddr();
+                String host = addr.getHost();
+                if(IPUtils.isIPAddress(host)) {
+                    for(String localAddr : localAddresses) {
+                        if(IPUtils.isSameSubnet(host, localAddr, "255.255.255.0")) {
+                            return localAddr;
+                        }
+                    }
+                }
+            }
+            return IPUtils.getPublicIPAddress();
+        } else {
+            return IPUtils.getPublicIPAddress();
+        }
     }
     
     private void addDataExportListener() {

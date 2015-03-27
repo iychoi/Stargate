@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.common;
 
+import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,10 +33,15 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,6 +52,13 @@ import org.apache.commons.logging.LogFactory;
 public class IPUtils {
     
     private static final Log LOG = LogFactory.getLog(IPUtils.class);
+    
+    private static final String IPADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+    
+    private static Pattern IP_pattern = Pattern.compile(IPADDRESS_PATTERN);
     
     public static Collection<String> getIPAddresses() {
         ArrayList<String> addresses = new ArrayList<String>();
@@ -92,5 +105,29 @@ public class IPUtils {
             LOG.error(ex);
         }
         return null;
+    }
+    
+    public static boolean isIPAddress(String address) {
+        Matcher matcher = IP_pattern.matcher(address);
+        return matcher.matches();
+    }
+
+    public static boolean isSameSubnet(String ip1, String ip2, String mask) {
+        try {
+            byte[] a1 = InetAddress.getByName(ip1).getAddress();
+            byte[] a2 = InetAddress.getByName(ip2).getAddress();
+            byte[] m = InetAddress.getByName(mask).getAddress();
+            
+            for (int i = 0; i < a1.length; i++) {
+                if ((a1[i] & m[i]) != (a2[i] & m[i])) {
+                    return false;
+                }
+            }
+            
+            return true;
+        } catch (UnknownHostException ex) {
+            LOG.error(ex);
+            return false;
+        }
     }
 }
