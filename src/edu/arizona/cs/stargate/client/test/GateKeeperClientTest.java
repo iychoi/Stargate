@@ -26,7 +26,6 @@ package edu.arizona.cs.stargate.client.test;
 
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
@@ -127,47 +126,39 @@ public class GateKeeperClientTest {
             Collection<DataExportInfo> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
             System.out.println("data export info : " + DataFormatter.toJSONFormat(dataExportInfo));
             
-            DataExportInfo info = new DataExportInfo("test");
-            DataExportEntry entry = new DataExportEntry("/aaa/bbb", "file:///home/iychoi/NetBeansProjects/Stargate/libs/hadoop-core-0.20.2-cdh3u5.jar");
-            info.addExportEntry(entry);
-            this.client.getDataExportManagerClient().addDataExport(info);
+            DataExportInfo export = new DataExportInfo("/aaa/bbb", "file:///home/iychoi/NetBeansProjects/Stargate/libs/hadoop-core-0.20.2-cdh3u5.jar");
+            this.client.getDataExportManagerClient().addDataExport(export);
             
             dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
             System.out.println("data export info : " + DataFormatter.toJSONFormat(dataExportInfo));
             
             for(DataExportInfo dei : dataExportInfo) {
-                for(DataExportEntry dee : dei.getAllExportEntry()) {
-                    // check recipe
-                    Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dee.getResourcePath());
-                    System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
-                    System.out.println(DataFormatter.toJSONFormat(recipe));
-                }
+                // check recipe
+                Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
+                System.out.println(DataFormatter.toJSONFormat(recipe));
             }
             
             
             // retest
             Thread.sleep(3000);
             for(DataExportInfo dei : dataExportInfo) {
-                for(DataExportEntry dee : dei.getAllExportEntry()) {
-                    // check recipe
-                    Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dee.getResourcePath());
-                    System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
-                    System.out.println(DataFormatter.toJSONFormat(recipe));
-                }
+                // check recipe
+                Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
+                System.out.println(DataFormatter.toJSONFormat(recipe));
             }
             
             // downloadtest
             Thread.sleep(3000);
             byte[] buffer = new byte[100*1024];
             for(DataExportInfo dei : dataExportInfo) {
-                for(DataExportEntry dee : dei.getAllExportEntry()) {
-                    // check recipe
-                    InputStream is = this.client.getDataExportManagerClient().getDataChunk("test", dee.getVirtualPath(), 0, 1024);
-                    System.out.println("reading first 1024KB from " + dee.getVirtualPath());
-                    is.read(buffer);
-                    
-                    System.out.println(new String(buffer));
-                }
+                // check recipe
+                InputStream is = this.client.getDataExportManagerClient().getDataChunk(dei.getVirtualPath(), 0, 1024);
+                System.out.println("reading first 1024KB from " + dei.getVirtualPath());
+                is.read(buffer);
+
+                System.out.println(new String(buffer));
             }
         } catch (IOException ex) {
             ex.printStackTrace();

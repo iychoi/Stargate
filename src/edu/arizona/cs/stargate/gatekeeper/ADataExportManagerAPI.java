@@ -42,13 +42,13 @@ public abstract class ADataExportManagerAPI {
     
     public abstract Collection<DataExportInfo> getAllDataExportInfo() throws Exception;
     
-    public abstract DataExportInfo getDataExportInfo(String name) throws Exception;
+    public abstract DataExportInfo getDataExportInfo(String vpath) throws Exception;
     
     public abstract void addDataExport(DataExportInfo info) throws Exception;
     
-    public abstract void removeDataExport(String name) throws Exception;
+    public abstract void removeDataExport(String vpath) throws Exception;
     
     public abstract void removeAllDataExport() throws Exception;
     
-    public abstract InputStream getDataChunk(String name, String path, long offset, int len) throws Exception;
+    public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
 }

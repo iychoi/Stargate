@@ -27,11 +27,14 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
+import edu.arizona.cs.stargate.common.recipe.ChunkReaderFactory;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
 import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -39,7 +42,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -162,6 +168,51 @@ public class RecipeManagerRestful extends ARecipeManagerAPI {
     public void removeAllRecipe() throws Exception {
         RecipeManager rm = getRecipeManager();
         rm.removeAllRecipe();
+    }
+    
+    @GET
+    @Path(ARecipeManagerAPI.GET_DATA_CHUNK_PATH)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response responseGetDataChunk(
+            @DefaultValue("null") @QueryParam("hash") String hash
+    ) throws Exception {
+        if(hash != null) {
+            
+            final InputStream is = getDataChunk(hash);
+            
+            StreamingOutput stream = new StreamingOutput() {
+
+                @Override
+                public void write(OutputStream out) throws IOException, WebApplicationException {
+                    try {
+                        int buffersize = 100 * 1024;
+                        byte[] buffer = new byte[buffersize];
+
+                        int read = 0;
+                        while ((read = is.read(buffer)) > 0) {
+                            out.write(buffer, 0, read);
+                        }
+                        is.close();
+
+                    } catch (Exception ex) {
+                        throw new WebApplicationException(ex);
+                    }
+                }
+
+            };
+            
+            return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
+        } else {
+            throw new Exception("invalid parameter");
+        }
+    }
+    
+    @Override
+    public InputStream getDataChunk(String hash) throws Exception {
+        RecipeManager rm = getRecipeManager();
+        ChunkInfo chunk = rm.findChunk(hash);
+
+        return ChunkReaderFactory.getChunkReader(chunk.getResourcePath(), chunk.getChunkStart(), chunk.getChunkLen());
     }
 
     private RecipeManager getRecipeManager() {

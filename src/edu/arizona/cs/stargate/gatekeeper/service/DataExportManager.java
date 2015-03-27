@@ -24,11 +24,13 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
+import edu.arizona.cs.stargate.cache.service.JsonMap;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
+import edu.arizona.cs.stargate.service.ServiceNotStartedException;
+import edu.arizona.cs.stargate.service.StargateService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
@@ -41,9 +43,11 @@ import org.apache.commons.logging.LogFactory;
 public class DataExportManager {
     private static final Log LOG = LogFactory.getLog(DataExportManager.class);
     
+    private static final String DATAEXPORTMANAGER_MAP_ID = "DataExportManager";
+    
     private static DataExportManager instance;
     
-    private Map<String, DataExportInfo> dataExportTable = new HashMap<String, DataExportInfo>();
+    private Map<String, DataExportInfo> dataExports;
     private ArrayList<IDataExportConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IDataExportConfigurationChangeEventHandler>();
     
     public static DataExportManager getInstance() {
@@ -56,36 +60,41 @@ public class DataExportManager {
     }
     
     DataExportManager() {
-        
+        try {
+            this.dataExports = new JsonMap<String, DataExportInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExportInfo.class);
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
+            throw new RuntimeException(ex);
+        }
     }
     
     public synchronized Collection<DataExportInfo> getAllDataExportInfo() {
-        return Collections.unmodifiableCollection(this.dataExportTable.values());
+        return Collections.unmodifiableCollection(this.dataExports.values());
     }
     
-    public synchronized DataExportInfo getDataExportInfo(String name) {
-        if(name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name is empty or null");
+    public synchronized DataExportInfo getDataExportInfo(String vpath) {
+        if(vpath == null || vpath.isEmpty()) {
+            throw new IllegalArgumentException("vpath is empty or null");
         }
         
-        return this.dataExportTable.get(name);
+        return this.dataExports.get(vpath);
     }
     
-    public synchronized boolean hasDataExportInfo(String name) {
-        if(name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name is empty or null");
+    public synchronized boolean hasDataExportInfo(String vpath) {
+        if(vpath == null || vpath.isEmpty()) {
+            throw new IllegalArgumentException("vpath is empty or null");
         }
         
-        return this.dataExportTable.containsKey(name);
+        return this.dataExports.containsKey(vpath);
     }
     
     public synchronized void removeAllDataExport() {
         ArrayList<String> toberemoved = new ArrayList<String>();
-        Set<String> keys = this.dataExportTable.keySet();
+        Set<String> keys = this.dataExports.keySet();
         toberemoved.addAll(keys);
         
         for(String key : toberemoved) {
-            DataExportInfo info = this.dataExportTable.get(key);
+            DataExportInfo info = this.dataExports.get(key);
 
             if(info != null) {
                 removeDataExport(info);
@@ -93,24 +102,24 @@ public class DataExportManager {
         }
     }
     
-    public synchronized void addDataExport(Collection<DataExportInfo> info) throws DataExportAlreadyAddedException {
-        for(DataExportInfo i : info) {
-            addDataExport(i);
+    public synchronized void addDataExport(Collection<DataExportInfo> exports) throws DataExportAlreadyAddedException {
+        for(DataExportInfo export : exports) {
+            addDataExport(export);
         }
     }
     
-    public synchronized void addDataExport(DataExportInfo info) throws DataExportAlreadyAddedException {
-        if(info == null || info.isEmpty()) {
+    public synchronized void addDataExport(DataExportInfo export) throws DataExportAlreadyAddedException {
+        if(export == null || export.isEmpty()) {
             throw new IllegalArgumentException("data export is empty or null");
         }
         
-        if(this.dataExportTable.containsKey(info.getName())) {
-            throw new DataExportAlreadyAddedException("data export " + info.getName() + " is already added");
+        if(this.dataExports.containsKey(export.getVirtualPath())) {
+            throw new DataExportAlreadyAddedException("data export " + export.getVirtualPath() + " is already added");
         }
         
-        DataExportInfo put = this.dataExportTable.put(info.getName(), info);
-        if(put != null) {
-            raiseEventForAddDataExport(put);
+        DataExportInfo exportAdded = this.dataExports.put(export.getVirtualPath(), export);
+        if(exportAdded != null) {
+            raiseEventForAddDataExport(exportAdded);
         }
     }
     
@@ -136,38 +145,38 @@ public class DataExportManager {
         }
     }
 
-    public synchronized void removeDataExport(DataExportInfo info) {
-        if(info == null || info.isEmpty()) {
+    public synchronized void removeDataExport(DataExportInfo export) {
+        if(export == null || export.isEmpty()) {
             throw new IllegalArgumentException("data export is empty or null");
         }
         
-        removeDataExport(info.getName());
+        removeDataExport(export.getVirtualPath());
     }
     
-    public synchronized void removeDataExport(String name) {
-        if(name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name is empty or null");
+    public synchronized void removeDataExport(String vpath) {
+        if(vpath == null || vpath.isEmpty()) {
+            throw new IllegalArgumentException("vpath is empty or null");
         }
         
-        DataExportInfo removed = this.dataExportTable.remove(name);
+        DataExportInfo removed = this.dataExports.remove(vpath);
         if(removed != null) {
             raiseEventForRemoveDataExport(removed);
         }
     }
 
-    private synchronized void raiseEventForAddDataExport(DataExportInfo info) {
-        LOG.debug("data export added : " + info.toString());
+    private synchronized void raiseEventForAddDataExport(DataExportInfo export) {
+        LOG.debug("data export added : " + export.toString());
         
         for(IDataExportConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
-            handler.addDataExport(this, info);
+            handler.addDataExport(this, export);
         }
     }
     
-    private synchronized void raiseEventForRemoveDataExport(DataExportInfo info) {
-        LOG.debug("data export removed : " + info.toString());
+    private synchronized void raiseEventForRemoveDataExport(DataExportInfo export) {
+        LOG.debug("data export removed : " + export.toString());
         
         for(IDataExportConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
-            handler.removeDataExport(this, info);
+            handler.removeDataExport(this, export);
         }
     }
     

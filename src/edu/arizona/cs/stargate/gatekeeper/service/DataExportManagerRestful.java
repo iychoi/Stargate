@@ -26,7 +26,6 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
-import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ChunkReaderFactory;
 import edu.arizona.cs.stargate.gatekeeper.ADataExportManagerAPI;
@@ -67,10 +66,10 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetDataExportInfoText(
-            @DefaultValue("null") @QueryParam("name") String name
+            @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
-            return DataFormatter.toJSONFormat(responseGetDataExportInfoJSON(name));
+            return DataFormatter.toJSONFormat(responseGetDataExportInfoJSON(vpath));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
@@ -80,14 +79,14 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     @Path(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Collection<DataExportInfo>> responseGetDataExportInfoJSON(
-            @DefaultValue("null") @QueryParam("name") String name
+            @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
-            if(name != null) {
-                if(name.equals("*")) {
+            if(vpath != null) {
+                if(vpath.equals("*")) {
                     return new RestfulResponse<Collection<DataExportInfo>>(getAllDataExportInfo());
                 } else {
-                    DataExportInfo info = getDataExportInfo(name);
+                    DataExportInfo info = getDataExportInfo(vpath);
                     List<DataExportInfo> dataExportInfo = new ArrayList<DataExportInfo>();
                     dataExportInfo.add(info);
                     
@@ -102,9 +101,9 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     }
     
     @Override
-    public DataExportInfo getDataExportInfo(String name) throws Exception {
+    public DataExportInfo getDataExportInfo(String vpath) throws Exception {
         DataExportManager dem = getDataExportManager();
-        return dem.getDataExportInfo(name);
+        return dem.getDataExportInfo(vpath);
     }
     
     @Override
@@ -150,10 +149,10 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
     public String responseDeleteDataExportText(
-            @DefaultValue("null") @QueryParam("name") String name
+            @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
-            return DataFormatter.toJSONFormat(responseDeleteDataExportJSON(name));
+            return DataFormatter.toJSONFormat(responseDeleteDataExportJSON(vpath));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
@@ -163,14 +162,14 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     @Path(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Boolean> responseDeleteDataExportJSON(
-            @DefaultValue("null") @QueryParam("name") String name
+            @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
-            if(name != null) {
-                if(name.equals("*")) {
+            if(vpath != null) {
+                if(vpath.equals("*")) {
                     removeAllDataExport();
                 } else {
-                    removeDataExport(name);
+                    removeDataExport(vpath);
                 }
                 return new RestfulResponse<Boolean>(true);
             } else {
@@ -182,9 +181,9 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     }
 
     @Override
-    public void removeDataExport(String name) throws Exception {
+    public void removeDataExport(String vpath) throws Exception {
         DataExportManager dem = getDataExportManager();
-        dem.removeDataExport(name);
+        dem.removeDataExport(vpath);
     }
 
     @Override
@@ -197,14 +196,13 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
     @Path(ADataExportManagerAPI.GET_DATA_CHUNK_PATH)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response responseGetDataChunk(
-            @DefaultValue("null") @QueryParam("name") String name,
-            @DefaultValue("null") @QueryParam("path") String path,
+            @DefaultValue("null") @QueryParam("vpath") String vpath,
             @DefaultValue("0") @QueryParam("offset") long offset,
             @DefaultValue("0") @QueryParam("len") int len
     ) throws Exception {
-        if(name != null && path != null && len > 0) {
+        if(vpath != null && len > 0) {
             
-            final InputStream is = getDataChunk(name, path, offset, len);
+            final InputStream is = getDataChunk(vpath, offset, len);
             
             StreamingOutput stream = new StreamingOutput() {
 
@@ -227,19 +225,18 @@ public class DataExportManagerRestful extends ADataExportManagerAPI {
 
             };
             
-            return Response.ok(stream).header("content-disposition", "attachment; filename = " + path).build();
+            return Response.ok(stream).header("content-disposition", "attachment; filename = " + vpath).build();
         } else {
             throw new Exception("invalid parameter");
         }
     }
     
     @Override
-    public InputStream getDataChunk(String name, String path, long offset, int len) throws Exception {
+    public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
         DataExportManager dem = getDataExportManager();
-        DataExportInfo info = dem.getDataExportInfo(name);
-        DataExportEntry entry = info.getExportEntry(path);
+        DataExportInfo info = dem.getDataExportInfo(vpath);
 
-        return ChunkReaderFactory.getChunkReader(entry.getResourcePath(), offset, len);
+        return ChunkReaderFactory.getChunkReader(info.getResourcePath(), offset, len);
     }
     
     private DataExportManager getDataExportManager() {

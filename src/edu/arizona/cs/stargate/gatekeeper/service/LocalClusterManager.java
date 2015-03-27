@@ -67,6 +67,7 @@ public class LocalClusterManager {
             this.nodes = new JsonMap<String, ClusterNodeInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNodeInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
+            throw new RuntimeException(ex);
         }
     }
     

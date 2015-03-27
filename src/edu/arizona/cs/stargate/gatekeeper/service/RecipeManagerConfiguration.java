@@ -25,8 +25,6 @@
 package edu.arizona.cs.stargate.gatekeeper.service;
 
 import edu.arizona.cs.stargate.common.ImmutableConfiguration;
-import java.io.File;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**

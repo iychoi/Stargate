@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper;
 
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
+import java.io.InputStream;
 import java.net.URI;
 
 /**
@@ -37,7 +38,8 @@ public abstract class ARecipeManagerAPI {
     public static final String PATH = "/rcp";
     public static final String GET_RECIPE_PATH = "/recipe";
     public static final String DELETE_RECIPE_PATH = "/recipe";
-    public static final String GET_CHUNK_INFO_PATH = "/chunk";
+    public static final String GET_CHUNK_INFO_PATH = "/cinfo";
+    public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
     public abstract Recipe getRecipe(URI resourceURI) throws Exception;
     
@@ -46,4 +48,6 @@ public abstract class ARecipeManagerAPI {
     public abstract void removeAllRecipe() throws Exception;
     
     public abstract ChunkInfo getChunkInfo(String hash) throws Exception;
+    
+    public abstract InputStream getDataChunk(String hash) throws Exception;
 }

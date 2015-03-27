@@ -29,8 +29,10 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.MultiMap;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.util.Map;
+import java.util.Queue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -131,7 +133,15 @@ public class DistributedCacheService {
         return this.hazelcastInstance.getMap(name);
     }
     
+    public synchronized MultiMap getDistributedMultiMap(String name) {
+        return this.hazelcastInstance.getMultiMap(name);
+    }
+    
     public synchronized Map getReplicatedMap(String name) {
         return this.hazelcastInstance.getReplicatedMap(name);
+    }
+    
+    public synchronized Queue getDistributedQueue(String name) {
+        return this.hazelcastInstance.getQueue(name);
     }
 }

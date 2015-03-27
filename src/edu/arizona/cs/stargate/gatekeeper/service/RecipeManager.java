@@ -24,21 +24,23 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.common.recipe.MemoryRecipeStore;
-import edu.arizona.cs.stargate.common.dataexport.DataExportEntry;
+import edu.arizona.cs.stargate.cache.service.JsonMap;
+import edu.arizona.cs.stargate.cache.service.JsonMultiMap;
+import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ARecipeGenerator;
-import edu.arizona.cs.stargate.common.recipe.ARecipeStore;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.RecipeChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.RecipeGeneratorFactory;
+import edu.arizona.cs.stargate.service.ServiceNotStartedException;
+import edu.arizona.cs.stargate.service.StargateService;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import java.util.concurrent.BlockingQueue;
+import java.util.Iterator;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
@@ -51,16 +53,17 @@ import org.apache.commons.logging.LogFactory;
 public class RecipeManager {
     private static final Log LOG = LogFactory.getLog(RecipeManager.class);
     
+    private static final String RECIPEMANAGER_RECIPES_MAP_ID = "RecipeManager_Recipes";
+    private static final String RECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
+    private static final String RECIPEMANAGER_PENDING_RECIPES_MAP_ID = "RecipeManager_Pending_Recipes";
+    
     private static RecipeManager instance;
 
-    static RecipeManager getInstance() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
     private RecipeManagerConfiguration config;
-    private BlockingQueue<Recipe> pendingRecipes = new LinkedBlockingQueue<Recipe>();
-    //private Map<URI, Boolean> removedRecipes = new HashMap<URI, Boolean>();
-    private ARecipeStore recipeStore;
+    
+    private JsonMap<URI, Recipe> recipes;
+    private JsonMap<URI, Recipe> pendingRecipes;
+    private JsonMultiMap<String, ChunkInfo> chunkinfo;
     
     // check message and start hashing
     private ScheduledExecutorService backgroundWorker;
@@ -82,77 +85,110 @@ public class RecipeManager {
             this.config.setImmutable();
         }
         
+        try {
+            this.recipes = new JsonMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), Recipe.class);
+            this.pendingRecipes = new JsonMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), Recipe.class);
+            this.chunkinfo = new JsonMultiMap<String, ChunkInfo>(StargateService.getInstance().getDistributedCacheService().getDistributedMultiMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), ChunkInfo.class);
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
+            throw new RuntimeException(ex);
+        }
+        
         this.backgroundWorker = Executors.newSingleThreadScheduledExecutor();
         this.backgroundWorker.scheduleAtFixedRate(new BackgroundWorker(), 0, 1, TimeUnit.MINUTES);
-        this.recipeStore = new MemoryRecipeStore();
     }
     
     public RecipeManagerConfiguration getConfiguration() {
         return this.config;
     }
     
-    public synchronized void prepareRecipe(DataExportInfo info) {
-        Collection<DataExportEntry> entries = info.getAllExportEntry();
-        if(entries != null) {
-            for(DataExportEntry entry : entries) {
-                prepareRecipe(entry.getResourcePath());
-            }
-        }
+    public synchronized Recipe prepareRecipe(DataExportInfo export) {
+        URI resourceUri = export.getResourcePath();
+        return prepareRecipe(resourceUri);
     }
     
-    public synchronized void prepareRecipe(URI resourceUri) {
+    public synchronized Recipe prepareRecipe(URI resourceUri) {
         try {
-            if(!this.recipeStore.hasRecipe(resourceUri)) {
+            if(!this.recipes.containsKey(resourceUri) && 
+                    !this.pendingRecipes.containsKey(resourceUri)) {
                 LOG.info("Preparing a new recipe of " + resourceUri.toASCIIString());
                 ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(resourceUri, this.config.getChunkSize());
                 Recipe recipe = recipeGenerator.generateRecipeWithoutHash(resourceUri, this.config.getHashAlgorithm());
-                this.pendingRecipes.offer(recipe);
-                this.recipeStore.store(recipe);
+                this.pendingRecipes.put(resourceUri, recipe);
+                return recipe;
             }
         } catch(Exception ex) {
             LOG.error(ex);
+            return null;
         }
+        return null;
     }
     
     public synchronized Recipe getRecipe(URI resourceUri) {
-        Recipe recipe = this.recipeStore.get(resourceUri);
-        if(recipe == null) {
-            prepareRecipe(resourceUri);
-            return this.recipeStore.get(resourceUri);
-        } else {
+        Recipe recipe;
+        recipe = this.recipes.get(resourceUri);
+        if(recipe != null) {
             return recipe;
         }
+        
+        recipe = this.pendingRecipes.get(resourceUri);
+        if(recipe != null) {
+            return recipe;
+        }
+        
+        return prepareRecipe(resourceUri);
     }
     
-    public synchronized void removeRecipe(DataExportInfo info) {
-        Collection<DataExportEntry> entries = info.getAllExportEntry();
-        if(entries != null) {
-            for(DataExportEntry entry : entries) {
-                removeRecipe(entry.getResourcePath());
+    public synchronized void removeRecipe(DataExportInfo export) {
+        removeRecipe(export.getResourcePath());
+    }
+    
+    public synchronized void removeRecipe(URI resourceUri) {
+        Recipe recipe1 = this.recipes.remove(resourceUri);
+        Recipe recipe2 = this.pendingRecipes.remove(resourceUri);
+        
+        Recipe recipe = null;
+        if(recipe1 != null) {
+            recipe = recipe1;
+        }
+        if(recipe2 != null) {
+            recipe = recipe2;
+        }
+        if(recipe != null) {
+            Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
+            for(RecipeChunkInfo info : allChunk) {
+                Collection<ChunkInfo> removedChunks = this.chunkinfo.remove(info.getHashString());
+                for(ChunkInfo chunk : removedChunks) {
+                    if(!chunk.getResourcePath().equals(recipe.getResourcePath())) {
+                        // other's 
+                        this.chunkinfo.put(chunk.getHashString(), chunk);
+                    }
+                }
             }
         }
     }
     
-    public synchronized void removeRecipe(URI resourceUri) {
-        this.recipeStore.remove(resourceUri);
-        //if(!this.removedRecipes.containsKey(resourceUri)) {
-        //    this.removedRecipes.put(resourceUri, true);
-        //}
-    }
-    
     public synchronized void removeAllRecipe() {
-        this.recipeStore.removeAll();
-        //if(!this.removedRecipes.containsKey(resourceUri)) {
-        //    this.removedRecipes.put(resourceUri, true);
-        //}
+        this.recipes.clear();
+        this.pendingRecipes.clear();
+        this.chunkinfo.clear();
     }
     
     public synchronized ChunkInfo findChunk(String hash) {
-        return this.recipeStore.find(hash);
+        Collection<ChunkInfo> chunks = this.chunkinfo.get(hash);
+        Iterator<ChunkInfo> iterator = chunks.iterator();
+        while(iterator.hasNext()) {
+            ChunkInfo chunk = iterator.next();
+            if(this.recipes.containsKey(chunk.getResourcePath())) {
+                return chunk;
+            }
+        }
+        return null;
     }
     
     public synchronized ChunkInfo findChunk(byte[] hash) {
-        return this.recipeStore.find(hash);
+        String hashString = DataFormatter.toHexString(hash);
+        return findChunk(hashString);
     }
     
     @Override
@@ -170,26 +206,22 @@ public class RecipeManager {
         
         @Override
         public void run() {
-            try {
-                while(true) {
-                    try {
-                        Recipe recipe = pendingRecipes.take();
-                        //if(removedRecipes.containsKey(recipe.getResourcePath())) {
-                        //    removedRecipes.remove(recipe.getResourcePath());
-                        //} else {
-                            LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
-                            ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
-                            recipeGenerator.hashRecipe(recipe);
-                            recipeStore.notifyRecipeHashed(recipe);
-                        //}
-                    } catch (IOException ex) {
-                        LOG.error(ex);
-                    } catch (NoSuchAlgorithmException ex) {
-                        LOG.error(ex);
+            while(pendingRecipes.size() > 0) {
+                try {
+                    Recipe recipe = pendingRecipes.popAnyEntry();
+                    LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
+                    ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
+                    recipeGenerator.hashRecipe(recipe);
+                    recipes.put(recipe.getResourcePath(), recipe);
+                    Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
+                    for(RecipeChunkInfo chunk : allChunk) {
+                        chunkinfo.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
                     }
+                } catch (IOException ex) {
+                    LOG.error(ex);
+                } catch (NoSuchAlgorithmException ex) {
+                    LOG.error(ex);
                 }
-            } catch (InterruptedException ex) {
-                LOG.debug("BackgroundWorker thread is interrupted");
             }
         }
     }

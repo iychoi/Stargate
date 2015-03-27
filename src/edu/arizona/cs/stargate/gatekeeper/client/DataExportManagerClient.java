@@ -72,7 +72,7 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
         RestfulResponse<Collection<DataExportInfo>> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
-            params.put("name", "*");
+            params.put("vpath", "*");
             response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH, params), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
@@ -87,11 +87,11 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
     }
     
     @Override
-    public DataExportInfo getDataExportInfo(String name) throws Exception {
+    public DataExportInfo getDataExportInfo(String vpath) throws Exception {
         RestfulResponse<Collection<DataExportInfo>> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
-            params.put("name", name);
+            params.put("vpath", vpath);
             response = (RestfulResponse<Collection<DataExportInfo>>) this.gatekeeperRPCClient.get(getResourcePath(ADataExportManagerAPI.GET_DATA_EXPORT_INFO_PATH, params), new GenericType<RestfulResponse<Collection<DataExportInfo>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
@@ -126,11 +126,11 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
     }
 
     @Override
-    public void removeDataExport(String name) throws Exception {
+    public void removeDataExport(String vpath) throws Exception {
         RestfulResponse<Boolean> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
-            params.put("name", name);
+            params.put("vpath", vpath);
             response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
@@ -147,7 +147,7 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
         RestfulResponse<Boolean> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
-            params.put("name", "*");
+            params.put("vpath", "*");
             response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(getResourcePath(ADataExportManagerAPI.DELETE_DATA_EXPORT_PATH, params), new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
@@ -160,11 +160,10 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
     }
 
     @Override
-    public InputStream getDataChunk(String name, String path, long offset, int len) throws Exception {
+    public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
         try {
             Map<String, String> params = new HashMap<String, String>();
-            params.put("name", name);
-            params.put("path", path);
+            params.put("vpath", vpath);
             params.put("offset", Long.toString(offset));
             params.put("len", Integer.toString(len));
             return this.gatekeeperRPCClient.download(getResourcePath(ADataExportManagerAPI.GET_DATA_CHUNK_PATH, params));

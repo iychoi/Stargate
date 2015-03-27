@@ -34,6 +34,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,40 +47,40 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
 
     private static final Log LOG = LogFactory.getLog(JsonMap.class);
     
-    private Map<K, String> intermalMap;
+    private Map<K, String> internalMap;
     private JsonSerializer serializer;
     private Class<? extends V> valueClass;
     
     public JsonMap(Map<K, String> internalMap, Class<? extends V> clazz) {
-        this.intermalMap = internalMap;
+        this.internalMap = internalMap;
         this.valueClass = clazz;
         this.serializer = new JsonSerializer();
     }
     
     public Map<K, String> getInternalMap() {
-        return this.intermalMap;
+        return this.internalMap;
     }
     
     @Override
-    public int size() {
-        return this.intermalMap.size();
+    public synchronized int size() {
+        return this.internalMap.size();
     }
 
     @Override
-    public boolean isEmpty() {
-        return this.intermalMap.isEmpty();
+    public synchronized boolean isEmpty() {
+        return this.internalMap.isEmpty();
     }
 
     @Override
-    public boolean containsKey(Object key) {
-        return this.intermalMap.containsKey(key);
+    public synchronized boolean containsKey(Object key) {
+        return this.internalMap.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public synchronized boolean containsValue(Object value) {
         try {
             String json = this.serializer.toJson(value);
-            return this.intermalMap.containsValue(json);
+            return this.internalMap.containsValue(json);
         } catch (IOException ex) {
             LOG.error(ex);
             return false;
@@ -86,9 +88,9 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
     }
 
     @Override
-    public V get(Object key) {
+    public synchronized V get(Object key) {
         try {
-            String json = this.intermalMap.get(key);
+            String json = this.internalMap.get(key);
             return (V) this.serializer.fromJson(json, this.valueClass);
         } catch (IOException ex) {
             LOG.error(ex);
@@ -97,10 +99,10 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
+    public synchronized V put(K key, V value) {
         try {
             String json = this.serializer.toJson(value);
-            this.intermalMap.put(key, json);
+            this.internalMap.put(key, json);
             return value;
         } catch (IOException ex) {
             LOG.error(ex);
@@ -109,9 +111,9 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
     }
     
     @Override
-    public V remove(Object key) {
+    public synchronized V remove(Object key) {
         try {
-            String json = this.intermalMap.remove(key);
+            String json = this.internalMap.remove(key);
             return (V) this.serializer.fromJson(json, this.valueClass);
         } catch (IOException ex) {
             LOG.error(ex);
@@ -120,7 +122,7 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> map) {
+    public synchronized void putAll(Map<? extends K, ? extends V> map) {
         Set<? extends K> keySet = map.keySet();
         Iterator<? extends K> iterator = keySet.iterator();
         while(iterator.hasNext()) {
@@ -129,24 +131,24 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
         }
     }
     
-    public void putAll(JsonMap<K, V> map) {
-        this.intermalMap.putAll(map.intermalMap);
+    public synchronized void putAll(JsonMap<K, V> map) {
+        this.internalMap.putAll(map.internalMap);
     }
 
     @Override
-    public void clear() {
-        this.intermalMap.clear();
+    public synchronized void clear() {
+        this.internalMap.clear();
     }
 
     @Override
-    public Set<K> keySet() {
-        return this.intermalMap.keySet();
+    public synchronized Set<K> keySet() {
+        return this.internalMap.keySet();
     }
     
     @Override
-    public Collection<V> values() {
+    public synchronized Collection<V> values() {
         ArrayList<V> values = new ArrayList<V>();
-        Collection<String> jsonValues = this.intermalMap.values();
+        Collection<String> jsonValues = this.internalMap.values();
         for(String json : jsonValues) {
             try {
                 V value = (V) this.serializer.fromJson(json, this.valueClass);
@@ -159,9 +161,9 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
+    public synchronized Set<Entry<K, V>> entrySet() {
         Set<Entry<K, V>> set = new HashSet<Entry<K, V>>();
-        Set<Entry<K, String>> entrySet = this.intermalMap.entrySet();
+        Set<Entry<K, String>> entrySet = this.internalMap.entrySet();
         for(Entry<K, String> entry : entrySet) {
             try {
                 V value = (V) this.serializer.fromJson(entry.getValue(), this.valueClass);
@@ -171,5 +173,22 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
             }
         }
         return set;
+    }
+    
+    public synchronized V popAnyEntry() {
+        if(this.internalMap.size() > 0) {
+            Set<K> keySet = this.internalMap.keySet();
+            Iterator<K> iterator = keySet.iterator();
+            while(iterator.hasNext()) {
+                try {
+                    K key = iterator.next();
+                    String json = this.internalMap.remove(key);
+                    return (V) this.serializer.fromJson(json, this.valueClass);
+                } catch (IOException ex) {
+                    LOG.error(ex);
+                }
+            }
+        }
+        return null;
     }
 }

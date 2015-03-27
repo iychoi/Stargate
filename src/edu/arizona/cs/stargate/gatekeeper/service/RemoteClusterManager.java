@@ -64,6 +64,7 @@ public class RemoteClusterManager {
             this.remoteClusters = new JsonMap<String, ClusterInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), ClusterInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
+            throw new RuntimeException(ex);
         }
     }
     
@@ -90,9 +91,7 @@ public class RemoteClusterManager {
     public synchronized void removeAllCluster() {
         ArrayList<String> toberemoved = new ArrayList<String>();
         Set<String> keys = this.remoteClusters.keySet();
-        for(String key : keys) {
-            toberemoved.add(key);
-        }
+        toberemoved.addAll(keys);
         
         for(String key : toberemoved) {
             ClusterInfo cluster = this.remoteClusters.get(key);
@@ -100,6 +99,12 @@ public class RemoteClusterManager {
             if(cluster != null) {
                 removeCluster(cluster);
             }
+        }
+    }
+    
+    public synchronized void addDataExport(Collection<ClusterInfo> clusters) throws ClusterAlreadyAddedException {
+        for(ClusterInfo info : clusters) {
+            addCluster(info);
         }
     }
     
