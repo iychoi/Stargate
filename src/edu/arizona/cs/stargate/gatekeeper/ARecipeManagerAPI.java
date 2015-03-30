@@ -35,10 +35,10 @@ import java.net.URI;
  */
 public abstract class ARecipeManagerAPI {
     
-    public static final String PATH = "/rcp";
+    public static final String PATH = "/recipemgr";
     public static final String GET_RECIPE_PATH = "/recipe";
     public static final String DELETE_RECIPE_PATH = "/recipe";
-    public static final String GET_CHUNK_INFO_PATH = "/cinfo";
+    public static final String GET_CHUNK_INFO_PATH = "/chunkinfo";
     public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
     public abstract Recipe getRecipe(URI resourceURI) throws Exception;

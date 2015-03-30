@@ -77,6 +77,15 @@ public class RecipeManager {
         }
     }
     
+    public static RecipeManager getInstance() throws ServiceNotStartedException {
+        synchronized (RecipeManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("RecipeManager is not started");
+            }
+            return instance;
+        }
+    }
+    
     RecipeManager(RecipeManagerConfiguration config) {
         if(config == null) {
             this.config = new RecipeManagerConfiguration();

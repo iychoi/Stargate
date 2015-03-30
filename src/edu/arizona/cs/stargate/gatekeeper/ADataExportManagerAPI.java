@@ -34,7 +34,7 @@ import java.util.Collection;
  */
 public abstract class ADataExportManagerAPI {
     
-    public static final String PATH = "/de";
+    public static final String PATH = "/dataexportmgr";
     public static final String GET_DATA_EXPORT_INFO_PATH = "/export";
     public static final String DELETE_DATA_EXPORT_PATH = "/export";
     public static final String ADD_DATA_EXPORT_PATH = "/export";

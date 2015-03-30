@@ -24,30 +24,25 @@
 
 package edu.arizona.cs.stargate.gatekeeper;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import java.util.Collection;
+import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
+import edu.arizona.cs.stargate.common.recipe.Recipe;
+import java.io.InputStream;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AClusterManagerAPI {
+public abstract class ATransportManagerAPI {
+    public static final String PATH = "/transportmgr";
+    public static final String GET_RECIPE_PATH = "/recipe";
+    public static final String GET_CHUNK_INFO_PATH = "/chunkinfo";
+    public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
-    public static final String PATH = "/clustermgr";
-    public static final String GET_LOCAL_CLUSTER_INFO_PATH = "/local";
-    public static final String GET_REMOTE_CLUSTER_INFO_PATH = "/remote";
-    public static final String DELETE_REMOTE_CLUSTER_PATH = "/remote";
-    public static final String ADD_REMOTE_CLUSTER_PATH = "/remote";
+    public abstract Recipe getRecipe(String vpath) throws Exception;
     
-    public abstract ClusterInfo getLocalClusterInfo() throws Exception;
+    public abstract ChunkInfo getChunkInfo(String hash) throws Exception;
     
-    public abstract Collection<ClusterInfo> getAllRemoteClusterInfo() throws Exception;
+    public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
     
-    public abstract ClusterInfo getRemoteClusterInfo(String name) throws Exception;
-    
-    public abstract void addRemoteCluster(ClusterInfo cluster) throws Exception;
-    
-    public abstract void removeRemoteCluster(String name) throws Exception;
-    
-    public abstract void removeAllRemoteCluster() throws Exception;
+    public abstract InputStream getDataChunk(String hash) throws Exception;
 }

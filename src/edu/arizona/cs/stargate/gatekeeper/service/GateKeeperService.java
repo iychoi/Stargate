@@ -56,6 +56,7 @@ public class GateKeeperService {
     private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
     private RecipeManager recipeManager;
+    private TransportManager transportManager;
     
     public static GateKeeperService getInstance(GateKeeperServiceConfiguration config) {
         synchronized (GateKeeperService.class) {
@@ -96,6 +97,8 @@ public class GateKeeperService {
         addDataExportListener();
         
         this.dataExportManager.addDataExport(this.config.getDataExport());
+        
+        this.transportManager = TransportManager.getInstance();
         
         Guice.createInjector(Stage.PRODUCTION, new GatekeeperServletModule());
     }
@@ -207,6 +210,10 @@ public class GateKeeperService {
     
     public synchronized RecipeManager getRecipeManager() {
         return this.recipeManager;
+    }
+    
+    public synchronized TransportManager getTransportManager() {
+        return this.transportManager;
     }
     
     @Override
