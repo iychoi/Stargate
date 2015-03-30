@@ -35,8 +35,11 @@ import java.io.InputStream;
 public abstract class ATransportManagerAPI {
     public static final String PATH = "/transportmgr";
     public static final String GET_RECIPE_PATH = "/recipe";
+    public static final String GET_RECIPE_URL_PATH = "/recipeu";
     public static final String GET_CHUNK_INFO_PATH = "/chunkinfo";
+    public static final String GET_CHUNK_INFO_URL_PATH = "/chunkinfou";
     public static final String GET_DATA_CHUNK_PATH = "/chunk";
+    public static final String GET_DATA_CHUNK_URL_PATH = "/chunku";
     
     public abstract Recipe getRecipe(String vpath) throws Exception;
     

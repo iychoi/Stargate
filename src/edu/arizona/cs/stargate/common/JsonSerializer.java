@@ -59,6 +59,9 @@ public class JsonSerializer {
     }
     
     public Object fromJson(String json, Class<?> cls) throws IOException {
+        if(json == null) {
+            return null;
+        }
         StringReader reader = new StringReader(json);
         return this.mapper.readValue(reader, cls);
     }

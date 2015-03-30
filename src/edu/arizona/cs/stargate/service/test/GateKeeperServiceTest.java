@@ -26,7 +26,6 @@ package edu.arizona.cs.stargate.service.test;
 
 import edu.arizona.cs.stargate.cache.service.DistributedCacheServiceConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
-import edu.arizona.cs.stargate.common.Namer;
 import edu.arizona.cs.stargate.common.ResourceLocator;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
@@ -40,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  *

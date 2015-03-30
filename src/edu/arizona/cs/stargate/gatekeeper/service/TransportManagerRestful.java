@@ -39,6 +39,7 @@ import java.net.URI;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -64,6 +65,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     public String responseGetRecipeText(
             @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
+        LOG.info("vpath = " + vpath);
         try {
             return DataFormatter.toJSONFormat(responseGetRecipeJSON(vpath));
         } catch (IOException ex) {
@@ -77,6 +79,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     public RestfulResponse<Recipe> responseGetRecipeJSON(
             @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
+        LOG.info("vpath = " + vpath);
         try {
             return new RestfulResponse<Recipe>(getRecipe(vpath));
         } catch(Exception ex) {
@@ -85,11 +88,12 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_RECIPE_PATH + "/{vpath}")
+    @Path(ATransportManagerAPI.GET_RECIPE_URL_PATH + "/{vpath:.*}")
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetRecipeTextURL(
-            @DefaultValue("null") @QueryParam("vpath") String vpath
+            @DefaultValue("null") @PathParam("vpath") String vpath
     ) {
+        LOG.info("vpath = " + vpath);
         try {
             return DataFormatter.toJSONFormat(responseGetRecipeJSON(vpath));
         } catch (IOException ex) {
@@ -98,11 +102,12 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_RECIPE_PATH + "/{vpath}")
+    @Path(ATransportManagerAPI.GET_RECIPE_URL_PATH + "/{vpath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Recipe> responseGetRecipeJSONURL(
-            @DefaultValue("null") @QueryParam("vpath") String vpath
+            @DefaultValue("null") @PathParam("vpath") String vpath
     ) {
+        LOG.info("vpath = " + vpath);
         try {
             return new RestfulResponse<Recipe>(getRecipe(vpath));
         } catch(Exception ex) {
@@ -122,6 +127,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     public String responseGetChunkInfoText(
             @DefaultValue("null") @QueryParam("hash") String hash
     ) {
+        LOG.info("hash = " + hash);
         try {
             return DataFormatter.toJSONFormat(responseGetChunkInfoJSON(hash));
         } catch (IOException ex) {
@@ -135,6 +141,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     public RestfulResponse<ChunkInfo> responseGetChunkInfoJSON(
             @DefaultValue("null") @QueryParam("hash") String hash
     ) {
+        LOG.info("hash = " + hash);
         try {
             return new RestfulResponse<ChunkInfo>(getChunkInfo(hash));
         } catch(Exception ex) {
@@ -143,11 +150,12 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_CHUNK_INFO_PATH + "/{hash}")
+    @Path(ATransportManagerAPI.GET_CHUNK_INFO_URL_PATH + "/{hash:.*}")
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetChunkInfoTextURL(
-            @DefaultValue("null") @QueryParam("hash") String hash
+            @DefaultValue("null") @PathParam("hash") String hash
     ) {
+        LOG.info("hash = " + hash);
         try {
             return DataFormatter.toJSONFormat(responseGetChunkInfoJSON(hash));
         } catch (IOException ex) {
@@ -156,11 +164,12 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_RECIPE_PATH + "/{hash}")
+    @Path(ATransportManagerAPI.GET_CHUNK_INFO_URL_PATH + "/{hash:.*}")
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<ChunkInfo> responseGetChunkInfoJSONURL(
-            @DefaultValue("null") @QueryParam("hash") String hash
+            @DefaultValue("null") @PathParam("hash") String hash
     ) {
+        LOG.info("hash = " + hash);
         try {
             return new RestfulResponse<ChunkInfo>(getChunkInfo(hash));
         } catch(Exception ex) {
@@ -183,6 +192,10 @@ public class TransportManagerRestful extends ATransportManagerAPI {
             @DefaultValue("0") @QueryParam("len") int len,
             @DefaultValue("null") @QueryParam("hash") String hash
     ) throws Exception {
+        LOG.info("vpath = " + vpath);
+        LOG.info("offset = " + offset);
+        LOG.info("len = " + len);
+        LOG.info("hash = " + hash);
         if(hash != null) {
             final InputStream is = getDataChunk(hash);
             
@@ -206,7 +219,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
                 }
             };
             
-            return Response.ok(stream).header("content-disposition", "attachment; filename = " + vpath).build();
+            return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
         } else if(vpath != null && len > 0) {
             final InputStream is = getDataChunk(vpath, offset, len);
             
@@ -237,16 +250,24 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_DATA_CHUNK_PATH + "/{vpath}")
+    @Path(ATransportManagerAPI.GET_DATA_CHUNK_URL_PATH + "/{param:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response responseGetDataChunkURL(
-            @DefaultValue("null") @QueryParam("vpath") String vpath,
+            @DefaultValue("null") @PathParam("param") String param,
             @DefaultValue("0") @QueryParam("offset") long offset,
-            @DefaultValue("0") @QueryParam("len") int len,
-            @DefaultValue("null") @QueryParam("hash") String hash
+            @DefaultValue("0") @QueryParam("len") int len
     ) throws Exception {
-        if(!vpath.contains(".") && !vpath.contains("/")) {
-            hash = vpath;
+        String hash = null;
+        String vpath = null;
+        LOG.info("param = " + param);
+        LOG.info("offset = " + offset);
+        LOG.info("len = " + len);
+        if(param != null) {
+            if(!param.contains(".") && !param.contains("/")) {
+                hash = param;
+            } else {
+                vpath = param;
+            }
         }
         if(hash != null) {
             final InputStream is = getDataChunk(hash);

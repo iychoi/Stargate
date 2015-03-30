@@ -57,6 +57,7 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     }
     
     public GateKeeperServiceConfiguration() {
+        this.recipeManagerConfiguration = new RecipeManagerConfiguration();
     }
     
     @JsonProperty("cluster")

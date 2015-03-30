@@ -45,6 +45,7 @@ public class GatekeeperServletModule extends ServletModule {
         bind(ClusterManagerRestful.class).in(Singleton.class); 
         bind(DataExportManagerRestful.class).in(Singleton.class);
         bind(RecipeManagerRestful.class).in(Singleton.class);
+        bind(TransportManagerRestful.class).in(Singleton.class);
 
         bind(MessageBodyReader.class).to(JacksonJsonProvider.class); 
         bind(MessageBodyWriter.class).to(JacksonJsonProvider.class); 
