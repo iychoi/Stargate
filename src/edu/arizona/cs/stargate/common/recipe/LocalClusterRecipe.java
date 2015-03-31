@@ -38,26 +38,26 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class Recipe {
+public class LocalClusterRecipe {
     
     private URI resourcePath;
     private String hashAlgorithm;
     private ArrayList<RecipeChunkInfo> chunks = new ArrayList<RecipeChunkInfo>();
 
-    Recipe() {
+    LocalClusterRecipe() {
     }
     
-    public static Recipe createInstance(File file) throws IOException {
+    public static LocalClusterRecipe createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (Recipe) serializer.fromJsonFile(file, Recipe.class);
+        return (LocalClusterRecipe) serializer.fromJsonFile(file, LocalClusterRecipe.class);
     }
     
-    public static Recipe createInstance(String json) throws IOException {
+    public static LocalClusterRecipe createInstance(String json) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (Recipe) serializer.fromJson(json, Recipe.class);
+        return (LocalClusterRecipe) serializer.fromJson(json, LocalClusterRecipe.class);
     }
     
-    public Recipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunkInfo> chunks) {
+    public LocalClusterRecipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunkInfo> chunks) {
         initializeRecipe(resourcePath, hashAlgorithm, chunks);
     }
     

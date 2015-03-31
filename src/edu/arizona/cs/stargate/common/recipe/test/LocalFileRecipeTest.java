@@ -26,7 +26,7 @@ package edu.arizona.cs.stargate.common.recipe.test;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.common.recipe.FixedSizeLocalFileRecipeGenerator;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -78,7 +78,7 @@ public class LocalFileRecipeTest {
             FixedSizeLocalFileRecipeGenerator gen = new FixedSizeLocalFileRecipeGenerator(1024*1024);
             for(File f : files) {
                 //Recipe recipe = gen.generateRecipe(f, "SHA-1");
-                Recipe recipe = gen.generateRecipeWithoutHash(f, "SHA-1");
+                LocalClusterRecipe recipe = gen.generateRecipeWithoutHash(f, "SHA-1");
                 gen.hashRecipe(recipe);
                 File recipeFile = new File(f.getAbsoluteFile().getCanonicalPath() + ".recipe");
                 serializer.toJsonFile(recipeFile, recipe);

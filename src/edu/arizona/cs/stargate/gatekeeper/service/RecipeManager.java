@@ -34,7 +34,7 @@ import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ARecipeGenerator;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.FixedSizeLocalFileRecipeGenerator;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.common.recipe.RecipeChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.RecipeGeneratorFactory;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
@@ -66,8 +66,8 @@ public class RecipeManager {
 
     private RecipeManagerConfiguration config;
     
-    private JsonIMap<URI, Recipe> recipes;
-    private JsonIMap<URI, Recipe> pendingRecipes;
+    private JsonIMap<URI, LocalClusterRecipe> recipes;
+    private JsonIMap<URI, LocalClusterRecipe> pendingRecipes;
     private JsonMultiMap<String, ChunkInfo> chunkinfo;
     
     // check message and start hashing
@@ -100,26 +100,26 @@ public class RecipeManager {
         }
         
         try {
-            this.recipes = new JsonIMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), Recipe.class);
-            this.pendingRecipes = new JsonIMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), Recipe.class);
-            this.pendingRecipes.addEntryListener(new EntryListener<URI, Recipe>(){
+            this.recipes = new JsonIMap<URI, LocalClusterRecipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalClusterRecipe.class);
+            this.pendingRecipes = new JsonIMap<URI, LocalClusterRecipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), LocalClusterRecipe.class);
+            this.pendingRecipes.addEntryListener(new EntryListener<URI, LocalClusterRecipe>(){
 
                 @Override
-                public void entryAdded(EntryEvent<URI, Recipe> ee) {
+                public void entryAdded(EntryEvent<URI, LocalClusterRecipe> ee) {
                     Runnable worker = new BackgroundWorker(); 
                     backgroundWorker.execute(worker);
                 }
 
                 @Override
-                public void entryRemoved(EntryEvent<URI, Recipe> ee) {
+                public void entryRemoved(EntryEvent<URI, LocalClusterRecipe> ee) {
                 }
 
                 @Override
-                public void entryUpdated(EntryEvent<URI, Recipe> ee) {
+                public void entryUpdated(EntryEvent<URI, LocalClusterRecipe> ee) {
                 }
 
                 @Override
-                public void entryEvicted(EntryEvent<URI, Recipe> ee) {
+                public void entryEvicted(EntryEvent<URI, LocalClusterRecipe> ee) {
                 }
 
                 @Override
@@ -144,18 +144,18 @@ public class RecipeManager {
         return this.config;
     }
     
-    public synchronized Recipe prepareRecipe(DataExportInfo export) {
+    public synchronized LocalClusterRecipe prepareRecipe(DataExportInfo export) {
         URI resourceUri = export.getResourcePath();
         return prepareRecipe(resourceUri);
     }
     
-    public synchronized Recipe prepareRecipe(URI resourceUri) {
+    public synchronized LocalClusterRecipe prepareRecipe(URI resourceUri) {
         try {
             if(!this.recipes.containsKey(resourceUri) && 
                     !this.pendingRecipes.containsKey(resourceUri)) {
                 LOG.info("Preparing a new recipe of " + resourceUri.toASCIIString());
                 ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(resourceUri, this.config.getChunkSize());
-                Recipe recipe = recipeGenerator.generateRecipeWithoutHash(resourceUri, this.config.getHashAlgorithm());
+                LocalClusterRecipe recipe = recipeGenerator.generateRecipeWithoutHash(resourceUri, this.config.getHashAlgorithm());
                 this.pendingRecipes.put(resourceUri, recipe);
                 return recipe;
             }
@@ -166,8 +166,8 @@ public class RecipeManager {
         return null;
     }
     
-    public synchronized Recipe getRecipe(URI resourceUri) {
-        Recipe recipe;
+    public synchronized LocalClusterRecipe getRecipe(URI resourceUri) {
+        LocalClusterRecipe recipe;
         recipe = this.recipes.get(resourceUri);
         if(recipe != null) {
             return recipe;
@@ -186,10 +186,10 @@ public class RecipeManager {
     }
     
     public synchronized void removeRecipe(URI resourceUri) {
-        Recipe recipe1 = this.recipes.remove(resourceUri);
-        Recipe recipe2 = this.pendingRecipes.remove(resourceUri);
+        LocalClusterRecipe recipe1 = this.recipes.remove(resourceUri);
+        LocalClusterRecipe recipe2 = this.pendingRecipes.remove(resourceUri);
         
-        Recipe recipe = null;
+        LocalClusterRecipe recipe = null;
         if(recipe1 != null) {
             recipe = recipe1;
         }
@@ -250,7 +250,7 @@ public class RecipeManager {
         public void run() {
             if(pendingRecipes.size() > 0) {
                 try {
-                    Recipe recipe = pendingRecipes.peekEntry();
+                    LocalClusterRecipe recipe = pendingRecipes.peekEntry();
                     LocalClusterManager lcm = LocalClusterManager.getInstance();
                     ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
                     if(recipeGenerator instanceof FixedSizeLocalFileRecipeGenerator) {

@@ -27,7 +27,7 @@ package edu.arizona.cs.stargate.client.test;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.client.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
@@ -134,7 +134,7 @@ public class GateKeeperClientTest {
             
             for(DataExportInfo dei : dataExportInfo) {
                 // check recipe
-                Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                LocalClusterRecipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
                 System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
                 System.out.println(DataFormatter.toJSONFormat(recipe));
             }
@@ -144,7 +144,7 @@ public class GateKeeperClientTest {
             Thread.sleep(3000);
             for(DataExportInfo dei : dataExportInfo) {
                 // check recipe
-                Recipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                LocalClusterRecipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
                 System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
                 System.out.println(DataFormatter.toJSONFormat(recipe));
             }

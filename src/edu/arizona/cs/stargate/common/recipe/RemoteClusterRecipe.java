@@ -59,7 +59,7 @@ public class RemoteClusterRecipe {
         initializeRecipe(vpath, hashAlgorithm, chunks);
     }
     
-    public RemoteClusterRecipe(String vpath, Recipe recipe) {
+    public RemoteClusterRecipe(String vpath, LocalClusterRecipe recipe) {
         initializeRecipe(vpath, recipe.getHashAlgorithm(), recipe.getAllChunk());
     }
     

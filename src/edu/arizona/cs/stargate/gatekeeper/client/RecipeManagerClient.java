@@ -26,7 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.client;
 
 import com.sun.jersey.api.client.GenericType;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
@@ -68,12 +68,12 @@ public class RecipeManagerClient extends ARecipeManagerAPI {
     }
     
     @Override
-    public Recipe getRecipe(URI resourceURI) throws Exception {
-        RestfulResponse<Recipe> response;
+    public LocalClusterRecipe getRecipe(URI resourceURI) throws Exception {
+        RestfulResponse<LocalClusterRecipe> response;
         try {
             Map<String, String> params = new HashMap<String, String>();
             params.put("name", resourceURI.toASCIIString());
-            response = (RestfulResponse<Recipe>) this.gatekeeperRPCClient.get(getResourcePath(ARecipeManagerAPI.GET_RECIPE_PATH, params), new GenericType<RestfulResponse<Recipe>>(){});
+            response = (RestfulResponse<LocalClusterRecipe>) this.gatekeeperRPCClient.get(getResourcePath(ARecipeManagerAPI.GET_RECIPE_PATH, params), new GenericType<RestfulResponse<LocalClusterRecipe>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

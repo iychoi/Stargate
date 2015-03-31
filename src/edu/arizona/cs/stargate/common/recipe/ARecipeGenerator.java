@@ -34,7 +34,7 @@ import java.security.NoSuchAlgorithmException;
  */
 public abstract class ARecipeGenerator {
     
-    public abstract Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
-    public abstract Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
-    public abstract void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException;
+    public abstract LocalClusterRecipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract LocalClusterRecipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException;
+    public abstract void hashRecipe(LocalClusterRecipe recipe) throws IOException, NoSuchAlgorithmException;
 }

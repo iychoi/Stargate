@@ -25,7 +25,7 @@
 package edu.arizona.cs.stargate.gatekeeper;
 
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -41,7 +41,7 @@ public abstract class ARecipeManagerAPI {
     public static final String GET_CHUNK_INFO_PATH = "/chunkinfo";
     public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
-    public abstract Recipe getRecipe(URI resourceURI) throws Exception;
+    public abstract LocalClusterRecipe getRecipe(URI resourceURI) throws Exception;
     
     public abstract void removeRecipe(URI resourceURI) throws Exception;
     

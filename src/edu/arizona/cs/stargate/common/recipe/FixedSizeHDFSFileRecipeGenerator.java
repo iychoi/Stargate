@@ -199,36 +199,36 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
     }
 
     @Override
-    public Recipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+    public LocalClusterRecipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         // test hash algorithm
         MessageDigest md = MessageDigest.getInstance(hashAlgorithm);
         
         Path path = new Path(resourcePath.normalize());
         Collection<RecipeChunkInfo> chunks = chunkAndHash(path, hashAlgorithm, this.chunkSize);
-        return new Recipe(resourcePath.normalize(), hashAlgorithm, chunks);
+        return new LocalClusterRecipe(resourcePath.normalize(), hashAlgorithm, chunks);
     }
     
-    public Recipe generateRecipe(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+    public LocalClusterRecipe generateRecipe(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         Collection<RecipeChunkInfo> chunks = chunkAndHash(path, hashAlgorithm, this.chunkSize);
         URI resourceUri = path.toUri().normalize();
-        return new Recipe(resourceUri, hashAlgorithm, chunks);
+        return new LocalClusterRecipe(resourceUri, hashAlgorithm, chunks);
     }
 
     @Override
-    public Recipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+    public LocalClusterRecipe generateRecipeWithoutHash(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         Path path = new Path(resourcePath.normalize());
         Collection<RecipeChunkInfo> chunks = chunk(path, this.chunkSize);
-        return new Recipe(resourcePath, hashAlgorithm, chunks);
+        return new LocalClusterRecipe(resourcePath, hashAlgorithm, chunks);
     }
     
-    public Recipe generateRecipeWithoutHash(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+    public LocalClusterRecipe generateRecipeWithoutHash(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         Collection<RecipeChunkInfo> chunks = chunk(path, this.chunkSize);
         URI resourceUri = path.toUri().normalize();
-        return new Recipe(resourceUri, hashAlgorithm, chunks);
+        return new LocalClusterRecipe(resourceUri, hashAlgorithm, chunks);
     }
 
     @Override
-    public void hashRecipe(Recipe recipe) throws IOException, NoSuchAlgorithmException {
+    public void hashRecipe(LocalClusterRecipe recipe) throws IOException, NoSuchAlgorithmException {
         Path path = new Path(recipe.getResourcePath());
         FileSystem fs = path.getFileSystem(this.hadoopConf);
         if(fs.exists(path) && fs.isFile(path)) {

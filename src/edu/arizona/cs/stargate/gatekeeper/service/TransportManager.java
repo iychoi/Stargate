@@ -26,7 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.common.recipe.RemoteClusterRecipe;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.net.URI;
@@ -60,7 +60,7 @@ public class TransportManager {
         if(export != null) {
             try {
                 RecipeManager rm = RecipeManager.getInstance();
-                Recipe recipe = rm.getRecipe(export.getResourcePath());
+                LocalClusterRecipe recipe = rm.getRecipe(export.getResourcePath());
                 
                 return new RemoteClusterRecipe(export.getVirtualPath(), recipe);
             } catch (ServiceNotStartedException ex) {

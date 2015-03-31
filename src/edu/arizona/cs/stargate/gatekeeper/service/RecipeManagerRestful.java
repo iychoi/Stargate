@@ -28,7 +28,7 @@ import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.ChunkReaderFactory;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
@@ -75,18 +75,18 @@ public class RecipeManagerRestful extends ARecipeManagerAPI {
     @GET
     @Path(ARecipeManagerAPI.GET_RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Recipe> responseGetRecipeJSON(
+    public RestfulResponse<LocalClusterRecipe> responseGetRecipeJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            return new RestfulResponse<Recipe>(getRecipe(new URI(name)));
+            return new RestfulResponse<LocalClusterRecipe>(getRecipe(new URI(name)));
         } catch(Exception ex) {
-            return new RestfulResponse<Recipe>(ex);
+            return new RestfulResponse<LocalClusterRecipe>(ex);
         }
     }
     
     @Override
-    public Recipe getRecipe(URI resourceURI) throws Exception {
+    public LocalClusterRecipe getRecipe(URI resourceURI) throws Exception {
         RecipeManager rm = getRecipeManager();
         return rm.getRecipe(resourceURI);
     }
