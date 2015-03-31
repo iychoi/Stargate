@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.cache.service.JsonMap;
+import edu.arizona.cs.stargate.cache.service.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
@@ -33,7 +33,6 @@ import edu.arizona.cs.stargate.service.StargateService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,7 +49,7 @@ public class LocalClusterManager {
     private static LocalClusterManager instance;
     
     private String name;
-    private Map<String, ClusterNodeInfo> nodes;
+    private JsonReplicatedMap<String, ClusterNodeInfo> nodes;
     private ArrayList<IClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigurationChangeEventHandler>();
     
     public static LocalClusterManager getInstance() {
@@ -61,10 +60,11 @@ public class LocalClusterManager {
             return instance;
         }
     }
+    private ClusterNodeInfo localNode;
     
     LocalClusterManager() {
         try {
-            this.nodes = new JsonMap<String, ClusterNodeInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNodeInfo.class);
+            this.nodes = new JsonReplicatedMap<String, ClusterNodeInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNodeInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);
@@ -97,6 +97,19 @@ public class LocalClusterManager {
         }
         
         return this.nodes.get(name);
+    }
+    
+    public synchronized ClusterNodeInfo findNodeByAddress(String addr) {
+        if(addr == null || addr.isEmpty()) {
+            throw new IllegalArgumentException("addr is empty or null");
+        }
+        Collection<ClusterNodeInfo> values = this.nodes.values();
+        for(ClusterNodeInfo node : values) {
+            if(node.hasAddress(addr)) {
+                return node;
+            }
+        }
+        return null;
     }
     
     public synchronized boolean hasNode(String name) {
@@ -221,5 +234,13 @@ public class LocalClusterManager {
             LOG.error(ex);
             return null;
         }
+    }
+
+    public synchronized void setLocalNode(ClusterNodeInfo node) {
+        this.localNode = node;
+    }
+    
+    public synchronized ClusterNodeInfo getLocalNode() {
+        return this.localNode;
     }
 }

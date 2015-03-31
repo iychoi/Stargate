@@ -22,25 +22,30 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper;
+package edu.arizona.cs.stargate.common.cluster;
 
-import edu.arizona.cs.stargate.common.recipe.Recipe;
-import java.io.InputStream;
+import edu.arizona.cs.stargate.common.IPUtils;
+import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ATransportManagerAPI {
-    public static final String PATH = "/transportmgr";
-    public static final String GET_RECIPE_PATH = "/recipe";
-    public static final String GET_RECIPE_URL_PATH = "/recipeu";
-    public static final String GET_DATA_CHUNK_PATH = "/chunk";
-    public static final String GET_DATA_CHUNK_URL_PATH = "/chunku";
+public class LocalNodeInfoUtils {
+    public static ClusterNodeInfo getNodeInfo(StargateServiceConfiguration stargateConfig) throws URISyntaxException {
+        String serviceIPAddress = IPUtils.getPublicIPAddress();
+        URI serviceURL = new URI("http://" + serviceIPAddress + ":" + stargateConfig.getServicePort());
+        
+        return new ClusterNodeInfo(serviceIPAddress + ":" + stargateConfig.getServicePort(), 
+                serviceURL, 
+                getAllAddresses());
+    }
     
-    public abstract Recipe getRecipe(String vpath) throws Exception;
-    
-    public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
-    
-    public abstract InputStream getDataChunk(String hash) throws Exception;
+    private static String[] getAllAddresses() {
+        Collection<String> hostAddresses = IPUtils.getHostAddresses();
+        return hostAddresses.toArray(new String[0]);
+    }
 }

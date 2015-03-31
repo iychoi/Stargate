@@ -24,6 +24,8 @@
 
 package edu.arizona.cs.stargate.common.recipe;
 
+import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
+import edu.arizona.cs.stargate.gatekeeper.service.LocalClusterManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
@@ -43,6 +47,8 @@ import java.util.List;
  */
 public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
 
+    private static final Log LOG = LogFactory.getLog(FixedSizeLocalFileRecipeGenerator.class);
+    
     private static final int BUFFER_SIZE = 100*1024;
     private int chunkSize;
     
@@ -51,6 +57,15 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
     }
     
     private Collection<RecipeChunkInfo> chunk(File file, int chunkSize) throws IOException, NoSuchAlgorithmException {
+        String ownerHostName = null;
+        
+        LocalClusterManager lcm = LocalClusterManager.getInstance();
+        ClusterNodeInfo localNode = lcm.getLocalNode();
+        
+        if(localNode != null) {
+            ownerHostName = localNode.getName();
+        }
+        
         long fileLen = file.length();
         
         List<RecipeChunkInfo> chunks = new ArrayList<RecipeChunkInfo>();
@@ -65,7 +80,7 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
             chunkOffset = i * chunkSize;
             curChunkSize = (int) Math.min(fileLen - chunkOffset, chunkSize);
             
-            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize));
+            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, new String[] {ownerHostName}));
         }
         
         return Collections.unmodifiableCollection(chunks);
@@ -100,6 +115,15 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
     }
     
     private Collection<RecipeChunkInfo> chunkAndHash(File file, String hashAlgorithm, int chunkSize) throws IOException, NoSuchAlgorithmException {
+        String ownerHostName = null;
+        
+        LocalClusterManager lcm = LocalClusterManager.getInstance();
+        ClusterNodeInfo localNode = lcm.getLocalNode();
+        
+        if(localNode != null) {
+            ownerHostName = localNode.getName();
+        }
+        
         InputStream is = new FileInputStream(file);
         
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm);
@@ -129,7 +153,7 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
         if(curChunkSize != 0) {
             // has some data
             byte[] digest = messageDigest.digest();
-            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, digest));
+            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, digest, new String[] {ownerHostName}));
         }
         
         dis.close();

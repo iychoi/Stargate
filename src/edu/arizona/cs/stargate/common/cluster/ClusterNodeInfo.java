@@ -39,11 +39,13 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class ClusterNodeInfo {
     
     private String name;
-    private URI addr;
+    private URI serviceURL;
+    private String[] hostAddrs;
     
     ClusterNodeInfo() {
         this.name = null;
-        this.addr = null;
+        this.serviceURL = null;
+        this.hostAddrs = null;
     }
     
     public static ClusterNodeInfo createInstance(File file) throws IOException {
@@ -58,42 +60,77 @@ public class ClusterNodeInfo {
     
     public ClusterNodeInfo(ClusterNodeInfo that) {
         this.name = that.name;
-        this.addr = that.addr;
+        this.serviceURL = that.serviceURL;
+        this.hostAddrs = that.hostAddrs;
     }
     
-    public ClusterNodeInfo(String name, URI addr) {
-        initializeClusterNodeInfo(name, addr);
+    public ClusterNodeInfo(String name, URI serviceURL) {
+        initializeClusterNodeInfo(name, serviceURL, null);
     }
     
-    public ClusterNodeInfo(String name, String addr) throws URISyntaxException {
-        initializeClusterNodeInfo(name, new URI(addr));
+    public ClusterNodeInfo(String name, URI publicAddr, String[] hostAddrs) {
+        initializeClusterNodeInfo(name, publicAddr, hostAddrs);
     }
     
-    private void initializeClusterNodeInfo(String name, URI addr) {
+    public ClusterNodeInfo(String name, String publicAddr) throws URISyntaxException {
+        initializeClusterNodeInfo(name, new URI(publicAddr), null);
+    }
+    
+    public ClusterNodeInfo(String name, String publicAddr, String[] hostAddrs) throws URISyntaxException {
+        initializeClusterNodeInfo(name, new URI(publicAddr), hostAddrs);
+    }
+    
+    private void initializeClusterNodeInfo(String name, URI serviceURL, String[] hostAddrs) {
         setName(name);
-        setAddr(addr);
+        setServiceURL(serviceURL);
+        setHostAddrs(hostAddrs);
     }
 
+    @JsonProperty("name")
     public String getName() {
         return this.name;
     }
     
+    @JsonProperty("name")
     void setName(String name) {
         this.name = name;
     }
 
-    @JsonProperty("addr")
-    public URI getAddr() {
-        return addr;
+    @JsonProperty("service_url")
+    public URI getServiceURL() {
+        return serviceURL;
     }
 
-    @JsonProperty("addr")
-    void setAddr(URI addr) {
-        this.addr = addr;
+    @JsonProperty("service_url")
+    void setServiceURL(URI serviceURL) {
+        this.serviceURL = serviceURL;
     }
     
-    void setAddr(String addr) throws URISyntaxException {
-        this.addr = new URI(addr);
+    @JsonIgnore
+    void setServiceURL(String serviceURL) throws URISyntaxException {
+        this.serviceURL = new URI(serviceURL);
+    }
+    
+    @JsonProperty("host_addrs")
+    public String[] getHostAddrs() {
+        return this.hostAddrs;
+    }
+    
+    @JsonProperty("host_addrs")
+    void setHostAddrs(String[] hostAddrs) {
+        this.hostAddrs = hostAddrs;
+    }
+    
+    @JsonIgnore
+    public boolean hasAddress(String addr) {
+        if(this.hostAddrs != null) {
+            for(String hostAddr : this.hostAddrs) {
+                if(hostAddr.equalsIgnoreCase(addr)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
     @JsonIgnore
@@ -102,7 +139,7 @@ public class ClusterNodeInfo {
             return true;
         }
         
-        if(this.addr == null || this.addr.getHost().isEmpty()) {
+        if(this.serviceURL == null || this.serviceURL.getHost().isEmpty()) {
             return true;
         }
         
@@ -111,6 +148,6 @@ public class ClusterNodeInfo {
     
     @Override
     public String toString() {
-        return this.name + "(" + this.addr.toString() + ")";
+        return this.name + "(" + this.serviceURL.toString() + ")";
     }
 }

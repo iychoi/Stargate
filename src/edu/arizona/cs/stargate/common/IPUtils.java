@@ -24,7 +24,6 @@
 
 package edu.arizona.cs.stargate.common;
 
-import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
@@ -59,6 +56,68 @@ public class IPUtils {
 		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
     
     private static Pattern IP_pattern = Pattern.compile(IPADDRESS_PATTERN);
+    
+    private static boolean isProperHostAddress(String addr) {
+        if(addr == null || addr.isEmpty()) {
+            return false;
+        }
+        
+        if(addr.equalsIgnoreCase("localhost")) {
+            return false;
+        } else if(addr.equalsIgnoreCase("ip6-localhost")) {
+            return false;
+        } else if(addr.equalsIgnoreCase("127.0.0.1")) {
+            return false;
+        } else if(addr.indexOf(":") > 0) {
+            return false;
+        }
+        return true;
+    }
+    
+    public static Collection<String> getHostAddresses() {
+        ArrayList<String> addresses = new ArrayList<String>();
+        try {
+            Enumeration e = NetworkInterface.getNetworkInterfaces();
+            while (e.hasMoreElements()) {
+                NetworkInterface n = (NetworkInterface) e.nextElement();
+                Enumeration ee = n.getInetAddresses();
+                while (ee.hasMoreElements()) {
+                    InetAddress i = (InetAddress) ee.nextElement();
+                    
+                    String hostAddress = i.getHostAddress();
+                    if(isProperHostAddress(hostAddress)) {
+                        if(!addresses.contains(hostAddress)) {
+                            addresses.add(hostAddress);
+                        }
+                    }
+                    
+                    String hostName = i.getHostName();
+                    if(isProperHostAddress(hostName)) {
+                        if(!addresses.contains(hostName)) {
+                            addresses.add(hostName);
+                        }
+                    }
+                    
+                    String canonicalHostName = i.getCanonicalHostName();
+                    if(isProperHostAddress(canonicalHostName)) {
+                        if(!addresses.contains(canonicalHostName)) {
+                            addresses.add(canonicalHostName);
+                        }
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            LOG.error(ex);
+        }
+        String publicIPAddress = getPublicIPAddress();
+        if(isProperHostAddress(publicIPAddress)) {
+            if(!addresses.contains(publicIPAddress)) {
+                addresses.add(publicIPAddress);
+            }
+        }
+        
+        return Collections.unmodifiableCollection(addresses);
+    }
     
     public static Collection<String> getIPAddresses() {
         ArrayList<String> addresses = new ArrayList<String>();

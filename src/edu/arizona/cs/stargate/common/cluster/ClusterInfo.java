@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -83,10 +85,12 @@ public class ClusterInfo {
         }
     }
     
+    @JsonProperty("name")
     public synchronized String getName() {
         return this.name;
     }
     
+    @JsonProperty("name")
     public synchronized void setName(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -95,14 +99,17 @@ public class ClusterInfo {
         this.name = name;
     }
     
+    @JsonIgnore
     public synchronized int getNodeCount() {
         return this.nodes.size();
     }
     
+    @JsonProperty("nodes")
     public synchronized Collection<ClusterNodeInfo> getAllNode() {
         return Collections.unmodifiableCollection(this.nodes.values());
     }
     
+    @JsonIgnore
     public synchronized ClusterNodeInfo getNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -111,6 +118,7 @@ public class ClusterInfo {
         return this.nodes.get(name);
     }
     
+    @JsonIgnore
     public synchronized boolean hasNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -119,6 +127,7 @@ public class ClusterInfo {
         return this.nodes.containsKey(name);
     }
     
+    @JsonIgnore
     public synchronized void removeAllNode() {
         ArrayList<String> keys = new ArrayList<String>();
         
@@ -134,12 +143,14 @@ public class ClusterInfo {
         keys.clear();
     }
     
+    @JsonProperty("nodes")
     public synchronized void addNode(Collection<ClusterNodeInfo> nodes) throws NodeAlreadyAddedException {
         for(ClusterNodeInfo node : nodes) {
             addNode(node);
         }
     }
     
+    @JsonIgnore
     public synchronized void addNode(ClusterNodeInfo node) throws NodeAlreadyAddedException {
         if(node == null || node.isEmpty()) {
             throw new IllegalArgumentException("node is empty or null");
@@ -152,6 +163,7 @@ public class ClusterInfo {
         this.nodes.put(node.getName(), node);
     }
     
+    @JsonIgnore
     public synchronized void removeNode(ClusterNodeInfo node) {
         if(node == null || node.isEmpty()) {
             throw new IllegalArgumentException("node is empty or null");
@@ -160,6 +172,7 @@ public class ClusterInfo {
         removeNode(node.getName());
     }
     
+    @JsonIgnore
     public synchronized void removeNode(String name) {
         if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name is empty or null");
@@ -173,6 +186,7 @@ public class ClusterInfo {
         return this.name;
     }
 
+    @JsonIgnore
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
             return true;

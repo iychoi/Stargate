@@ -24,6 +24,8 @@
 
 package edu.arizona.cs.stargate.common.recipe;
 
+import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
+import edu.arizona.cs.stargate.gatekeeper.service.LocalClusterManager;
 import java.io.IOException;
 import java.net.URI;
 import java.security.DigestInputStream;
@@ -33,7 +35,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,6 +50,8 @@ import org.apache.hadoop.fs.Path;
  */
 public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
 
+    private static final Log LOG = LogFactory.getLog(FixedSizeHDFSFileRecipeGenerator.class);
+    
     private static final int BUFFER_SIZE = 100*1024;
     private int chunkSize;
     private Configuration hadoopConf;
@@ -66,13 +73,34 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
             numChunks++;
         }
         
+        LocalClusterManager lcm = LocalClusterManager.getInstance();
+        
         long chunkOffset = 0;
         int curChunkSize = 0;
         for(int i=0;i<numChunks;i++) {
             chunkOffset = i * chunkSize;
             curChunkSize = (int) Math.min(fileLen - chunkOffset, chunkSize);
             
-            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize));
+            ArrayList<String> ownerHosts = new ArrayList<String>();
+            BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(fileStatus, chunkOffset, curChunkSize);
+            for(BlockLocation blockLocation : fileBlockLocations) {
+                for(String host : blockLocation.getHosts()) {
+                    if(host.equalsIgnoreCase("localhost")) {
+                        ownerHosts.add("*");
+                    } else {
+                        ClusterNodeInfo node = lcm.findNodeByAddress(host);
+                        if(node != null) {
+                            ownerHosts.add(node.getName());
+                        } else {
+                            LOG.info("unable to find host : " + host);
+                            ownerHosts.add("*");
+                        }
+                    }
+                }
+            }
+            
+            String[] ownerHostsString = ownerHosts.toArray(new String[0]);
+            chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, ownerHostsString));
         }
         
         return Collections.unmodifiableCollection(chunks);
@@ -109,6 +137,7 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
     
     private Collection<RecipeChunkInfo> chunkAndHash(Path path, String hashAlgorithm, int chunkSize) throws IOException, NoSuchAlgorithmException {
         FileSystem fs = path.getFileSystem(this.hadoopConf);
+        FileStatus fileStatus = fs.getFileStatus(path);
         FSDataInputStream is = fs.open(path, BUFFER_SIZE);
         
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm);
@@ -123,12 +152,35 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
         
         List<RecipeChunkInfo> chunks = new ArrayList<RecipeChunkInfo>();
         
+        LocalClusterManager lcm = LocalClusterManager.getInstance();
+        
         while((nread = dis.read(buffer, 0, Math.min(toread, bufferSize))) > 0) {
             toread -= nread;
             curChunkSize += nread;
             if(toread == 0) {
                 byte[] digest = messageDigest.digest();
-                chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, digest));
+                
+                ArrayList<String> ownerHosts = new ArrayList<String>();
+                BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(fileStatus, chunkOffset, curChunkSize);
+                for (BlockLocation blockLocation : fileBlockLocations) {
+                    for (String host : blockLocation.getHosts()) {
+                        if(host.equalsIgnoreCase("localhost")) {
+                            ownerHosts.add("*");
+                        } else {
+                            ClusterNodeInfo node = lcm.findNodeByAddress(host);
+                            if (node != null) {
+                                ownerHosts.add(node.getName());
+                            } else {
+                                LOG.info("unable to find host : " + host);
+                                ownerHosts.add("*");
+                            }
+                        }
+                    }
+                }
+
+                String[] ownerHostsString = ownerHosts.toArray(new String[0]);
+                
+                chunks.add(new RecipeChunkInfo(chunkOffset, curChunkSize, digest, ownerHostsString));
                 chunkOffset += curChunkSize;
                 curChunkSize = 0;
                 toread = chunkSize;

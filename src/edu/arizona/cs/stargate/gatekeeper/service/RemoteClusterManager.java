@@ -24,14 +24,14 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.cache.service.JsonMap;
+import edu.arizona.cs.stargate.cache.service.JsonIMap;
+import edu.arizona.cs.stargate.cache.service.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import edu.arizona.cs.stargate.service.StargateService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +48,7 @@ public class RemoteClusterManager {
     
     private static RemoteClusterManager instance;
     
-    private Map<String, ClusterInfo> remoteClusters;
+    private JsonReplicatedMap<String, ClusterInfo> remoteClusters;
     
     public static RemoteClusterManager getInstance() {
         synchronized (RemoteClusterManager.class) {
@@ -61,7 +61,7 @@ public class RemoteClusterManager {
     
     RemoteClusterManager() {
         try {
-            this.remoteClusters = new JsonMap<String, ClusterInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), ClusterInfo.class);
+            this.remoteClusters = new JsonReplicatedMap<String, ClusterInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), ClusterInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);

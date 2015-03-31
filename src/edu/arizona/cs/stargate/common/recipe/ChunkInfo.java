@@ -37,16 +37,22 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * @author iychoi
  */
 public class ChunkInfo {
+    
+    private static final String OWNER_HOST_DEFAULT = "*";
+    private static final String[] OWNER_HOST_DEFAULT_ARR = new String[] {OWNER_HOST_DEFAULT};
+    
     private URI resourcePath;
     private long chunkStart;
     private int chunkLen;
     private byte[] hash;
+    private String[] ownerHost;
     
     ChunkInfo() {
         this.resourcePath = null;
         this.chunkStart = -1;
         this.chunkLen = 0;
         this.hash = null;
+        this.ownerHost = OWNER_HOST_DEFAULT_ARR;
     }
     
     public static ChunkInfo createInstance(File file) throws IOException {
@@ -67,14 +73,19 @@ public class ChunkInfo {
     }
     
     public ChunkInfo(URI resourcePath, long chunkStart, int chunkLen, byte[] hash) {
-        initializeChunkInfo(resourcePath, chunkStart, chunkLen, hash);
+        initializeChunkInfo(resourcePath, chunkStart, chunkLen, hash, OWNER_HOST_DEFAULT_ARR);
     }
     
-    private void initializeChunkInfo(URI resourcePath, long chunkStart, int chunkLen, byte[] hash) {
+    public ChunkInfo(URI resourcePath, long chunkStart, int chunkLen, byte[] hash, String[] ownerHost) {
+        initializeChunkInfo(resourcePath, chunkStart, chunkLen, hash, ownerHost);
+    }
+    
+    private void initializeChunkInfo(URI resourcePath, long chunkStart, int chunkLen, byte[] hash, String[] ownerHost) {
         this.resourcePath = resourcePath;
         this.chunkStart = chunkStart;
         this.chunkLen = chunkLen;
         this.hash = hash;
+        this.ownerHost = ownerHost;
     }
 
     @JsonIgnore
@@ -153,12 +164,27 @@ public class ChunkInfo {
         return hasHash(DataFormatter.hexToBytes(hash));
     }
     
+    @JsonProperty("ownerHost")
+    public String[] getOwnerHost() {
+        return this.ownerHost;
+    }
+    
+    @JsonIgnore
+    public void setOwnerHost(String ownerHost) {
+        this.ownerHost = new String[] {ownerHost};
+    }
+    
+    @JsonProperty("ownerHost")
+    public void setOwnerHost(String[] ownerHost) {
+        this.ownerHost = ownerHost;
+    }
+    
     @Override
     public String toString() {
         return this.resourcePath.toString() + "(" + this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash) + ")";
     }
     
     public RecipeChunkInfo toRecipeChunk() {
-        return new RecipeChunkInfo(this.chunkStart, this.chunkLen, this.hash);
+        return new RecipeChunkInfo(this.chunkStart, this.chunkLen, this.hash, this.ownerHost);
     }
 }

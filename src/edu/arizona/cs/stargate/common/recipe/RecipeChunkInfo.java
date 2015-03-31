@@ -37,44 +37,65 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * @author iychoi
  */
 public class RecipeChunkInfo {
+    
+    private static final String OWNER_HOST_DEFAULT = "*";
+    private static final String[] OWNER_HOST_DEFAULT_ARR = new String[] {OWNER_HOST_DEFAULT};
+    
     private long chunkStart;
     private int chunkLen;
     private byte[] hash;
+    private String[] ownerHost;
     
     RecipeChunkInfo() {
         this.chunkStart = -1;
         this.chunkLen = 0;
         this.hash = null;
+        this.ownerHost = OWNER_HOST_DEFAULT_ARR;
     }
     
-    public static ChunkInfo createInstance(File file) throws IOException {
+    public static RecipeChunkInfo createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (ChunkInfo) serializer.fromJsonFile(file, ChunkInfo.class);
+        return (RecipeChunkInfo) serializer.fromJsonFile(file, RecipeChunkInfo.class);
     }
     
-    public static ChunkInfo createInstance(String json) throws IOException {
+    public static RecipeChunkInfo createInstance(String json) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (ChunkInfo) serializer.fromJson(json, ChunkInfo.class);
+        return (RecipeChunkInfo) serializer.fromJson(json, RecipeChunkInfo.class);
     }
     
     public RecipeChunkInfo(RecipeChunkInfo that) {
         this.chunkStart = that.chunkStart;
         this.chunkLen = that.chunkLen;
         this.hash = that.hash.clone();
+        this.ownerHost = that.ownerHost;
     }
     
     public RecipeChunkInfo(long chunkStart, int chunkLen, byte[] hash) {
-        initializeRecipeChunk(chunkStart, chunkLen, hash);
+        initializeRecipeChunk(chunkStart, chunkLen, hash, OWNER_HOST_DEFAULT_ARR);
+    }
+    
+    public RecipeChunkInfo(long chunkStart, int chunkLen, byte[] hash, String[] ownerHost) {
+        initializeRecipeChunk(chunkStart, chunkLen, hash, ownerHost);
     }
     
     public RecipeChunkInfo(long chunkStart, int chunkLen) {
-        initializeRecipeChunk(chunkStart, chunkLen, null);
+        initializeRecipeChunk(chunkStart, chunkLen, null, OWNER_HOST_DEFAULT_ARR);
     }
     
-    private void initializeRecipeChunk(long chunkStart, int chunkLen, byte[] hash) {
+    public RecipeChunkInfo(long chunkStart, int chunkLen, String[] ownerHost) {
+        initializeRecipeChunk(chunkStart, chunkLen, null, ownerHost);
+    }
+    
+    private void initializeRecipeChunk(long chunkStart, int chunkLen, byte[] hash, String[] ownerHost) {
         this.chunkStart = chunkStart;
         this.chunkLen = chunkLen;
         this.hash = hash;
+        
+        if(ownerHost == null) {
+            this.ownerHost = OWNER_HOST_DEFAULT_ARR;
+        } else {
+            this.ownerHost = ownerHost;
+        }
     }
 
     @JsonIgnore
@@ -154,6 +175,21 @@ public class RecipeChunkInfo {
         return hasHash(DataFormatter.hexToBytes(hash));
     }
     
+    @JsonProperty("ownerHost")
+    public String[] getOwnerHost() {
+        return this.ownerHost;
+    }
+    
+    @JsonIgnore
+    public void setOwnerHost(String ownerHost) {
+        this.ownerHost = new String[] {ownerHost};
+    }
+    
+    @JsonProperty("ownerHost")
+    public void setOwnerHost(String[] ownerHost) {
+        this.ownerHost = ownerHost;
+    }
+    
     @Override
     public String toString() {
         return this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash);
@@ -161,6 +197,6 @@ public class RecipeChunkInfo {
     
     @JsonIgnore
     public ChunkInfo toChunk(URI resourcePath) {
-        return new ChunkInfo(resourcePath, this.chunkStart, this.chunkLen, this.hash);
+        return new ChunkInfo(resourcePath, this.chunkStart, this.chunkLen, this.hash, this.ownerHost);
     }
 }

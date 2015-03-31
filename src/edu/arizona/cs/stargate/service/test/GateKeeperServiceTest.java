@@ -114,7 +114,7 @@ public class GateKeeperServiceTest {
             Collection<ClusterNodeInfo> allNode = localClusterManager.getAllNode();
             System.out.println("Cluster Name : " + localClusterManager.getName());
             for(ClusterNodeInfo node : allNode) {
-                System.out.println("Node : " + node.getName() + " / " + node.getAddr().toASCIIString());
+                System.out.println("Node : " + node.getName() + " / " + node.getServiceURL().toASCIIString());
             }
             
             instance.join();

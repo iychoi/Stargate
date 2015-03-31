@@ -24,14 +24,14 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.cache.service.JsonMap;
+import com.hazelcast.core.ReplicatedMap;
+import edu.arizona.cs.stargate.cache.service.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import edu.arizona.cs.stargate.service.StargateService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +47,7 @@ public class DataExportManager {
     
     private static DataExportManager instance;
     
-    private Map<String, DataExportInfo> dataExports;
+    private JsonReplicatedMap<String, DataExportInfo> dataExports;
     private ArrayList<IDataExportConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IDataExportConfigurationChangeEventHandler>();
     
     public static DataExportManager getInstance() {
@@ -61,7 +61,7 @@ public class DataExportManager {
     
     DataExportManager() {
         try {
-            this.dataExports = new JsonMap<String, DataExportInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExportInfo.class);
+            this.dataExports = new JsonReplicatedMap<String, DataExportInfo>(StargateService.getInstance().getDistributedCacheService().getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExportInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);

@@ -122,68 +122,6 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     }
     
     @GET
-    @Path(ATransportManagerAPI.GET_CHUNK_INFO_PATH)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetChunkInfoText(
-            @DefaultValue("null") @QueryParam("hash") String hash
-    ) {
-        LOG.info("hash = " + hash);
-        try {
-            return DataFormatter.toJSONFormat(responseGetChunkInfoJSON(hash));
-        } catch (IOException ex) {
-            return "DataFormatter formatting error";
-        }
-    }
-    
-    @GET
-    @Path(ATransportManagerAPI.GET_CHUNK_INFO_PATH)
-    @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<ChunkInfo> responseGetChunkInfoJSON(
-            @DefaultValue("null") @QueryParam("hash") String hash
-    ) {
-        LOG.info("hash = " + hash);
-        try {
-            return new RestfulResponse<ChunkInfo>(getChunkInfo(hash));
-        } catch(Exception ex) {
-            return new RestfulResponse<ChunkInfo>(ex);
-        }
-    }
-    
-    @GET
-    @Path(ATransportManagerAPI.GET_CHUNK_INFO_URL_PATH + "/{hash:.*}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetChunkInfoTextURL(
-            @DefaultValue("null") @PathParam("hash") String hash
-    ) {
-        LOG.info("hash = " + hash);
-        try {
-            return DataFormatter.toJSONFormat(responseGetChunkInfoJSON(hash));
-        } catch (IOException ex) {
-            return "DataFormatter formatting error";
-        }
-    }
-    
-    @GET
-    @Path(ATransportManagerAPI.GET_CHUNK_INFO_URL_PATH + "/{hash:.*}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<ChunkInfo> responseGetChunkInfoJSONURL(
-            @DefaultValue("null") @PathParam("hash") String hash
-    ) {
-        LOG.info("hash = " + hash);
-        try {
-            return new RestfulResponse<ChunkInfo>(getChunkInfo(hash));
-        } catch(Exception ex) {
-            return new RestfulResponse<ChunkInfo>(ex);
-        }
-    }
-
-    @Override
-    public ChunkInfo getChunkInfo(String hash) throws Exception {
-        TransportManager tm = getTransportManager();
-        return tm.getChunkInfo(hash);
-    }
-    
-    @GET
     @Path(ATransportManagerAPI.GET_DATA_CHUNK_PATH)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response responseGetDataChunk(

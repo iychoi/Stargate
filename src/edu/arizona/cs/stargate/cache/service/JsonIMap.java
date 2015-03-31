@@ -24,6 +24,10 @@
 
 package edu.arizona.cs.stargate.cache.service;
 
+import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.EntryListener;
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.MapEvent;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -34,8 +38,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,21 +45,21 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
+public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
 
-    private static final Log LOG = LogFactory.getLog(JsonMap.class);
+    private static final Log LOG = LogFactory.getLog(JsonIMap.class);
     
-    private Map<K, String> internalMap;
+    private IMap<K, String> internalMap;
     private JsonSerializer serializer;
     private Class<? extends V> valueClass;
     
-    public JsonMap(Map<K, String> internalMap, Class<? extends V> clazz) {
+    public JsonIMap(IMap<K, String> internalMap, Class<? extends V> clazz) {
         this.internalMap = internalMap;
         this.valueClass = clazz;
         this.serializer = new JsonSerializer();
     }
     
-    public Map<K, String> getInternalMap() {
+    public IMap<K, String> getInternalMap() {
         return this.internalMap;
     }
     
@@ -131,7 +133,7 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
         }
     }
     
-    public synchronized void putAll(JsonMap<K, V> map) {
+    public synchronized void putAll(JsonIMap<K, V> map) {
         this.internalMap.putAll(map.internalMap);
     }
 
@@ -190,5 +192,78 @@ public class JsonMap<K extends Object, V extends Object> implements Map<K, V> {
             }
         }
         return null;
+    }
+    
+    public synchronized V peekEntry() {
+        if(this.internalMap.size() > 0) {
+            Set<K> keySet = this.internalMap.keySet();
+            Iterator<K> iterator = keySet.iterator();
+            while(iterator.hasNext()) {
+                try {
+                    K key = iterator.next();
+                    String json = this.internalMap.get(key);
+                    return (V) this.serializer.fromJson(json, this.valueClass);
+                } catch (IOException ex) {
+                    LOG.error(ex);
+                }
+            }
+        }
+        return null;
+    }
+    
+    public synchronized void addEntryListener(final EntryListener<K, V> el, boolean bln) {
+        this.internalMap.addEntryListener(new EntryListener<K, String>(){
+
+            private EntryEvent<K, V> convEntry(EntryEvent<K, String> ee) {
+                String oldValueJson = ee.getOldValue();
+                V oldValue = null;
+                if(oldValueJson != null) {
+                    try {
+                        oldValue = (V) serializer.fromJson(oldValueJson, valueClass);
+                    } catch (IOException ex) {
+                    }
+                }
+                String valueJson = ee.getValue();
+                V value = null;
+                if(valueJson != null) {
+                    try {
+                        value = (V) serializer.fromJson(valueJson, valueClass);
+                    } catch (IOException ex) {
+                    }
+                }
+                
+                return new EntryEvent<K, V>(ee.getSource(), ee.getMember(), ee.getEventType().getType(), ee.getKey(), oldValue, value);
+            }
+            
+            @Override
+            public void entryAdded(EntryEvent<K, String> ee) {
+                el.entryAdded(convEntry(ee));
+            }
+
+            @Override
+            public void entryRemoved(EntryEvent<K, String> ee) {
+                el.entryRemoved(convEntry(ee));
+            }
+
+            @Override
+            public void entryUpdated(EntryEvent<K, String> ee) {
+                el.entryUpdated(convEntry(ee));
+            }
+
+            @Override
+            public void entryEvicted(EntryEvent<K, String> ee) {
+                el.entryEvicted(convEntry(ee));
+            }
+
+            @Override
+            public void mapEvicted(MapEvent me) {
+                el.mapEvicted(me);
+            }
+
+            @Override
+            public void mapCleared(MapEvent me) {
+                el.mapEvicted(me);
+            }
+        }, bln);
     }
 }

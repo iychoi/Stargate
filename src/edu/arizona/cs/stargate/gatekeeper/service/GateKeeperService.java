@@ -26,15 +26,14 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 
 import com.google.inject.Guice;
 import com.google.inject.Stage;
-import edu.arizona.cs.stargate.common.IPUtils;
 import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
 import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
+import edu.arizona.cs.stargate.common.cluster.LocalNodeInfoUtils;
 import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import edu.arizona.cs.stargate.service.StargateService;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -125,6 +124,12 @@ public class GateKeeperService {
                 Collection<ClusterNodeInfo> nodes = this.config.getClusterInfo().getAllNode();
                 if(nodes != null) {
                     this.localClusterManager.addNode(nodes);
+                    Iterator<ClusterNodeInfo> iterator = nodes.iterator();
+                    while(iterator.hasNext()) {
+                        ClusterNodeInfo node = iterator.next();
+                        this.localClusterManager.setLocalNode(node);
+                        break;
+                    }
                 }
             } catch (NodeAlreadyAddedException ex) {
                 LOG.error(ex);
@@ -133,10 +138,9 @@ public class GateKeeperService {
             try {
                 // autogenerate?
                 StargateServiceConfiguration stargateConfig = StargateService.getInstance().getConfiguration();
-                String IPAddress = getGoodIPAddress();
-                URI hostUri = new URI("http://" + IPAddress + ":" + stargateConfig.getServicePort());
-                ClusterNodeInfo node = new ClusterNodeInfo(IPAddress + ":" + stargateConfig.getServicePort(), hostUri);
+                ClusterNodeInfo node = LocalNodeInfoUtils.getNodeInfo(stargateConfig);
                 this.localClusterManager.addNode(node);
+                this.localClusterManager.setLocalNode(node);
             } catch (NodeAlreadyAddedException ex) {
                 LOG.error(ex);
             } catch (ServiceNotStartedException ex) {
@@ -144,29 +148,6 @@ public class GateKeeperService {
             } catch (URISyntaxException ex) {
                 LOG.error(ex);
             }
-        }
-    }
-    
-    private String getGoodIPAddress() {
-        Collection<ClusterNodeInfo> nodes = this.localClusterManager.getAllNode();
-        if(nodes.size() > 0) {
-            Collection<String> localAddresses = IPUtils.getIPAddresses();
-            Iterator<ClusterNodeInfo> iterator = nodes.iterator();
-            while(iterator.hasNext()) {
-                ClusterNodeInfo node = iterator.next();
-                URI addr = node.getAddr();
-                String host = addr.getHost();
-                if(IPUtils.isIPAddress(host)) {
-                    for(String localAddr : localAddresses) {
-                        if(IPUtils.isSameSubnet(host, localAddr, "255.255.255.0")) {
-                            return localAddr;
-                        }
-                    }
-                }
-            }
-            return IPUtils.getPublicIPAddress();
-        } else {
-            return IPUtils.getPublicIPAddress();
         }
     }
     

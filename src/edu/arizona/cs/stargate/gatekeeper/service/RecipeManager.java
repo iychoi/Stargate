@@ -24,12 +24,16 @@
 
 package edu.arizona.cs.stargate.gatekeeper.service;
 
-import edu.arizona.cs.stargate.cache.service.JsonMap;
+import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.EntryListener;
+import com.hazelcast.core.MapEvent;
+import edu.arizona.cs.stargate.cache.service.JsonIMap;
 import edu.arizona.cs.stargate.cache.service.JsonMultiMap;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ARecipeGenerator;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
+import edu.arizona.cs.stargate.common.recipe.FixedSizeLocalFileRecipeGenerator;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
 import edu.arizona.cs.stargate.common.recipe.RecipeChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.RecipeGeneratorFactory;
@@ -40,9 +44,8 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,6 +56,8 @@ import org.apache.commons.logging.LogFactory;
 public class RecipeManager {
     private static final Log LOG = LogFactory.getLog(RecipeManager.class);
     
+    private static final int RECIPE_BACKGROUND_WORKER_THREADS = 1;
+    
     private static final String RECIPEMANAGER_RECIPES_MAP_ID = "RecipeManager_Recipes";
     private static final String RECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
     private static final String RECIPEMANAGER_PENDING_RECIPES_MAP_ID = "RecipeManager_Pending_Recipes";
@@ -61,12 +66,12 @@ public class RecipeManager {
 
     private RecipeManagerConfiguration config;
     
-    private JsonMap<URI, Recipe> recipes;
-    private JsonMap<URI, Recipe> pendingRecipes;
+    private JsonIMap<URI, Recipe> recipes;
+    private JsonIMap<URI, Recipe> pendingRecipes;
     private JsonMultiMap<String, ChunkInfo> chunkinfo;
     
     // check message and start hashing
-    private ScheduledExecutorService backgroundWorker;
+    private ExecutorService backgroundWorker;
     
     public static RecipeManager getInstance(RecipeManagerConfiguration config) {
         synchronized (RecipeManager.class) {
@@ -95,16 +100,44 @@ public class RecipeManager {
         }
         
         try {
-            this.recipes = new JsonMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), Recipe.class);
-            this.pendingRecipes = new JsonMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), Recipe.class);
+            this.recipes = new JsonIMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), Recipe.class);
+            this.pendingRecipes = new JsonIMap<URI, Recipe>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), Recipe.class);
+            this.pendingRecipes.addEntryListener(new EntryListener<URI, Recipe>(){
+
+                @Override
+                public void entryAdded(EntryEvent<URI, Recipe> ee) {
+                    Runnable worker = new BackgroundWorker(); 
+                    backgroundWorker.execute(worker);
+                }
+
+                @Override
+                public void entryRemoved(EntryEvent<URI, Recipe> ee) {
+                }
+
+                @Override
+                public void entryUpdated(EntryEvent<URI, Recipe> ee) {
+                }
+
+                @Override
+                public void entryEvicted(EntryEvent<URI, Recipe> ee) {
+                }
+
+                @Override
+                public void mapEvicted(MapEvent me) {
+                }
+
+                @Override
+                public void mapCleared(MapEvent me) {
+                }
+            }, true);
+            
             this.chunkinfo = new JsonMultiMap<String, ChunkInfo>(StargateService.getInstance().getDistributedCacheService().getDistributedMultiMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), ChunkInfo.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);
         }
         
-        this.backgroundWorker = Executors.newSingleThreadScheduledExecutor();
-        this.backgroundWorker.scheduleAtFixedRate(new BackgroundWorker(), 0, 1, TimeUnit.MINUTES);
+        this.backgroundWorker = Executors.newFixedThreadPool(RECIPE_BACKGROUND_WORKER_THREADS);
     }
     
     public RecipeManagerConfiguration getConfiguration() {
@@ -215,16 +248,47 @@ public class RecipeManager {
         
         @Override
         public void run() {
-            while(pendingRecipes.size() > 0) {
+            if(pendingRecipes.size() > 0) {
                 try {
-                    Recipe recipe = pendingRecipes.popAnyEntry();
-                    LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
+                    Recipe recipe = pendingRecipes.peekEntry();
+                    LocalClusterManager lcm = LocalClusterManager.getInstance();
                     ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
-                    recipeGenerator.hashRecipe(recipe);
-                    recipes.put(recipe.getResourcePath(), recipe);
-                    Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
-                    for(RecipeChunkInfo chunk : allChunk) {
-                        chunkinfo.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
+                    if(recipeGenerator instanceof FixedSizeLocalFileRecipeGenerator) {
+                        LOG.info("local file recipe generation " + recipe.getResourcePath());
+                        boolean local = true;
+                        Collection<RecipeChunkInfo> chunks = recipe.getAllChunk();
+                        Iterator<RecipeChunkInfo> iterator = chunks.iterator();
+                        while(iterator.hasNext()) {
+                            RecipeChunkInfo chunk = iterator.next();
+                            boolean ownerhost = false;
+                            String[] ownerHosts = chunk.getOwnerHost();
+                            for(String ownerHost : ownerHosts) {
+                                if(lcm.getLocalNode().getName().equals(ownerHost)) {
+                                    ownerhost = true;
+                                }
+                            }
+                            
+                            if(!ownerhost) {
+                                local = false;
+                                break;
+                            }
+                        }
+                        
+                        if(local) {
+                            recipe = pendingRecipes.get(recipe.getResourcePath());
+                            LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
+                            
+                            recipeGenerator.hashRecipe(recipe);
+                            recipes.put(recipe.getResourcePath(), recipe);
+                            Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
+                            for (RecipeChunkInfo chunk : allChunk) {
+                                chunkinfo.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
+                            }
+                        } else {
+                            LOG.info("Ignoring hashing " + recipe.getResourcePath().toASCIIString());
+                        }
+                    } else {
+                        LOG.info("hdfs file recipe generation " + recipe.getResourcePath());
                     }
                 } catch (IOException ex) {
                     LOG.error(ex);
