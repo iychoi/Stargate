@@ -75,7 +75,7 @@ public class TransportManager {
     public synchronized ChunkInfo getChunkInfo(String hash) {
         try {
             RecipeManager rm = RecipeManager.getInstance();
-            return rm.findChunk(hash);
+            return rm.getChunk(hash);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

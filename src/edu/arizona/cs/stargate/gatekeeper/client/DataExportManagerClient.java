@@ -158,18 +158,4 @@ public class DataExportManagerClient extends ADataExportManagerAPI {
             throw response.getException();
         }
     }
-
-    @Override
-    public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
-        try {
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("vpath", vpath);
-            params.put("offset", Long.toString(offset));
-            params.put("len", Integer.toString(len));
-            return this.gatekeeperRPCClient.download(getResourcePath(ADataExportManagerAPI.GET_DATA_CHUNK_PATH, params));
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw ex;
-        }
-    }
 }

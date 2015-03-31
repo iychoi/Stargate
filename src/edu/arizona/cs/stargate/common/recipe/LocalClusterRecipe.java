@@ -31,6 +31,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -39,6 +42,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * @author iychoi
  */
 public class LocalClusterRecipe {
+    
+    private static final Log LOG = LogFactory.getLog(LocalClusterRecipe.class);
     
     private URI resourcePath;
     private String hashAlgorithm;
@@ -92,6 +97,18 @@ public class LocalClusterRecipe {
     @JsonProperty("chunkinfo")
     public Collection<RecipeChunkInfo> getAllChunk() {
         return Collections.unmodifiableCollection(this.chunks);
+    }
+    
+    @JsonIgnore
+    public RecipeChunkInfo getChunk(String hash) {
+        Iterator<RecipeChunkInfo> iterator = this.chunks.iterator();
+        while(iterator.hasNext()) {
+            RecipeChunkInfo chunk = iterator.next();
+            if(chunk.hasHash(hash)) {
+                return chunk;
+            }
+        }
+        return null;
     }
     
     @JsonProperty("chunkinfo")

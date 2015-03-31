@@ -98,7 +98,7 @@ public class ChunkInfo {
         if(this.hash == null) {
             return null;
         }
-        return DataFormatter.toHexString(this.hash);
+        return DataFormatter.toHexString(this.hash).toLowerCase();
     }
     
     @JsonIgnore
@@ -181,7 +181,7 @@ public class ChunkInfo {
     
     @Override
     public String toString() {
-        return this.resourcePath.toString() + "(" + this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash) + ")";
+        return this.resourcePath.toString() + "(" + this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash).toLowerCase() + ")";
     }
     
     public RecipeChunkInfo toRecipeChunk() {

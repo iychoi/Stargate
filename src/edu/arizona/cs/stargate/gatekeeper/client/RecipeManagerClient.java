@@ -30,7 +30,6 @@ import edu.arizona.cs.stargate.common.recipe.LocalClusterRecipe;
 import edu.arizona.cs.stargate.gatekeeper.ARecipeManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -136,18 +135,6 @@ public class RecipeManagerClient extends ARecipeManagerAPI {
         
         if(response.getException() != null) {
             throw response.getException();
-        }
-    }
-
-    @Override
-    public InputStream getDataChunk(String hash) throws Exception {
-        try {
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("hash", hash);
-            return this.gatekeeperRPCClient.download(getResourcePath(ARecipeManagerAPI.GET_DATA_CHUNK_PATH, params));
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw ex;
         }
     }
 }

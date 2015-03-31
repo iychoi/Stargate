@@ -136,6 +136,10 @@ public class TransportManagerRestful extends ATransportManagerAPI {
         LOG.info("hash = " + hash);
         if(hash != null) {
             final InputStream is = getDataChunk(hash);
+            if(is == null) {
+                LOG.error("data chunk not found : hash - " + hash);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
             
             StreamingOutput stream = new StreamingOutput() {
 
@@ -160,6 +164,10 @@ public class TransportManagerRestful extends ATransportManagerAPI {
             return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
         } else if(vpath != null && len > 0) {
             final InputStream is = getDataChunk(vpath, offset, len);
+            if(is == null) {
+                LOG.error("data chunk not found : vpath - " + vpath);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
             
             StreamingOutput stream = new StreamingOutput() {
 
@@ -209,6 +217,10 @@ public class TransportManagerRestful extends ATransportManagerAPI {
         }
         if(hash != null) {
             final InputStream is = getDataChunk(hash);
+            if(is == null) {
+                LOG.error("data chunk not found : hash - " + hash);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
             
             StreamingOutput stream = new StreamingOutput() {
 
@@ -233,6 +245,10 @@ public class TransportManagerRestful extends ATransportManagerAPI {
             return Response.ok(stream).header("content-disposition", "attachment; filename = " + vpath).build();
         } else if(vpath != null && len > 0) {
             final InputStream is = getDataChunk(vpath, offset, len);
+            if(is == null) {
+                LOG.error("data chunk not found : vpath - " + vpath);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
             
             StreamingOutput stream = new StreamingOutput() {
 
@@ -267,7 +283,7 @@ public class TransportManagerRestful extends ATransportManagerAPI {
         if(resourcePath != null) {
             return ChunkReaderFactory.getChunkReader(resourcePath, offset, len);
         } else {
-            return null;
+            throw new Exception("chunk for vpath (" + vpath + ") was not found");
         }
     }
     

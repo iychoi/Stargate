@@ -154,11 +154,11 @@ public class GateKeeperClientTest {
             byte[] buffer = new byte[100*1024];
             for(DataExportInfo dei : dataExportInfo) {
                 // check recipe
-                InputStream is = this.client.getDataExportManagerClient().getDataChunk(dei.getVirtualPath(), 0, 1024);
-                System.out.println("reading first 1024KB from " + dei.getVirtualPath());
-                is.read(buffer);
+                //InputStream is = this.client.getDataExportManagerClient().getDataChunk(dei.getVirtualPath(), 0, 1024);
+                //System.out.println("reading first 1024KB from " + dei.getVirtualPath());
+                //is.read(buffer);
 
-                System.out.println(new String(buffer));
+                //System.out.println(new String(buffer));
             }
         } catch (IOException ex) {
             ex.printStackTrace();

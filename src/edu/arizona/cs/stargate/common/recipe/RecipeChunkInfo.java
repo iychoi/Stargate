@@ -29,6 +29,8 @@ import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -37,6 +39,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * @author iychoi
  */
 public class RecipeChunkInfo {
+    
+    private static final Log LOG = LogFactory.getLog(RecipeChunkInfo.class);
     
     private static final String OWNER_HOST_DEFAULT = "*";
     private static final String[] OWNER_HOST_DEFAULT_ARR = new String[] {OWNER_HOST_DEFAULT};
@@ -108,7 +112,7 @@ public class RecipeChunkInfo {
         if(this.hash == null) {
             return null;
         }
-        return DataFormatter.toHexString(this.hash);
+        return DataFormatter.toHexString(this.hash).toLowerCase();
     }
     
     @JsonIgnore
@@ -158,7 +162,6 @@ public class RecipeChunkInfo {
         if(this.hash == null) {
             return false;
         }
-        
         if(this.hash.length == hash.length) {
             for(int i=0;i<this.hash.length;i++) {
                 if(this.hash[i] != hash[i]) {
@@ -192,7 +195,7 @@ public class RecipeChunkInfo {
     
     @Override
     public String toString() {
-        return this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash);
+        return this.chunkStart + ", " + this.chunkLen + ", " + DataFormatter.toHexString(this.hash).toLowerCase();
     }
     
     @JsonIgnore

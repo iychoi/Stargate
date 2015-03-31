@@ -49,6 +49,4 @@ public abstract class ADataExportManagerAPI {
     public abstract void removeDataExport(String vpath) throws Exception;
     
     public abstract void removeAllDataExport() throws Exception;
-    
-    public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
 }

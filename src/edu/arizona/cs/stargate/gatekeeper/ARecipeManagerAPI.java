@@ -39,7 +39,6 @@ public abstract class ARecipeManagerAPI {
     public static final String GET_RECIPE_PATH = "/recipe";
     public static final String DELETE_RECIPE_PATH = "/recipe";
     public static final String GET_CHUNK_INFO_PATH = "/chunkinfo";
-    public static final String GET_DATA_CHUNK_PATH = "/chunk";
     
     public abstract LocalClusterRecipe getRecipe(URI resourceURI) throws Exception;
     
@@ -48,6 +47,4 @@ public abstract class ARecipeManagerAPI {
     public abstract void removeAllRecipe() throws Exception;
     
     public abstract ChunkInfo getChunkInfo(String hash) throws Exception;
-    
-    public abstract InputStream getDataChunk(String hash) throws Exception;
 }

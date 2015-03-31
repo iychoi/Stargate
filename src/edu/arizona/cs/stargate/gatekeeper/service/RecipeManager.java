@@ -28,7 +28,6 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.MapEvent;
 import edu.arizona.cs.stargate.cache.service.JsonIMap;
-import edu.arizona.cs.stargate.cache.service.JsonMultiMap;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ARecipeGenerator;
@@ -42,6 +41,7 @@ import edu.arizona.cs.stargate.service.StargateService;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
@@ -68,7 +68,7 @@ public class RecipeManager {
     
     private JsonIMap<URI, LocalClusterRecipe> recipes;
     private JsonIMap<URI, LocalClusterRecipe> pendingRecipes;
-    private JsonMultiMap<String, ChunkInfo> chunkinfo;
+    private JsonIMap<String, URI[]> chunkinfo;
     
     // check message and start hashing
     private ExecutorService backgroundWorker;
@@ -131,7 +131,7 @@ public class RecipeManager {
                 }
             }, true);
             
-            this.chunkinfo = new JsonMultiMap<String, ChunkInfo>(StargateService.getInstance().getDistributedCacheService().getDistributedMultiMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), ChunkInfo.class);
+            this.chunkinfo = new JsonIMap<String, URI[]>(StargateService.getInstance().getDistributedCacheService().getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);
@@ -197,15 +197,9 @@ public class RecipeManager {
             recipe = recipe2;
         }
         if(recipe != null) {
-            Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
-            for(RecipeChunkInfo info : allChunk) {
-                Collection<ChunkInfo> removedChunks = this.chunkinfo.remove(info.getHashString());
-                for(ChunkInfo chunk : removedChunks) {
-                    if(!chunk.getResourcePath().equals(recipe.getResourcePath())) {
-                        // other's 
-                        this.chunkinfo.put(chunk.getHashString(), chunk);
-                    }
-                }
+            Collection<RecipeChunkInfo> chunks = recipe.getAllChunk();
+            for(RecipeChunkInfo info : chunks) {
+                removeChunk(info.getHashString(), recipe.getResourcePath());
             }
         }
     }
@@ -216,21 +210,59 @@ public class RecipeManager {
         this.chunkinfo.clear();
     }
     
-    public synchronized ChunkInfo findChunk(String hash) {
-        Collection<ChunkInfo> chunks = this.chunkinfo.get(hash);
-        Iterator<ChunkInfo> iterator = chunks.iterator();
-        while(iterator.hasNext()) {
-            ChunkInfo chunk = iterator.next();
-            if(this.recipes.containsKey(chunk.getResourcePath())) {
-                return chunk;
+    private synchronized void addChunk(String hash, URI resourceURI) {
+        URI[] chunksResourceURIs = this.chunkinfo.remove(hash);
+        
+        ArrayList<URI> newResourceURIs = new ArrayList<URI>();
+        if(chunksResourceURIs != null) {
+            for(URI chunksResourceURI : chunksResourceURIs) {
+                newResourceURIs.add(chunksResourceURI);
+            }
+        }
+        
+        newResourceURIs.add(resourceURI);
+
+        // update
+        this.chunkinfo.put(hash, newResourceURIs.toArray(new URI[0]));
+    }
+    
+    private synchronized void removeChunk(String hash, URI resourceURI) {
+        URI[] chunksResourceURIs = this.chunkinfo.remove(hash);
+        
+        ArrayList<URI> newResourceURIs = new ArrayList<URI>();
+        if(chunksResourceURIs != null) {
+            for(URI chunksResourceURI : chunksResourceURIs) {
+                if(!chunksResourceURI.equals(resourceURI)) {
+                    newResourceURIs.add(chunksResourceURI);
+                }
+            }
+        }
+
+        // update
+        if(!newResourceURIs.isEmpty()) {
+            this.chunkinfo.put(hash, newResourceURIs.toArray(new URI[0]));
+        }
+    }
+    
+    public synchronized ChunkInfo getChunk(String hash) {
+        URI[] resourceURIs = this.chunkinfo.get(hash.toLowerCase());
+        if(resourceURIs != null) {
+            for(URI resourceURI : resourceURIs) {
+                LocalClusterRecipe recipe = this.recipes.get(resourceURI);
+                if(recipe != null) {
+                    RecipeChunkInfo chunk = recipe.getChunk(hash.toLowerCase());
+                    if(chunk != null) {
+                        return chunk.toChunk(recipe.getResourcePath());
+                    }
+                }
             }
         }
         return null;
     }
     
-    public synchronized ChunkInfo findChunk(byte[] hash) {
-        String hashString = DataFormatter.toHexString(hash);
-        return findChunk(hashString);
+    public synchronized ChunkInfo getChunk(byte[] hash) {
+        String hashString = DataFormatter.toHexString(hash).toLowerCase();
+        return getChunk(hashString);
     }
     
     @Override
@@ -282,7 +314,7 @@ public class RecipeManager {
                             recipes.put(recipe.getResourcePath(), recipe);
                             Collection<RecipeChunkInfo> allChunk = recipe.getAllChunk();
                             for (RecipeChunkInfo chunk : allChunk) {
-                                chunkinfo.put(chunk.getHashString(), chunk.toChunk(recipe.getResourcePath()));
+                                addChunk(chunk.getHashString(), recipe.getResourcePath());
                             }
                         } else {
                             LOG.info("Ignoring hashing " + recipe.getResourcePath().toASCIIString());
