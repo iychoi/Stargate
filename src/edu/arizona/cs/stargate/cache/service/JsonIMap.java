@@ -30,11 +30,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.MapEvent;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -80,6 +76,8 @@ public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
 
     @Override
     public synchronized boolean containsValue(Object value) {
+        throw new UnsupportedOperationException();
+        /*
         try {
             String json = this.serializer.toJson(value);
             return this.internalMap.containsValue(json);
@@ -87,6 +85,7 @@ public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
             LOG.error(ex);
             return false;
         }
+        */
     }
 
     @Override
@@ -149,6 +148,8 @@ public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
     
     @Override
     public synchronized Collection<V> values() {
+        throw new UnsupportedOperationException();
+        /*
         ArrayList<V> values = new ArrayList<V>();
         Collection<String> jsonValues = this.internalMap.values();
         for(String json : jsonValues) {
@@ -160,10 +161,13 @@ public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
             }
         }
         return Collections.unmodifiableCollection(values);
+        */
     }
 
     @Override
     public synchronized Set<Entry<K, V>> entrySet() {
+        throw new UnsupportedOperationException();
+        /*
         Set<Entry<K, V>> set = new HashSet<Entry<K, V>>();
         Set<Entry<K, String>> entrySet = this.internalMap.entrySet();
         for(Entry<K, String> entry : entrySet) {
@@ -175,6 +179,7 @@ public class JsonIMap<K extends Object, V extends Object> implements Map<K, V> {
             }
         }
         return set;
+        */
     }
     
     public synchronized V popAnyEntry() {

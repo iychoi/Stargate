@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper;
 
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.RemoteClusterRecipe;
 import java.io.InputStream;
 
 /**
@@ -38,7 +38,7 @@ public abstract class ATransportManagerAPI {
     public static final String GET_DATA_CHUNK_PATH = "/chunk";
     public static final String GET_DATA_CHUNK_URL_PATH = "/chunku";
     
-    public abstract Recipe getRecipe(String vpath) throws Exception;
+    public abstract RemoteClusterRecipe getRecipe(String vpath) throws Exception;
     
     public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
     

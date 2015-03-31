@@ -28,7 +28,7 @@ import com.google.inject.Singleton;
 import edu.arizona.cs.stargate.common.DataFormatter;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.ChunkReaderFactory;
-import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.RemoteClusterRecipe;
 import edu.arizona.cs.stargate.gatekeeper.ATransportManagerAPI;
 import edu.arizona.cs.stargate.gatekeeper.response.RestfulResponse;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
@@ -76,14 +76,14 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     @GET
     @Path(ATransportManagerAPI.GET_RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Recipe> responseGetRecipeJSON(
+    public RestfulResponse<RemoteClusterRecipe> responseGetRecipeJSON(
             @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         LOG.info("vpath = " + vpath);
         try {
-            return new RestfulResponse<Recipe>(getRecipe(vpath));
+            return new RestfulResponse<RemoteClusterRecipe>(getRecipe(vpath));
         } catch(Exception ex) {
-            return new RestfulResponse<Recipe>(ex);
+            return new RestfulResponse<RemoteClusterRecipe>(ex);
         }
     }
     
@@ -104,19 +104,19 @@ public class TransportManagerRestful extends ATransportManagerAPI {
     @GET
     @Path(ATransportManagerAPI.GET_RECIPE_URL_PATH + "/{vpath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Recipe> responseGetRecipeJSONURL(
+    public RestfulResponse<RemoteClusterRecipe> responseGetRecipeJSONURL(
             @DefaultValue("null") @PathParam("vpath") String vpath
     ) {
         LOG.info("vpath = " + vpath);
         try {
-            return new RestfulResponse<Recipe>(getRecipe(vpath));
+            return new RestfulResponse<RemoteClusterRecipe>(getRecipe(vpath));
         } catch(Exception ex) {
-            return new RestfulResponse<Recipe>(ex);
+            return new RestfulResponse<RemoteClusterRecipe>(ex);
         }
     }
     
     @Override
-    public Recipe getRecipe(String vpath) throws Exception {
+    public RemoteClusterRecipe getRecipe(String vpath) throws Exception {
         TransportManager tm = getTransportManager();
         return tm.getRecipe(vpath);
     }

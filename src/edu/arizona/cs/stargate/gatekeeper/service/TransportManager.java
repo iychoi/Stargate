@@ -27,6 +27,7 @@ package edu.arizona.cs.stargate.gatekeeper.service;
 import edu.arizona.cs.stargate.common.dataexport.DataExportInfo;
 import edu.arizona.cs.stargate.common.recipe.ChunkInfo;
 import edu.arizona.cs.stargate.common.recipe.Recipe;
+import edu.arizona.cs.stargate.common.recipe.RemoteClusterRecipe;
 import edu.arizona.cs.stargate.service.ServiceNotStartedException;
 import java.net.URI;
 import org.apache.commons.logging.Log;
@@ -53,14 +54,15 @@ public class TransportManager {
     TransportManager() {
     }
     
-    public synchronized Recipe getRecipe(String vpath) {
+    public synchronized RemoteClusterRecipe getRecipe(String vpath) {
         DataExportManager dem = DataExportManager.getInstance();
         DataExportInfo export = dem.getDataExportInfo(vpath);
         if(export != null) {
             try {
                 RecipeManager rm = RecipeManager.getInstance();
                 Recipe recipe = rm.getRecipe(export.getResourcePath());
-                return recipe;
+                
+                return new RemoteClusterRecipe(export.getVirtualPath(), recipe);
             } catch (ServiceNotStartedException ex) {
                 LOG.error(ex);
                 return null;
