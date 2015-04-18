@@ -155,7 +155,7 @@ public class StargateFS extends FileSystem {
         return true;
     }
     
-    private FileStatus convFileStatus(edu.arizona.cs.stargate.hdfs.FileStatus status) {
+    private FileStatus convFileStatus(edu.arizona.cs.stargate.hdfs.StargateFileStatus status) {
         return new FileStatus(status.getLength(), status.isDir(), status.getBlockReplication(), status.getBlockSize(), status.getModificationTime(), new Path(status.getCluster() + "/" + status.getVPath()));
     }
     
@@ -164,7 +164,7 @@ public class StargateFS extends FileSystem {
         /*
         Path absolutePath = makeAbsolute(path);
         try {
-            edu.arizona.cs.stargate.hdfs.FileStatus[] listStatus = this.client.listStatus(absolutePath.toUri());
+            edu.arizona.cs.stargate.hdfs.StargateFileStatus[] listStatus = this.client.listStatus(absolutePath.toUri());
             
         } catch (Exception ex) {
             LOG.error(ex);

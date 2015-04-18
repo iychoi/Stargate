@@ -34,15 +34,15 @@ import java.util.Collection;
 public abstract class ADataExportManagerRestfulAPI {
     
     public static final String BASE_PATH = "/dataexportmgr";
-    public static final String DATA_EXPORT_INFO_PATH = "/export";
+    public static final String DATA_EXPORT_PATH = "/export";
     
-    public abstract Collection<DataExport> getAllDataExportInfo() throws Exception;
+    public abstract Collection<DataExport> getAllDataExports() throws Exception;
     
-    public abstract DataExport getDataExportInfo(String vpath) throws Exception;
+    public abstract DataExport getDataExport(String vpath) throws Exception;
     
     public abstract void addDataExport(DataExport info) throws Exception;
     
     public abstract void removeDataExport(String vpath) throws Exception;
     
-    public abstract void removeAllDataExport() throws Exception;
+    public abstract void removeAllDataExports() throws Exception;
 }

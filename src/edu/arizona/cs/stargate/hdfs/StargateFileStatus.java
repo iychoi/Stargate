@@ -28,7 +28,7 @@ package edu.arizona.cs.stargate.hdfs;
  *
  * @author iychoi
  */
-public class FileStatus {
+public class StargateFileStatus {
 
     private long length;
     private String cluster;

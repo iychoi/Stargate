@@ -88,33 +88,33 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     }
     
     @GET
-    @Path(ARecipeManagerRestfulAPI.CHUNK_INFO_PATH)
+    @Path(ARecipeManagerRestfulAPI.CHUNK_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetChunkInfoText(
+    public String responseGetChunkText(
             @DefaultValue("null") @QueryParam("hash") String hash
     ) {
         try {
-            return DataFormatUtils.toJSONFormat(responseGetChunkInfoJSON(hash));
+            return DataFormatUtils.toJSONFormat(responseGetChunkJSON(hash));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(ARecipeManagerRestfulAPI.CHUNK_INFO_PATH)
+    @Path(ARecipeManagerRestfulAPI.CHUNK_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Chunk> responseGetChunkInfoJSON(
+    public RestfulResponse<Chunk> responseGetChunkJSON(
             @DefaultValue("null") @QueryParam("hash") String hash
     ) {
         try {
-            return new RestfulResponse<Chunk>(getChunkInfo(hash));
+            return new RestfulResponse<Chunk>(getChunk(hash));
         } catch(Exception ex) {
             return new RestfulResponse<Chunk>(ex);
         }
     }
     
     @Override
-    public Chunk getChunkInfo(String hash) throws Exception {
+    public Chunk getChunk(String hash) throws Exception {
         RecipeManager rm = getRecipeManager();
         return rm.getChunk(hash);
     }
@@ -141,7 +141,7 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
         try {
             if(name != null) {
                 if(name.equals("*")) {
-                    removeAllRecipe();
+                    removeAllRecipes();
                 } else {
                     removeRecipe(new URI(name));
                 }
@@ -161,7 +161,7 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     }
 
     @Override
-    public void removeAllRecipe() throws Exception {
+    public void removeAllRecipes() throws Exception {
         RecipeManager rm = getRecipeManager();
         rm.removeAllRecipes();
     }

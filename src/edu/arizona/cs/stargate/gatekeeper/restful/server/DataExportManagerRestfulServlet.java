@@ -59,34 +59,34 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
     private static final Log LOG = LogFactory.getLog(DataExportManagerRestfulServlet.class);
     
     @GET
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetDataExportInfoText(
+    public String responseGetDataExportText(
             @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
-            return DataFormatUtils.toJSONFormat(responseGetDataExportInfoJSON(vpath));
+            return DataFormatUtils.toJSONFormat(responseGetDataExportJSON(vpath));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<DataExport>> responseGetDataExportInfoJSON(
+    public RestfulResponse<Collection<DataExport>> responseGetDataExportJSON(
             @DefaultValue("null") @QueryParam("vpath") String vpath
     ) {
         try {
             if(vpath != null) {
                 if(vpath.equals("*")) {
-                    return new RestfulResponse<Collection<DataExport>>(getAllDataExportInfo());
+                    return new RestfulResponse<Collection<DataExport>>(getAllDataExports());
                 } else {
-                    DataExport info = getDataExportInfo(vpath);
-                    List<DataExport> dataExportInfo = new ArrayList<DataExport>();
-                    dataExportInfo.add(info);
+                    DataExport export = getDataExport(vpath);
+                    List<DataExport> exports = new ArrayList<DataExport>();
+                    exports.add(export);
                     
-                    return new RestfulResponse<Collection<DataExport>>(Collections.unmodifiableCollection(dataExportInfo));
+                    return new RestfulResponse<Collection<DataExport>>(Collections.unmodifiableCollection(exports));
                 }
             } else {
                 return new RestfulResponse<Collection<DataExport>>(new Exception("invalid parameter"));
@@ -97,35 +97,35 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
     }
     
     @Override
-    public DataExport getDataExportInfo(String vpath) throws Exception {
+    public DataExport getDataExport(String vpath) throws Exception {
         DataExportManager dem = getDataExportManager();
         return dem.getDataExport(vpath);
     }
     
     @Override
-    public Collection<DataExport> getAllDataExportInfo() throws Exception {
+    public Collection<DataExport> getAllDataExports() throws Exception {
         DataExportManager dem = getDataExportManager();
         return dem.getAllDataExports();
     }
     
     @POST
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseAddDataExportText(DataExport dataExportInfo) {
+    public String responseAddDataExportText(DataExport export) {
         try {
-            return DataFormatUtils.toJSONFormat(responseAddDataExportJSON(dataExportInfo));
+            return DataFormatUtils.toJSONFormat(responseAddDataExportJSON(export));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @POST
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseAddDataExportJSON(DataExport dataExportInfo) {
+    public RestfulResponse<Boolean> responseAddDataExportJSON(DataExport export) {
         try {
-            if(dataExportInfo != null) {
-                addDataExport(dataExportInfo);
+            if(export != null) {
+                addDataExport(export);
                 return new RestfulResponse<Boolean>(true);
             } else {
                 return new RestfulResponse<Boolean>(false);
@@ -136,13 +136,13 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
     }
     
     @Override
-    public void addDataExport(DataExport info) throws Exception {
+    public void addDataExport(DataExport export) throws Exception {
         DataExportManager dem = getDataExportManager();
-        dem.addDataExport(info);
+        dem.addDataExport(export);
     }
     
     @DELETE
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.TEXT_PLAIN)
     public String responseDeleteDataExportText(
             @DefaultValue("null") @QueryParam("vpath") String vpath
@@ -155,7 +155,7 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
     }
     
     @DELETE
-    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_INFO_PATH)
+    @Path(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Boolean> responseDeleteDataExportJSON(
             @DefaultValue("null") @QueryParam("vpath") String vpath
@@ -163,7 +163,7 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
         try {
             if(vpath != null) {
                 if(vpath.equals("*")) {
-                    removeAllDataExport();
+                    removeAllDataExports();
                 } else {
                     removeDataExport(vpath);
                 }
@@ -183,7 +183,7 @@ public class DataExportManagerRestfulServlet extends ADataExportManagerRestfulAP
     }
 
     @Override
-    public void removeAllDataExport() throws Exception {
+    public void removeAllDataExports() throws Exception {
         DataExportManager dem = getDataExportManager();
         dem.removeAllDataExports();
     }

@@ -36,13 +36,13 @@ public abstract class ARecipeManagerRestfulAPI {
     
     public static final String BASE_PATH = "/recipemgr";
     public static final String RECIPE_PATH = "/recipe";
-    public static final String CHUNK_INFO_PATH = "/chunkinfo";
+    public static final String CHUNK_PATH = "/chunk";
     
     public abstract LocalRecipe getRecipe(URI resourceURI) throws Exception;
     
     public abstract void removeRecipe(URI resourceURI) throws Exception;
     
-    public abstract void removeAllRecipe() throws Exception;
+    public abstract void removeAllRecipes() throws Exception;
     
-    public abstract Chunk getChunkInfo(String hash) throws Exception;
+    public abstract Chunk getChunk(String hash) throws Exception;
 }

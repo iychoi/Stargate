@@ -61,66 +61,66 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     private static final Log LOG = LogFactory.getLog(ClusterManagerRestfulServlet.class);
     
     @GET
-    @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetLocalClusterInfoText() {
-        LOG.info("request local cluster info");
+    public String responseGetLocalClusterText() {
+        LOG.info("request local cluster");
         try {
-            return DataFormatUtils.toJSONFormat(responseGetLocalClusterInfoJSON());
+            return DataFormatUtils.toJSONFormat(responseGetLocalClusterJSON());
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Cluster> responseGetLocalClusterInfoJSON() {
-        LOG.info("request local cluster info");
+    public RestfulResponse<Cluster> responseGetLocalClusterJSON() {
+        LOG.info("request local cluster");
         try {
-            return new RestfulResponse<Cluster>(getLocalClusterInfo());
+            return new RestfulResponse<Cluster>(getLocalCluster());
         } catch(Exception ex) {
             return new RestfulResponse<Cluster>(ex);
         }
     }
 
     @Override
-    public Cluster getLocalClusterInfo() throws Exception {
+    public Cluster getLocalCluster() throws Exception {
         LocalClusterManager lcm = getLocalClusterManager();
         return lcm.getCluster();
     }
 
     @GET
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetRemoteClusterInfoText(
+    public String responseGetRemoteClusterText(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
-        LOG.info("request remote cluster info : name = " + name);
+        LOG.info("request remote cluster : name = " + name);
         try {
-            return DataFormatUtils.toJSONFormat(responseGetRemoteClusterInfoJSON(name));
+            return DataFormatUtils.toJSONFormat(responseGetRemoteClusterJSON(name));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<Cluster>> responseGetRemoteClusterInfoJSON(
+    public RestfulResponse<Collection<Cluster>> responseGetRemoteClusterJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
-        LOG.info("request remote cluster info : name = " + name);
+        LOG.info("request remote cluster : name = " + name);
         try {
             if(name != null) {
                 if(name.equals("*")) {
-                    return new RestfulResponse<Collection<Cluster>>(getAllRemoteClusterInfo());
+                    return new RestfulResponse<Collection<Cluster>>(getAllRemoteClusters());
                 } else {
-                    Cluster info = getRemoteClusterInfo(name);
-                    List<Cluster> clusterInfo = new ArrayList<Cluster>();
-                    clusterInfo.add(info);
+                    Cluster cluster = getRemoteClusters(name);
+                    List<Cluster> clusters = new ArrayList<Cluster>();
+                    clusters.add(cluster);
                     
-                    return new RestfulResponse<Collection<Cluster>>(Collections.unmodifiableCollection(clusterInfo));
+                    return new RestfulResponse<Collection<Cluster>>(Collections.unmodifiableCollection(clusters));
                 }
             } else {
                 return new RestfulResponse<Collection<Cluster>>(new Exception("invalid parameter"));
@@ -131,35 +131,35 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     }
     
     @Override
-    public Cluster getRemoteClusterInfo(String name) throws Exception {
+    public Cluster getRemoteClusters(String name) throws Exception {
         RemoteClusterManager rcm = getRemoteClusterManager();
         return rcm.getCluster(name);
     }
     
     @Override
-    public Collection<Cluster> getAllRemoteClusterInfo() throws Exception {
+    public Collection<Cluster> getAllRemoteClusters() throws Exception {
         RemoteClusterManager rcm = getRemoteClusterManager();
         return rcm.getAllClusters();
     }
     
     @POST
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseAddRemoteClusterText(Cluster clusterInfo) {
+    public String responseAddRemoteClusterText(Cluster cluster) {
         try {
-            return DataFormatUtils.toJSONFormat(responseAddRemoteClusterJSON(clusterInfo));
+            return DataFormatUtils.toJSONFormat(responseAddRemoteClusterJSON(cluster));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @POST
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> responseAddRemoteClusterJSON(Cluster clusterInfo) {
+    public RestfulResponse<Boolean> responseAddRemoteClusterJSON(Cluster cluster) {
         try {
-            if(clusterInfo != null) {
-                addRemoteCluster(clusterInfo);
+            if(cluster != null) {
+                addRemoteCluster(cluster);
                 return new RestfulResponse<Boolean>(true);
             } else {
                 return new RestfulResponse<Boolean>(new Exception("invalid parameter"));
@@ -176,7 +176,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     }
     
     @DELETE
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.TEXT_PLAIN)
     public String responseDeleteRemoteClusterText(
             @DefaultValue("null") @QueryParam("name") String name
@@ -189,7 +189,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     }
     
     @DELETE
-    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_INFO_PATH)
+    @Path(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Boolean> responseDeleteRemoteClusterJSON(
             @DefaultValue("null") @QueryParam("name") String name
@@ -197,7 +197,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
         try {
             if(name != null) {
                 if(name.equals("*")) {
-                    removeAllRemoteCluster();
+                    removeAllRemoteClusters();
                 } else {
                     removeRemoteCluster(name);
                 }
@@ -211,7 +211,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     }
     
     @Override
-    public void removeAllRemoteCluster() {
+    public void removeAllRemoteClusters() {
         RemoteClusterManager rcm = getRemoteClusterManager();
         rcm.removeAllClusters();
     }

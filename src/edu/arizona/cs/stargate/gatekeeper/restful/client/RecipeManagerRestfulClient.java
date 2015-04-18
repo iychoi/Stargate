@@ -76,10 +76,10 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
     }
 
     @Override
-    public Chunk getChunkInfo(String hash) throws Exception {
+    public Chunk getChunk(String hash) throws Exception {
         RestfulResponse<Chunk> response;
         try {
-            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.CHUNK_INFO_PATH));
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.CHUNK_PATH));
             builder.addParam("hash", hash);
             String url = builder.build();
             response = (RestfulResponse<Chunk>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Chunk>>(){});
@@ -114,7 +114,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
     }
     
     @Override
-    public void removeAllRecipe() throws Exception {
+    public void removeAllRecipes() throws Exception {
         RestfulResponse<Boolean> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));

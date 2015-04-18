@@ -24,28 +24,13 @@
 
 package edu.arizona.cs.stargate.gatekeeper.restful.api;
 
-import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import java.util.Collection;
-
 /**
  *
  * @author iychoi
  */
-public abstract class AClusterManagerRestfulAPI {
+public abstract class AFileSystemRestfulAPI {
+    public static final String BASE_PATH = "/filesystem";
+    //public static final String RECIPE_PATH = "/recipe";
     
-    public static final String BASE_PATH = "/clustermgr";
-    public static final String LOCAL_CLUSTER_PATH = "/local";
-    public static final String REMOTE_CLUSTER_PATH = "/remote";
     
-    public abstract Cluster getLocalCluster() throws Exception;
-    
-    public abstract Collection<Cluster> getAllRemoteClusters() throws Exception;
-    
-    public abstract Cluster getRemoteClusters(String name) throws Exception;
-    
-    public abstract void addRemoteCluster(Cluster cluster) throws Exception;
-    
-    public abstract void removeRemoteCluster(String name) throws Exception;
-    
-    public abstract void removeAllRemoteClusters() throws Exception;
 }

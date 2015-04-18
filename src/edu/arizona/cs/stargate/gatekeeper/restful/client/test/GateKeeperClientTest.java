@@ -86,12 +86,12 @@ public class GateKeeperClientTest {
 
     private void testClusterInfo() {
         try {
-            Cluster localClusterInfo = this.client.getClusterManagerClient().getLocalClusterInfo();
+            Cluster localClusterInfo = this.client.getClusterManagerClient().getLocalCluster();
             System.out.println("local cluster info : " + DataFormatUtils.toJSONFormat(localClusterInfo));
             
-            this.client.getClusterManagerClient().removeAllRemoteCluster();
+            this.client.getClusterManagerClient().removeAllRemoteClusters();
             
-            Collection<Cluster> remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
+            Collection<Cluster> remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
             System.out.println("Adding remote cluster info");
@@ -99,18 +99,18 @@ public class GateKeeperClientTest {
             Cluster remoteCluster1 = new Cluster("remote1");
             this.client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
             Cluster remoteCluster2 = new Cluster("remote2");
             this.client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
-            this.client.getClusterManagerClient().removeAllRemoteCluster();
+            this.client.getClusterManagerClient().removeAllRemoteClusters();
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusterInfo();
+            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -121,15 +121,15 @@ public class GateKeeperClientTest {
 
     private void testDataExport() {
         try {
-            this.client.getDataExportManagerClient().removeAllDataExport();
+            this.client.getDataExportManagerClient().removeAllDataExports();
             
-            Collection<DataExport> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
+            Collection<DataExport> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExports();
             System.out.println("data export info : " + DataFormatUtils.toJSONFormat(dataExportInfo));
             
             DataExport export = new DataExport("/aaa/bbb", "file:///home/iychoi/NetBeansProjects/Stargate/libs/hadoop-core-0.20.2-cdh3u5.jar");
             this.client.getDataExportManagerClient().addDataExport(export);
             
-            dataExportInfo = this.client.getDataExportManagerClient().getAllDataExportInfo();
+            dataExportInfo = this.client.getDataExportManagerClient().getAllDataExports();
             System.out.println("data export info : " + DataFormatUtils.toJSONFormat(dataExportInfo));
             
             for(DataExport dei : dataExportInfo) {
