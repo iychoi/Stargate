@@ -24,15 +24,15 @@
 
 package edu.arizona.cs.stargate.service.test;
 
-import edu.arizona.cs.stargate.cache.service.DistributedCacheServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheServiceConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
-import edu.arizona.cs.stargate.common.ResourceLocator;
-import edu.arizona.cs.stargate.common.cluster.ClusterInfo;
-import edu.arizona.cs.stargate.common.cluster.ClusterNodeInfo;
-import edu.arizona.cs.stargate.common.cluster.NodeAlreadyAddedException;
-import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperServiceConfiguration;
-import edu.arizona.cs.stargate.gatekeeper.service.LocalClusterManager;
-import edu.arizona.cs.stargate.gatekeeper.service.RecipeManagerConfiguration;
+import edu.arizona.cs.stargate.common.LocalResourceLocator;
+import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
+import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
+import edu.arizona.cs.stargate.gatekeeper.cluster.NodeAlreadyAddedException;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManagerConfiguration;
 import edu.arizona.cs.stargate.service.StargateService;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.File;
@@ -48,22 +48,21 @@ public class GateKeeperServiceTest {
     public static void makeDummyServiceConf(File f) throws IOException {
         try {
             StargateServiceConfiguration serviceConf = new StargateServiceConfiguration();
-            serviceConf.setServiceName("Stargate1");
             
             DistributedCacheServiceConfiguration dhtConf = new DistributedCacheServiceConfiguration();
             dhtConf.setMyHostAddr("localhost:10111");
             
-            serviceConf.setDistributedCacheServiceConfiguration(dhtConf);
-            
             GateKeeperServiceConfiguration gatekeeperConf = new GateKeeperServiceConfiguration();
             
-            ClusterInfo clusterInfo = new ClusterInfo("local");
-            clusterInfo.addNode(new ClusterNodeInfo("node1", "http://111.111.111.1"));
-            clusterInfo.addNode(new ClusterNodeInfo("node2", "http://111.111.111.2"));
-            clusterInfo.addNode(new ClusterNodeInfo("node3", "http://111.111.111.3"));
-            clusterInfo.addNode(new ClusterNodeInfo("node4", "http://111.111.111.4"));
+            gatekeeperConf.setDistributedCacheServiceConfiguration(dhtConf);
             
-            gatekeeperConf.setClusterInfo(clusterInfo);
+            Cluster clusterInfo = new Cluster("local");
+            clusterInfo.addNode(new ClusterNode("node1", "http://111.111.111.1"));
+            clusterInfo.addNode(new ClusterNode("node2", "http://111.111.111.2"));
+            clusterInfo.addNode(new ClusterNode("node3", "http://111.111.111.3"));
+            clusterInfo.addNode(new ClusterNode("node4", "http://111.111.111.4"));
+            
+            gatekeeperConf.setLocalCluster(clusterInfo);
             
             RecipeManagerConfiguration recipeConfiguration = new RecipeManagerConfiguration();
             recipeConfiguration.setChunkSize(1024*1024);
@@ -92,7 +91,7 @@ public class GateKeeperServiceTest {
      */
     public static void main(String[] args) {
         try {
-            ResourceLocator rl = new ResourceLocator();
+            LocalResourceLocator rl = new LocalResourceLocator();
             
             File configFile;
             if(args.length != 0) {
@@ -111,13 +110,13 @@ public class GateKeeperServiceTest {
             instance.start();
             
             LocalClusterManager localClusterManager = instance.getGateKeeperService().getLocalClusterManager();
-            Collection<ClusterNodeInfo> allNode = localClusterManager.getAllNode();
+            Collection<ClusterNode> allNode = localClusterManager.getAllNodes();
             System.out.println("Cluster Name : " + localClusterManager.getName());
-            for(ClusterNodeInfo node : allNode) {
+            for(ClusterNode node : allNode) {
                 System.out.println("Node : " + node.getName() + " / " + node.getServiceURL().toASCIIString());
             }
             
-            instance.join();
+            instance.stop();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

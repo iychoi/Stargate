@@ -24,15 +24,10 @@
 
 package edu.arizona.cs.stargate.service;
 
-import com.google.inject.servlet.GuiceFilter;
-import edu.arizona.cs.stargate.cache.service.DistributedCacheService;
-import edu.arizona.cs.stargate.gatekeeper.service.GateKeeperService;
-import java.util.EnumSet;
+import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 
 /**
  *
@@ -44,9 +39,6 @@ public class StargateService {
     private static StargateService instance;
     
     private StargateServiceConfiguration config;
-    private Server jettyServer;
-    
-    private DistributedCacheService distributedCacheService;
     private GateKeeperService gatekeeperService;
     
     public static StargateService getInstance(StargateServiceConfiguration config) throws Exception {
@@ -68,17 +60,16 @@ public class StargateService {
     }
     
     StargateService(StargateServiceConfiguration config) throws Exception {
-        this.config = config;
-        this.distributedCacheService = DistributedCacheService.getInstance(config.getDistributedCacheServiceConfiguration());
-        this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
+        if(config == null) {
+            throw new Exception("StargateServiceConfiguration is null. Failed to start StargateService.");
+        } else {
+            this.config = config;
+            this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
+        }
     }
     
     public synchronized StargateServiceConfiguration getConfiguration() {
         return this.config;
-    }
-    
-    public synchronized DistributedCacheService getDistributedCacheService() {
-        return this.distributedCacheService;
     }
     
     public synchronized GateKeeperService getGateKeeperService() {
@@ -86,23 +77,12 @@ public class StargateService {
     }
     
     public synchronized void start() throws Exception {
-        this.distributedCacheService.start();
         this.gatekeeperService.start();
-        
-        this.jettyServer = new Server(this.config.getServicePort());
-        
-        // setting servlets
-        ServletContextHandler context = new ServletContextHandler(this.jettyServer, "/", ServletContextHandler.SESSIONS);
-        context.addFilter(GuiceFilter.class, "/*", EnumSet.<javax.servlet.DispatcherType>of(javax.servlet.DispatcherType.REQUEST, javax.servlet.DispatcherType.ASYNC));
-
-        context.addServlet(DefaultServlet.class, "/*");
-        
-        this.jettyServer.start();
-        LOG.info("Stargate service started on port " + this.config.getServicePort());
+        LOG.info("Stargate service started");
     }
     
-    public synchronized void join() throws InterruptedException {
-        this.jettyServer.join();
+    public synchronized void stop() throws InterruptedException {
+        this.gatekeeperService.stop();
         LOG.info("Stargate service stopped");
     }
     
