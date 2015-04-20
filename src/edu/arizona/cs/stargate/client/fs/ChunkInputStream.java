@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.fs;
+package edu.arizona.cs.stargate.client.fs;
 
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
@@ -45,7 +45,7 @@ public class ChunkInputStream extends InputStream {
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
     private long offset;
     private long size;
-    private ChunkData chunkData;
+    private FileChunkData chunkData;
     
     public ChunkInputStream(FileSystemRestfulClient filesystemClient, Collection<RecipeChunk> chunks) {
         this.filesystemRestfulClient = filesystemClient;
@@ -116,7 +116,7 @@ public class ChunkInputStream extends InputStream {
         }
         
         byte[] data = this.filesystemRestfulClient.getChunkData(chunk);
-        ChunkData chunkdata = new ChunkData(chunk, data);
+        FileChunkData chunkdata = new FileChunkData(chunk, data);
         this.chunkData = chunkdata;
     }
     

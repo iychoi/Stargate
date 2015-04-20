@@ -1,4 +1,4 @@
-package edu.arizona.cs.stargate.fs;
+package edu.arizona.cs.stargate.client.fs;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

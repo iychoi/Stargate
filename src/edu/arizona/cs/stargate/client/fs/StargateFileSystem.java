@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.fs;
+package edu.arizona.cs.stargate.client.fs;
 
 import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.common.PathUtils;

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.fs;
+package edu.arizona.cs.stargate.client.fs;
 
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
 
@@ -30,11 +30,11 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
  *
  * @author iychoi
  */
-public class ChunkData {
+public class FileChunkData {
     private RecipeChunk chunk;
     private byte[] data;
     
-    public ChunkData(RecipeChunk chunk, byte[] data) {
+    public FileChunkData(RecipeChunk chunk, byte[] data) {
         this.chunk = chunk;
         this.data = data;
     }
