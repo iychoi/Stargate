@@ -24,7 +24,9 @@
 
 package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
+import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AFileSystemRestfulAPI;
 import java.util.Collection;
 import org.apache.commons.logging.Log;
@@ -60,6 +62,14 @@ public class FileSystemRestfulClient extends AFileSystemRestfulAPI {
     }
 
     public long getBlockSize() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Cluster getLocalCluster() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public byte[] getChunkData(RecipeChunk chunk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

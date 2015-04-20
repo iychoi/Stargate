@@ -24,7 +24,9 @@
 
 package edu.arizona.cs.stargate.gatekeeper.dataexport;
 
-import java.net.URI;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -34,53 +36,116 @@ public class VirtualFileStatus {
 
     private String clusterName;
     private String virtualPath;
-    private URI resourcePath;
     private boolean dir;
     private long length;
-    private int blockReplication;
     private long blockSize;
     private long modificationTime;
+    private LocalRecipe localRecipe;
+    private RemoteRecipe remoteRecipe;
     
-    public VirtualFileStatus(String clusterName, String vpath, URI resourcePath, boolean dir, long length, int blockReplication, long blockSize, long modificationTime) {
-        this.clusterName = clusterName;
-        this.virtualPath = vpath;
-        this.resourcePath = resourcePath;
-        this.dir = dir;
-        this.length = length;
-        this.blockReplication = blockReplication;
-        this.blockSize = blockSize;
-        this.modificationTime = modificationTime;
+    public VirtualFileStatus() {
     }
     
+    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime) {
+        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, null, null);
+    }
+    
+    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, LocalRecipe localRecipe) {
+        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, localRecipe, null);
+    }
+    
+    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, RemoteRecipe remoteRecipe) {
+        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, null, remoteRecipe);
+    }
+    
+    private void initialize(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, LocalRecipe localRecipe, RemoteRecipe remoteRecipe) {
+        this.clusterName = clusterName;
+        this.virtualPath = vpath;
+        this.dir = dir;
+        this.length = length;
+        this.blockSize = blockSize;
+        this.modificationTime = modificationTime;
+        this.localRecipe = localRecipe;
+        this.remoteRecipe = remoteRecipe;
+    }
+    
+    @JsonProperty("modificationTime")
     public long getModificationTime() {
         return this.modificationTime;
     }
+    
+    @JsonProperty("modificationTime")
+    public void setModificationTime(long time) {
+        this.modificationTime = time;
+    }
  
+    @JsonProperty("blockSize")
     public long getBlockSize() {
         return this.blockSize;
     }
- 
-    public int getBlockReplication() {
-        return blockReplication;
+    
+    @JsonProperty("blockSize")
+    public void setBlockSize(long blockSize) {
+        this.blockSize = blockSize;
     }
     
+    @JsonProperty("dir")
     public boolean isDir() {
         return dir;
     }
     
+    @JsonProperty("dir")
+    public void setDir(boolean dir) {
+        this.dir = dir;
+    }
+    
+    @JsonProperty("length")
     public long getLength() {
         return this.length;
     }
     
+    @JsonProperty("length")
+    public void setLength(long length) {
+        this.length = length;
+    }
+    
+    @JsonProperty("clusterName")
     public String getClusterName() {
         return this.clusterName;
     }
     
+    @JsonProperty("clusterName")
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+    
+    @JsonProperty("virtualPath")
     public String getVirtualPath() {
         return this.virtualPath;
     }
+    
+    @JsonProperty("virtualPath")
+    public void setVirtualPath(String virtualPath) {
+        this.virtualPath = virtualPath;
+    }
 
-    public URI getResourcePath() {
-        return this.resourcePath;
+    @JsonProperty("localRecipe")
+    public LocalRecipe getLocalRecipe() {
+        return this.localRecipe;
+    }
+    
+    @JsonProperty("localRecipe")
+    public void setLocalRecipe(LocalRecipe localRecipe) {
+        this.localRecipe = localRecipe;
+    }
+    
+    @JsonProperty("remoteRecipe")
+    public RemoteRecipe getRemoteRecipe() {
+        return this.remoteRecipe;
+    }
+    
+    @JsonProperty("remoteRecipe")
+    public void setRemoteRecipe(RemoteRecipe remoteRecipe) {
+        this.remoteRecipe = remoteRecipe;
     }
 }

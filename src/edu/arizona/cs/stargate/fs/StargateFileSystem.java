@@ -30,6 +30,9 @@ import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FSDataInputStream;
 
 /**
  *
@@ -90,7 +94,7 @@ public class StargateFileSystem {
 
     private synchronized void syncLocalCluster() throws IOException {
         try {
-            this.localCluster = this.gatekeeperClient.getRestfulClient().getClusterManagerClient().getLocalCluster();
+            this.localCluster = this.filesystemClient.getLocalCluster();
         } catch (Exception ex) {
             LOG.error(ex);
             throw new IOException(ex);
@@ -99,7 +103,7 @@ public class StargateFileSystem {
     
     private VirtualFileStatus makeRootDirectoryStatus() {
         long blockSize = this.filesystemClient.getBlockSize();
-        return new VirtualFileStatus("", "/", null, true, 4096, 1, blockSize, this.lastUpdatedTime);
+        return new VirtualFileStatus("", "/", true, 4096, blockSize, this.lastUpdatedTime);
     }
     
     private VirtualFileStatus makeParentDirectoryStatus(VirtualFileStatus status) {
@@ -109,7 +113,7 @@ public class StargateFileSystem {
         
         String parentPath = PathUtils.getParent(status.getVirtualPath());
         if(parentPath != null) {
-            return new VirtualFileStatus(status.getClusterName(), parentPath, null, true, 4096, 1, 4096, this.lastUpdatedTime);
+            return new VirtualFileStatus(status.getClusterName(), parentPath, true, 4096, 4096, this.lastUpdatedTime);
         }
         return null;
     }
@@ -176,9 +180,48 @@ public class StargateFileSystem {
         return list_status.toArray(new VirtualFileStatus[0]);
     }
 
-    public synchronized InputStream open(URI resourceURI, int bufferSize) {
+    public synchronized InputStream open(URI resourceURI, int bufferSize) throws IOException {
         String mappedPath = makeMappedPath(resourceURI);
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        VirtualFileStatus status = this.mappedEntries.get(mappedPath);
+        if(status != null) {
+            Collection<RecipeChunk> chunks = null;
+            LocalRecipe localRecipe = status.getLocalRecipe();
+            if(localRecipe != null) {
+                chunks = localRecipe.getAllChunks();
+            } else {
+                RemoteRecipe remoteRecipe = status.getRemoteRecipe();
+                if(remoteRecipe != null) {
+                    chunks = remoteRecipe.getAllChunks();
+                }
+            }
+            
+            if(chunks != null) {
+                return new ChunkInputStream(this.filesystemClient, chunks);
+            }
+        }
+        return null;
+    }
+    
+    public synchronized FSDataInputStream getFSDataInputStream(URI resourceURI, int bufferSize) throws IOException {
+        String mappedPath = makeMappedPath(resourceURI);
+        VirtualFileStatus status = this.mappedEntries.get(mappedPath);
+        if(status != null) {
+            Collection<RecipeChunk> chunks = null;
+            LocalRecipe localRecipe = status.getLocalRecipe();
+            if(localRecipe != null) {
+                chunks = localRecipe.getAllChunks();
+            } else {
+                RemoteRecipe remoteRecipe = status.getRemoteRecipe();
+                if(remoteRecipe != null) {
+                    chunks = remoteRecipe.getAllChunks();
+                }
+            }
+            
+            if(chunks != null) {
+                return new FSDataInputStream(new FSChunkInputStream(this.filesystemClient, chunks));
+            }
+        }
+        return null;
     }
 
     public synchronized VirtualFileStatus getFileStatus(URI resourceURI) {
@@ -195,7 +238,10 @@ public class StargateFileSystem {
         VirtualFileStatus status = this.mappedEntries.get(mappedPath);
         
         if(status != null) {
-            return status.getResourcePath();
+            LocalRecipe recipe = status.getLocalRecipe();
+            if(recipe != null) {
+                return recipe.getResourcePath();
+            }
         }
         return null;
     }
@@ -211,5 +257,9 @@ public class StargateFileSystem {
     
     public synchronized void close() {
         this.gatekeeperClient.stop();
+    }
+
+    private InputStream ChunkInputStream(FileSystemRestfulClient filesystemClient, Collection<RecipeChunk> chunks) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

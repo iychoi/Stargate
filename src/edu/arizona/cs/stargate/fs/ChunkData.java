@@ -22,29 +22,32 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.restful.api;
+package edu.arizona.cs.stargate.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
-import java.util.Collection;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AFileSystemRestfulAPI {
-    public static final String BASE_PATH = "/filesystem";
-    public static final String VIRTUAL_FILE_STATUS_PATH = "/vfstatus";
-    public static final String FS_BLOCK_SIZE_PATH = "/blocksize";
-    public static final String LOCAL_CLUSTER_PATH = "/localcluster";
-    public static final String CHUNK_DATA_PATH = "/chunkdata";
+public class ChunkData {
+    private RecipeChunk chunk;
+    private byte[] data;
     
-    public abstract Collection<VirtualFileStatus> getAllVirtualFileStatus() throws Exception;
-
-    public abstract long getBlockSize() throws Exception;
-
-    public abstract Cluster getLocalCluster() throws Exception;
-
-    public abstract byte[] getChunkData(RecipeChunk chunk) throws Exception;
+    public ChunkData(RecipeChunk chunk, byte[] data) {
+        this.chunk = chunk;
+        this.data = data;
+    }
+    
+    public RecipeChunk getChunk() {
+        return this.chunk;
+    }
+    
+    public byte[] getData() {
+        return this.data;
+    }
+    
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 }

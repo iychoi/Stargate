@@ -27,7 +27,6 @@ package edu.arizona.cs.stargate.fs;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Random;
 import org.apache.commons.logging.Log;
@@ -136,7 +135,7 @@ public class StargateFS extends FileSystem {
     }
     
     private FileStatus convFileStatus(VirtualFileStatus status) {
-        return new FileStatus(status.getLength(), status.isDir(), status.getBlockReplication(), status.getBlockSize(), status.getModificationTime(), new Path(status.getVirtualPath()));
+        return new FileStatus(status.getLength(), status.isDir(), 1, status.getBlockSize(), status.getModificationTime(), new Path(status.getVirtualPath()));
     }
     
     private FileStatus[] convFileStatusArray(VirtualFileStatus[] status) {
@@ -178,8 +177,7 @@ public class StargateFS extends FileSystem {
             URI localClusterPath = filesystem.getLocalClusterPath(makeAbsoluteURI);
             return this.localClusterHDFS.open(new Path(localClusterPath));
         } else {
-            InputStream is = filesystem.open(makeAbsoluteURI(path), bufferSize);
-            return new FSDataInputStream(is);
+            return filesystem.getFSDataInputStream(makeAbsoluteURI(path), bufferSize);
         }
     }
 
