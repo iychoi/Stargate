@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.restful.client;
+package edu.arizona.cs.stargate.gatekeeper;
 
 import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
@@ -34,27 +34,27 @@ import java.net.URI;
  *
  * @author iychoi
  */
-public class GateKeeperRestfulClientConfiguration extends ImmutableConfiguration {
+public class GateKeeperClientConfiguration extends ImmutableConfiguration {
     
     private static final int MAX_RPC_THREADS = 10;
     
     private URI serviceURI;
     private int rpcThreads = MAX_RPC_THREADS;
     
-    public static GateKeeperRestfulClientConfiguration createInstance(File file) throws IOException {
+    public static GateKeeperClientConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (GateKeeperRestfulClientConfiguration) serializer.fromJsonFile(file, GateKeeperRestfulClientConfiguration.class);
+        return (GateKeeperClientConfiguration) serializer.fromJsonFile(file, GateKeeperClientConfiguration.class);
     }
     
-    public static GateKeeperRestfulClientConfiguration createInstance(String json) throws IOException {
+    public static GateKeeperClientConfiguration createInstance(String json) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (GateKeeperRestfulClientConfiguration) serializer.fromJson(json, GateKeeperRestfulClientConfiguration.class);
+        return (GateKeeperClientConfiguration) serializer.fromJson(json, GateKeeperClientConfiguration.class);
     }
     
-    public GateKeeperRestfulClientConfiguration() {
+    public GateKeeperClientConfiguration() {
     }
     
-    public GateKeeperRestfulClientConfiguration(URI uri) {
+    public GateKeeperClientConfiguration(URI uri) {
         initialize(uri);
     }
     

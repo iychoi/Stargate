@@ -48,7 +48,7 @@ public class LocalClusterManager {
     private String name;
     private ClusterNode localNode;
     private JsonReplicatedMap<String, ClusterNode> nodes;
-    private ArrayList<IClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IClusterConfigurationChangeEventHandler>();
+    private ArrayList<ILocalClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<ILocalClusterConfigurationChangeEventHandler>();
     
     public static LocalClusterManager getInstance() {
         synchronized (LocalClusterManager.class) {
@@ -210,24 +210,24 @@ public class LocalClusterManager {
         return false;
     }
     
-    public synchronized void addConfigChangeEventHandler(IClusterConfigurationChangeEventHandler eventHandler) {
+    public synchronized void addConfigChangeEventHandler(ILocalClusterConfigurationChangeEventHandler eventHandler) {
         this.configChangeEventHandlers.add(eventHandler);
     }
     
-    public synchronized void removeConfigChangeEventHandler(IClusterConfigurationChangeEventHandler eventHandler) {
+    public synchronized void removeConfigChangeEventHandler(ILocalClusterConfigurationChangeEventHandler eventHandler) {
         this.configChangeEventHandlers.remove(eventHandler);
     }
     
     public synchronized void removeConfigChangeEventHandler(String handlerName) {
-        ArrayList<IClusterConfigurationChangeEventHandler> toberemoved = new ArrayList<IClusterConfigurationChangeEventHandler>();
+        ArrayList<ILocalClusterConfigurationChangeEventHandler> toberemoved = new ArrayList<ILocalClusterConfigurationChangeEventHandler>();
         
-        for(IClusterConfigurationChangeEventHandler handler : this.configChangeEventHandlers) {
+        for(ILocalClusterConfigurationChangeEventHandler handler : this.configChangeEventHandlers) {
             if(handler.getName().equals(handlerName)) {
                 toberemoved.add(handler);
             }
         }
         
-        for(IClusterConfigurationChangeEventHandler handler : toberemoved) {
+        for(ILocalClusterConfigurationChangeEventHandler handler : toberemoved) {
             this.configChangeEventHandlers.remove(handler);
         }
     }
@@ -235,7 +235,7 @@ public class LocalClusterManager {
     private synchronized void raiseEventForAddNode(ClusterNode node) {
         LOG.debug("Cluster node added : " + node.toString());
         
-        for(IClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
+        for(ILocalClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.addNode(this, node);
         }
     }
@@ -243,7 +243,7 @@ public class LocalClusterManager {
     private synchronized void raiseEventForRemoveNode(ClusterNode node) {
         LOG.debug("Cluster node removed : " + node.toString());
         
-        for(IClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
+        for(ILocalClusterConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.removeNode(this, node);
         }
     }

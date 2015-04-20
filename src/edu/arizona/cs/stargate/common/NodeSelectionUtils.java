@@ -1,3 +1,11 @@
+package edu.arizona.cs.stargate.common;
+
+
+import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Random;
+
 /*
  * The MIT License
  *
@@ -22,48 +30,16 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.hdfs;
-
 /**
  *
  * @author iychoi
  */
-public class StargateFileStatus {
-
-    private long length;
-    private String cluster;
-    private String vpath;
-    private boolean dir;
-    private int blockReplication;
-    private long blockSize;
-    private long modificationTime;
+public class NodeSelectionUtils {
     
-    public long getModificationTime() {
-        return this.modificationTime;
+    public static ClusterNode selectBestNode(ClusterNode myNode, Collection<ClusterNode> remoteNodes) {
+        Random random = new Random();
+        int rnd = random.nextInt(remoteNodes.size());
+        ClusterNode[] nodeArr = remoteNodes.toArray(new ClusterNode[0]);
+        return nodeArr[rnd];
     }
- 
-    public long getBlockSize() {
-        return this.blockSize;
-    }
- 
-    public int getBlockReplication() {
-        return blockReplication;
-    }
-    
-    public boolean isDir() {
-        return dir;
-    }
-    
-    public long getLength() {
-        return this.length;
-    }
-    
-    public String getCluster() {
-        return this.cluster;
-    }
-    
-    public String getVPath() {
-        return this.vpath;
-    }
-    
 }

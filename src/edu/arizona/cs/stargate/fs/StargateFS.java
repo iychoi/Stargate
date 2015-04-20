@@ -22,16 +22,14 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.hdfs;
+package edu.arizona.cs.stargate.fs;
 
+import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperClient;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperRestfulClientConfiguration;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.TransportRestfulClient;
-import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -51,45 +49,13 @@ public class StargateFS extends FileSystem {
 
     private static final Log LOG = LogFactory.getLog(StargateFS.class);
     
+    private static StargateFileSystem filesystem;
+    
     private URI uri;
-    private GateKeeperClient gatekeeperClient;
-    private TransportRestfulClient client;
     private Path workingDir;
+    private FileSystem localClusterHDFS;
     
     public StargateFS() {
-    }
-    
-    private GateKeeperClient createLocalGateKeeperClient() throws IOException {
-        GateKeeperRuntimeInfo rc = new GateKeeperRuntimeInfo();
-        rc.load();
-        
-        String localGatekeeperServiceURL = "http://localhost:" + rc.getServicePort();
-        LOG.info("connecting to local GateKeeper : " + localGatekeeperServiceURL);
-        try {
-            GateKeeperRestfulClientConfiguration config = new GateKeeperRestfulClientConfiguration(new URI(localGatekeeperServiceURL));
-            return new GateKeeperClient(config);
-        } catch (URISyntaxException ex) {
-            throw new IOException(ex);
-        }
-    }
-    
-    private GateKeeperClient createGateKeeperClient(String host, int port) throws IOException {
-        if(host == null) {
-            host = "localhost";
-        }
-        
-        if(port <= 0) {
-            port = GateKeeperServiceConfiguration.DEFAULT_SERVICE_PORT;
-        }
-        
-        String remoteGatekeeperServiceURL = "http://" + host + ":" + port;
-        LOG.info("connecting to remote GateKeeper : " + remoteGatekeeperServiceURL);
-        try {
-            GateKeeperRestfulClientConfiguration config = new GateKeeperRestfulClientConfiguration(new URI(remoteGatekeeperServiceURL));
-            return new GateKeeperClient(config);
-        } catch (URISyntaxException ex) {
-            throw new IOException(ex);
-        }
     }
     
     @Override
@@ -97,28 +63,38 @@ public class StargateFS extends FileSystem {
         return this.uri;
     }
     
+    private static String getGateKeeperServiceAddress(String[] hosts) throws IOException {
+        if(hosts == null || hosts.length == 0) {
+            GateKeeperRuntimeInfo rc = new GateKeeperRuntimeInfo();
+            rc.load();
+
+            String gatekeeperHost = "localhost:" + rc.getServicePort();
+            return gatekeeperHost;
+        } else {
+            Random random = new Random();
+            int rnd = random.nextInt(hosts.length);
+            return hosts[rnd];
+        }
+    }
+    
     @Override
     public void initialize(URI uri, Configuration conf) throws IOException {
         super.initialize(uri, conf);
+        
         LOG.info("initializing uri for StargateFS : " + uri.toString());
         
-        if (this.gatekeeperClient == null) {
-            if(uri.getHost() == null || uri.getHost().equalsIgnoreCase("localhost")) {
-                this.gatekeeperClient = createLocalGateKeeperClient();
-            } else {
-                this.gatekeeperClient = createGateKeeperClient(uri.getHost(), uri.getPort());
-            }
-        }
-        
-        if(this.client == null) {
-            this.client = this.gatekeeperClient.getTransportManagerClient();
+        if(filesystem == null) {
+            String[] gateKeeperHosts = StargateFSConfigurationUtils.getGateKeeperHosts(conf);
+            this.filesystem = new StargateFileSystem(getGateKeeperServiceAddress(gateKeeperHosts));
         }
         
         setConf(conf);
         this.uri = uri;
+        
         this.workingDir = new Path("/").makeQualified(this);
+        this.localClusterHDFS = this.workingDir.getFileSystem(conf);
     }
-
+    
     @Override
     public String getName() {
         return getUri().toString();
@@ -141,9 +117,13 @@ public class StargateFS extends FileSystem {
         return new Path(this.workingDir, path);
     }
     
+    private URI makeAbsoluteURI(Path path) {
+        return makeAbsolute(path).toUri();
+    }
+    
     @Override
     public boolean mkdirs(Path path, FsPermission permission) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
     
     @Override
@@ -155,23 +135,24 @@ public class StargateFS extends FileSystem {
         return true;
     }
     
-    private FileStatus convFileStatus(edu.arizona.cs.stargate.hdfs.StargateFileStatus status) {
-        return new FileStatus(status.getLength(), status.isDir(), status.getBlockReplication(), status.getBlockSize(), status.getModificationTime(), new Path(status.getCluster() + "/" + status.getVPath()));
+    private FileStatus convFileStatus(VirtualFileStatus status) {
+        return new FileStatus(status.getLength(), status.isDir(), status.getBlockReplication(), status.getBlockSize(), status.getModificationTime(), new Path(status.getVirtualPath()));
+    }
+    
+    private FileStatus[] convFileStatusArray(VirtualFileStatus[] status) {
+        FileStatus[] filestatus = new FileStatus[status.length];
+        
+        for(int i=0;i<status.length;i++) {
+            filestatus[i] = convFileStatus(status[i]);
+        }
+        
+        return filestatus;
     }
     
     @Override
     public FileStatus[] listStatus(Path path) throws IOException {
-        /*
-        Path absolutePath = makeAbsolute(path);
-        try {
-            edu.arizona.cs.stargate.hdfs.StargateFileStatus[] listStatus = this.client.listStatus(absolutePath.toUri());
-            
-        } catch (Exception ex) {
-            LOG.error(ex);
-            throw new IOException(ex);
-        }
-        */
-        return null;
+        VirtualFileStatus[] status = filesystem.listStatus(makeAbsoluteURI(path));
+        return convFileStatusArray(status);
     }
     
     /**
@@ -179,7 +160,7 @@ public class StargateFS extends FileSystem {
      */
     @Override
     public FSDataOutputStream append(Path f, int bufferSize, Progressable progress) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
     
     /**
@@ -187,62 +168,51 @@ public class StargateFS extends FileSystem {
      */
     @Override
     public FSDataOutputStream create(Path file, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
     
     @Override
     public FSDataInputStream open(Path path, int bufferSize) throws IOException {
-        /*
-        Path absolutePath = makeAbsolute(path);
-        return this.remoteFilesystemAPI.open(absolutePath, bufferSize);
-        */
-        return null;
+        URI makeAbsoluteURI = makeAbsoluteURI(path);
+        if(filesystem.isLocalClusterPath(makeAbsoluteURI)) {
+            URI localClusterPath = filesystem.getLocalClusterPath(makeAbsoluteURI);
+            return this.localClusterHDFS.open(new Path(localClusterPath));
+        } else {
+            InputStream is = filesystem.open(makeAbsoluteURI(path), bufferSize);
+            return new FSDataInputStream(is);
+        }
     }
 
     @Override
     public boolean rename(Path src, Path dst) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
     
     @Override
     public boolean delete(Path path, boolean recursive) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
     
     @Override
     public boolean delete(Path path) throws IOException {
-        throw new IOException("Not supported");
+        throw new UnsupportedOperationException("Not supported");
     }
 
     @Override
     public FileStatus getFileStatus(Path path) throws IOException {
-        /*
-        Path absolutePath = makeAbsolute(path);
-        try {
-            return this.remoteFilesystemAPI.getFileStatus(absolutePath);
-        } catch (Exception ex) {
-            LOG.error(ex);
-            throw new IOException(ex);
-        }
-        */
-        return null;
+        VirtualFileStatus status = filesystem.getFileStatus(makeAbsoluteURI(path));
+        return convFileStatus(status);
     }
     
     @Override
     public long getDefaultBlockSize() {
-        /*
-        try {
-            return this.remoteFilesystemAPI.getDefaultBlockSize();
-        } catch (Exception ex) {
-            LOG.error(ex);
-            return 1024*1024;
-        }
-        */
-        return 0;
+        return filesystem.getBlockSize();
     }
     
     @Override
     public void close() throws IOException {
+        this.localClusterHDFS.close();
+        
         super.close();
     }
 }

@@ -42,12 +42,10 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(TransportRestfulClient.class);
     
-    private GateKeeperClient gatekeeperClient;
-    private GateKeeperRestfulClient gatekeeperRPCClient;
+    private GateKeeperRestfulClient gatekeeperRestfulClient;
 
-    public TransportRestfulClient(GateKeeperClient gatekeeperClient) {
-        this.gatekeeperClient = gatekeeperClient;
-        this.gatekeeperRPCClient = gatekeeperClient.getRPCClient();
+    public TransportRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+        this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
@@ -67,7 +65,7 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
         RestfulResponse<RemoteRecipe> response;
         try {
             String url = getResourcePath(ATransportRestfulAPI.RECIPE_PATH, vpath);
-            response = (RestfulResponse<RemoteRecipe>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<RemoteRecipe>>(){});
+            response = (RestfulResponse<RemoteRecipe>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<RemoteRecipe>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -87,7 +85,7 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
             builder.addParam("offset", Long.toString(offset));
             builder.addParam("len", Integer.toString(len));
             String url = builder.build();
-            return this.gatekeeperRPCClient.download(url);
+            return this.gatekeeperRestfulClient.download(url);
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -98,7 +96,7 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
     public InputStream getDataChunk(String hash) throws Exception {
         try {
             String url = getResourcePath(ATransportRestfulAPI.DATA_CHUNK_PATH, hash);
-            return this.gatekeeperRPCClient.download(url);
+            return this.gatekeeperRestfulClient.download(url);
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

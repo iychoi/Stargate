@@ -22,15 +22,35 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.dataexport;
+package edu.arizona.cs.stargate.gatekeeper.intercluster;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @author iychoi
  */
-public interface IDataExportConfigurationChangeEventHandler {
-    public String getName();
+public class ClusterSynchronizationManager {
+    private static final Log LOG = LogFactory.getLog(ClusterSynchronizationManager.class);
     
-    public void addDataExport(DataExportManager manager, DataExport export);
-    public void removeDataExport(DataExportManager manager, DataExport export);
+    private static ClusterSynchronizationManager instance;
+    
+    public static ClusterSynchronizationManager getInstance() {
+        synchronized (ClusterSynchronizationManager.class) {
+            if(instance == null) {
+                instance = new ClusterSynchronizationManager();
+            }
+            return instance;
+        }
+    }
+    
+    ClusterSynchronizationManager() {
+        
+    }
+    
+    @Override
+    public synchronized String toString() {
+        return "RemoteClusterManager";
+    }
 }

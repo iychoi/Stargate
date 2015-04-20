@@ -28,7 +28,7 @@ package edu.arizona.cs.stargate.gatekeeper.cluster;
  *
  * @author iychoi
  */
-public interface IClusterConfigurationChangeEventHandler {
+public interface ILocalClusterConfigurationChangeEventHandler {
     public String getName();
     
     public void addNode(LocalClusterManager manager, ClusterNode node);

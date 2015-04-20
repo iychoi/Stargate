@@ -26,7 +26,7 @@ package edu.arizona.cs.stargate.service;
 
 import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperRestfulClientConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
     public static final String DEFAULT_CONFIG_FILEPATH = "service.json";
     
     private GateKeeperServiceConfiguration gatekeeperServiceConfig;
-    private ArrayList<GateKeeperRestfulClientConfiguration> gatekeeperClientConfigs = new ArrayList<GateKeeperRestfulClientConfiguration>();
+    private ArrayList<GateKeeperClientConfiguration> gatekeeperClientConfigs = new ArrayList<GateKeeperClientConfiguration>();
     
     public static StargateServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -61,22 +61,22 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
     }
     
     @JsonIgnore
-    public void addGatekeeperClientConfiguration(GateKeeperRestfulClientConfiguration conf) {
+    public void addGatekeeperClientConfiguration(GateKeeperClientConfiguration conf) {
         super.verifyMutable();
         
         this.gatekeeperClientConfigs.add(conf);
     }
     
     @JsonProperty("gatekeeperClient")
-    public Collection<GateKeeperRestfulClientConfiguration> getGatekeeperClientConfigurations() {
+    public Collection<GateKeeperClientConfiguration> getGatekeeperClientConfigurations() {
         return Collections.unmodifiableCollection(this.gatekeeperClientConfigs);
     }
     
     @JsonProperty("gatekeeperClient")
-    public void addGatekeeperClientConfigurations(Collection<GateKeeperRestfulClientConfiguration> configurations) {
+    public void addGatekeeperClientConfigurations(Collection<GateKeeperClientConfiguration> configurations) {
         super.verifyMutable();
         
-        for(GateKeeperRestfulClientConfiguration conf : configurations) {
+        for(GateKeeperClientConfiguration conf : configurations) {
             addGatekeeperClientConfiguration(conf);
         }
     }
@@ -99,7 +99,7 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
         super.setImmutable();
         
         this.gatekeeperServiceConfig.setImmutable();
-        for(GateKeeperRestfulClientConfiguration conf : this.gatekeeperClientConfigs) {
+        for(GateKeeperClientConfiguration conf : this.gatekeeperClientConfigs) {
             conf.setImmutable();
         }
     }

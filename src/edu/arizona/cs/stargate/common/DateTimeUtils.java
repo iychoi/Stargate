@@ -22,15 +22,22 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.dataexport;
+package edu.arizona.cs.stargate.common;
 
 /**
  *
  * @author iychoi
  */
-public interface IDataExportConfigurationChangeEventHandler {
-    public String getName();
+public class DateTimeUtils {
+    public static long getCurrentTime() {
+        return System.currentTimeMillis();
+    }
     
-    public void addDataExport(DataExportManager manager, DataExport export);
-    public void removeDataExport(DataExportManager manager, DataExport export);
+    public static boolean timeElapsedSecond(long prev_time, long cur_time, long period_second) {
+        long gap = period_second * 1000;
+        if(cur_time - prev_time >= gap) {
+            return true;
+        }
+        return false;
+    }
 }

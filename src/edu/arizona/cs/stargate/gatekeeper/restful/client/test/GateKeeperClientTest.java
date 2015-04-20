@@ -28,10 +28,10 @@ import edu.arizona.cs.stargate.common.DataFormatUtils;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperClient;
-import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperRestfulClientConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
-import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperRestfulClient;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,19 +43,23 @@ import java.util.Collection;
  */
 public class GateKeeperClientTest {
     
-    private GateKeeperRestfulClientConfiguration clientConfig;
+    private GateKeeperClientConfiguration clientConfig;
     private GateKeeperClient client;
+    private GateKeeperRestfulClient restfulClient;
     
     public void prepareClient(URI gatekeeperServiceURL) {
         try {
-            this.clientConfig = new GateKeeperRestfulClientConfiguration(gatekeeperServiceURL);
+            this.clientConfig = new GateKeeperClientConfiguration(gatekeeperServiceURL);
             this.client = new GateKeeperClient(this.clientConfig);
+            this.client.start();
+            
+            this.restfulClient = this.client.getRestfulClient();
             
             testCheckLive();
             testClusterInfo();
             testDataExport();
             
-            client.stop();
+            this.client.stop();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -80,37 +84,37 @@ public class GateKeeperClientTest {
     }
 
     private void testCheckLive() {
-        boolean live = this.client.checkLive();
+        boolean live = this.client.getRestfulClient().checkLive();
         System.out.println("live : " + live);
     }
 
     private void testClusterInfo() {
         try {
-            Cluster localClusterInfo = this.client.getClusterManagerClient().getLocalCluster();
+            Cluster localClusterInfo = this.restfulClient.getClusterManagerClient().getLocalCluster();
             System.out.println("local cluster info : " + DataFormatUtils.toJSONFormat(localClusterInfo));
             
-            this.client.getClusterManagerClient().removeAllRemoteClusters();
+            this.restfulClient.getClusterManagerClient().removeAllRemoteClusters();
             
-            Collection<Cluster> remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
+            Collection<Cluster> remoteClusterInfo = this.restfulClient.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
             System.out.println("Adding remote cluster info");
             
             Cluster remoteCluster1 = new Cluster("remote1");
-            this.client.getClusterManagerClient().addRemoteCluster(remoteCluster1);
+            this.restfulClient.getClusterManagerClient().addRemoteCluster(remoteCluster1);
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
+            remoteClusterInfo = this.restfulClient.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
             Cluster remoteCluster2 = new Cluster("remote2");
-            this.client.getClusterManagerClient().addRemoteCluster(remoteCluster2);
+            this.restfulClient.getClusterManagerClient().addRemoteCluster(remoteCluster2);
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
+            remoteClusterInfo = this.restfulClient.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
             
-            this.client.getClusterManagerClient().removeAllRemoteClusters();
+            this.restfulClient.getClusterManagerClient().removeAllRemoteClusters();
             
-            remoteClusterInfo = this.client.getClusterManagerClient().getAllRemoteClusters();
+            remoteClusterInfo = this.restfulClient.getClusterManagerClient().getAllRemoteClusters();
             System.out.println("remote cluster info : " + DataFormatUtils.toJSONFormat(remoteClusterInfo));
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -121,20 +125,20 @@ public class GateKeeperClientTest {
 
     private void testDataExport() {
         try {
-            this.client.getDataExportManagerClient().removeAllDataExports();
+            this.restfulClient.getDataExportManagerClient().removeAllDataExports();
             
-            Collection<DataExport> dataExportInfo = this.client.getDataExportManagerClient().getAllDataExports();
+            Collection<DataExport> dataExportInfo = this.restfulClient.getDataExportManagerClient().getAllDataExports();
             System.out.println("data export info : " + DataFormatUtils.toJSONFormat(dataExportInfo));
             
             DataExport export = new DataExport("/aaa/bbb", "file:///home/iychoi/NetBeansProjects/Stargate/libs/hadoop-core-0.20.2-cdh3u5.jar");
-            this.client.getDataExportManagerClient().addDataExport(export);
+            this.restfulClient.getDataExportManagerClient().addDataExport(export);
             
-            dataExportInfo = this.client.getDataExportManagerClient().getAllDataExports();
+            dataExportInfo = this.restfulClient.getDataExportManagerClient().getAllDataExports();
             System.out.println("data export info : " + DataFormatUtils.toJSONFormat(dataExportInfo));
             
             for(DataExport dei : dataExportInfo) {
                 // check recipe
-                LocalRecipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                LocalRecipe recipe = this.restfulClient.getRecipeManagerClient().getRecipe(dei.getResourcePath());
                 System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
                 System.out.println(DataFormatUtils.toJSONFormat(recipe));
             }
@@ -144,7 +148,7 @@ public class GateKeeperClientTest {
             Thread.sleep(3000);
             for(DataExport dei : dataExportInfo) {
                 // check recipe
-                LocalRecipe recipe = this.client.getRecipeManagerClient().getRecipe(dei.getResourcePath());
+                LocalRecipe recipe = this.restfulClient.getRecipeManagerClient().getRecipe(dei.getResourcePath());
                 System.out.println("recipe of " + recipe.getResourcePath().toASCIIString());
                 System.out.println(DataFormatUtils.toJSONFormat(recipe));
             }

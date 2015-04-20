@@ -38,6 +38,7 @@ import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.intercluster.CachedRemoteGateKeeperClientManager;
 import edu.arizona.cs.stargate.gatekeeper.restful.GateKeeperRestfulInterface;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
 import java.io.IOException;
@@ -67,6 +68,8 @@ public class GateKeeperService {
     private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
     private RecipeManager recipeManager;
+    
+    private CachedRemoteGateKeeperClientManager gatekeeperClientManager;
     
     private GateKeeperRuntimeInfo runtimeInfo;
     
@@ -112,6 +115,8 @@ public class GateKeeperService {
             this.dataExportManager.addDataExports(this.config.getDataExports());
             
             this.restfulInterface = GateKeeperRestfulInterface.getInstance();
+            
+            this.gatekeeperClientManager = CachedRemoteGateKeeperClientManager.getInstance();
         }
     }
     
@@ -248,6 +253,10 @@ public class GateKeeperService {
     
     public synchronized RecipeManager getRecipeManager() {
         return this.recipeManager;
+    }
+    
+    public synchronized CachedRemoteGateKeeperClientManager getRemoteGateKeeperClientManager() {
+        return this.gatekeeperClientManager;
     }
     
     @Override

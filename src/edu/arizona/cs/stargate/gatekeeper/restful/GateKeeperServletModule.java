@@ -32,6 +32,7 @@ import edu.arizona.cs.stargate.gatekeeper.restful.server.ClusterManagerRestfulSe
 import com.google.inject.Singleton;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import edu.arizona.cs.stargate.gatekeeper.restful.server.FileSystemRestfulServlet;
 import java.util.HashMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -51,6 +52,7 @@ public class GateKeeperServletModule extends ServletModule {
         bind(DataExportManagerRestfulServlet.class).in(Singleton.class);
         bind(RecipeManagerRestfulServlet.class).in(Singleton.class);
         bind(TransportRestfulServlet.class).in(Singleton.class);
+        bind(FileSystemRestfulServlet.class).in(Singleton.class);
 
         bind(MessageBodyReader.class).to(JacksonJsonProvider.class); 
         bind(MessageBodyWriter.class).to(JacksonJsonProvider.class); 

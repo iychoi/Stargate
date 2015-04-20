@@ -22,15 +22,46 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.dataexport;
+package edu.arizona.cs.stargate.gatekeeper;
+
+import edu.arizona.cs.stargate.gatekeeper.restful.client.GateKeeperRestfulClient;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @author iychoi
  */
-public interface IDataExportConfigurationChangeEventHandler {
-    public String getName();
+public class GateKeeperClient {
     
-    public void addDataExport(DataExportManager manager, DataExport export);
-    public void removeDataExport(DataExportManager manager, DataExport export);
+    private static final Log LOG = LogFactory.getLog(GateKeeperClient.class);
+    
+    private GateKeeperClientConfiguration config;
+    private GateKeeperRestfulClient restfulClient;
+    
+    public GateKeeperClient(GateKeeperClientConfiguration conf) {
+        this.config = conf;
+        this.restfulClient = new GateKeeperRestfulClient(conf);
+    }
+    
+    public GateKeeperRestfulClient getRestfulClient() {
+        return this.restfulClient;
+    }
+    
+    public GateKeeperClientConfiguration getConfiguration() {
+        return this.config;
+    }
+    
+    @Override
+    public synchronized String toString() {
+        return "GateKeeperClient";
+    }
+    
+    public void start() {
+        this.restfulClient.start();
+    }
+    
+    public void stop() {
+        this.restfulClient.stop();
+    }
 }

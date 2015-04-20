@@ -43,12 +43,10 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(ClusterManagerRestfulClient.class);
     
-    private GateKeeperClient gatekeeperClient;
-    private GateKeeperRestfulClient gatekeeperRPCClient;
+    private GateKeeperRestfulClient gatekeeperRestfulClient;
 
-    public ClusterManagerRestfulClient(GateKeeperClient gatekeeperClient) {
-        this.gatekeeperClient = gatekeeperClient;
-        this.gatekeeperRPCClient = gatekeeperClient.getRPCClient();
+    public ClusterManagerRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+        this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
@@ -60,7 +58,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
         RestfulResponse<Cluster> response;
         try {
             String url = getResourcePath(AClusterManagerRestfulAPI.LOCAL_CLUSTER_PATH);
-            response = (RestfulResponse<Cluster>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Cluster>>(){});
+            response = (RestfulResponse<Cluster>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Cluster>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -80,7 +78,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH));
             builder.addParam("name", "*");
             String url = builder.build();
-            response = (RestfulResponse<Collection<Cluster>>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Collection<Cluster>>>(){});
+            response = (RestfulResponse<Collection<Cluster>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<Cluster>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -100,7 +98,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH));
             builder.addParam("name", name);
             String url = builder.build();
-            response = (RestfulResponse<Collection<Cluster>>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Collection<Cluster>>>(){});
+            response = (RestfulResponse<Collection<Cluster>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<Cluster>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -123,7 +121,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
         RestfulResponse<Boolean> response;
         try {
             String url = getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH);
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.post(url, cluster, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.post(url, cluster, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -141,7 +139,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH));
             builder.addParam("name", name);
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -159,7 +157,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH));
             builder.addParam("name", "*");
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

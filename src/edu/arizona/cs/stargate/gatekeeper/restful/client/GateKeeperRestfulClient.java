@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import com.sun.jersey.api.client.AsyncWebResource;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -31,6 +32,8 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
+import edu.arizona.cs.stargate.gatekeeper.restful.api.AGateKeeperRestfulAPI;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -43,16 +46,22 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class GateKeeperRestfulClient {
+public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(GateKeeperRestfulClient.class);
     
-    private GateKeeperRestfulClientConfiguration config;
+    private GateKeeperClientConfiguration config;
     
     private ClientConfig clientConfig;
     private Client client;
+    
+    private ClusterManagerRestfulClient clusterManagerClient;
+    private DataExportManagerClient dataExportManagerClient;
+    private RecipeManagerRestfulClient recipeManagerClient;
+    private TransportRestfulClient transportClient;
+    private FileSystemRestfulClient filesystemClient;
 
-    GateKeeperRestfulClient(GateKeeperRestfulClientConfiguration conf) {
+    public GateKeeperRestfulClient(GateKeeperClientConfiguration conf) {
         this.config = conf;
         
         this.clientConfig = new DefaultClientConfig();
@@ -60,6 +69,40 @@ public class GateKeeperRestfulClient {
         this.clientConfig.getProperties().put(ClientConfig.PROPERTY_THREADPOOL_SIZE, conf.getMaxRPCThreads());
 
         this.client = Client.create(this.clientConfig);
+        
+        this.clusterManagerClient = new ClusterManagerRestfulClient(this);
+        this.dataExportManagerClient = new DataExportManagerClient(this);
+        this.recipeManagerClient = new RecipeManagerRestfulClient(this);
+        this.transportClient = new TransportRestfulClient(this);
+        this.filesystemClient = new FileSystemRestfulClient(this);
+    }
+    
+    public void start() {
+    }
+    
+    public void stop() {
+        this.client.getExecutorService().shutdownNow();
+        this.client.destroy();
+    }
+    
+    public ClusterManagerRestfulClient getClusterManagerClient() {
+        return this.clusterManagerClient;
+    }
+    
+    public DataExportManagerClient getDataExportManagerClient() {
+        return this.dataExportManagerClient;
+    }
+    
+    public RecipeManagerRestfulClient getRecipeManagerClient() {
+        return this.recipeManagerClient;
+    }
+    
+    public TransportRestfulClient getTransportClient() {
+        return this.transportClient;
+    }
+    
+    public FileSystemRestfulClient getFileSystemClient() {
+        return this.filesystemClient;
     }
     
     public Object post(String path, Object request, GenericType<?> generic) throws IOException {
@@ -146,8 +189,29 @@ public class GateKeeperRestfulClient {
         }
     }
     
-    public void stop() {
-        this.client.getExecutorService().shutdownNow();
-        this.client.destroy();
+    public String getResourcePath(String path) {
+        if(AGateKeeperRestfulAPI.BASE_PATH.endsWith("/") &&
+                path.startsWith("/")) {
+            return AGateKeeperRestfulAPI.BASE_PATH + path.substring(1);
+        }
+        return AGateKeeperRestfulAPI.BASE_PATH + path;
+    }
+
+    @Override
+    public boolean checkLive() {
+        RestfulResponse<Boolean> response;
+        try {
+            String url = getResourcePath(AGateKeeperRestfulAPI.LIVENESS_PATH);
+            response = (RestfulResponse<Boolean>) get(url, new GenericType<RestfulResponse<Boolean>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            return false;
+        }
+        
+        if(response.getException() != null) {
+            return false;
+        } else {
+            return response.getResponse().booleanValue();
+        }
     }
 }

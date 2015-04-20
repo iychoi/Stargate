@@ -39,7 +39,6 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -212,40 +211,5 @@ public class TransportRestfulServlet extends ATransportRestfulAPI {
             LOG.error(ex);
             return null;
         }
-    }
-    
-    private String[] splitPath(URI path) {
-        String[] paths = new String[2];
-        
-        String uriPath = path.getPath();
-        int startIdx = 0;
-        if(uriPath.startsWith("/")) {
-            startIdx++;
-        }
-        
-        int endIdx = uriPath.indexOf("/", startIdx);
-        if(endIdx > 0) {
-            // cluster
-            paths[0] = uriPath.substring(startIdx, endIdx);
-            // vpath
-            paths[1] = uriPath.substring(endIdx);
-        } else {
-            // cluster
-            paths[0] = "local";
-            // vpath
-            paths[1] = "/";
-        }
-        
-        return paths;
-    }
-    
-    private String extractClusterName(URI path) {
-        String[] splitPath = splitPath(path);
-        return splitPath[0];
-    }
-    
-    private String extractVPath(URI path) {
-        String[] splitPath = splitPath(path);
-        return splitPath[1];
     }
 }

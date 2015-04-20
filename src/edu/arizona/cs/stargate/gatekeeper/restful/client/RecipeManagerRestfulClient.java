@@ -43,12 +43,10 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(RecipeManagerRestfulClient.class);
     
-    private GateKeeperClient gatekeeperClient;
-    private GateKeeperRestfulClient gatekeeperRPCClient;
+    private GateKeeperRestfulClient gatekeeperRestfulClient;
 
-    public RecipeManagerRestfulClient(GateKeeperClient gatekeeperClient) {
-        this.gatekeeperClient = gatekeeperClient;
-        this.gatekeeperRPCClient = gatekeeperClient.getRPCClient();
+    public RecipeManagerRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+        this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
@@ -62,7 +60,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));
             builder.addParam("name", resourceURI.toASCIIString());
             String url = builder.build();
-            response = (RestfulResponse<LocalRecipe>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<LocalRecipe>>(){});
+            response = (RestfulResponse<LocalRecipe>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<LocalRecipe>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -82,7 +80,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.CHUNK_PATH));
             builder.addParam("hash", hash);
             String url = builder.build();
-            response = (RestfulResponse<Chunk>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Chunk>>(){});
+            response = (RestfulResponse<Chunk>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Chunk>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -102,7 +100,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));
             builder.addParam("name", resourceURI.toASCIIString());
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -120,7 +118,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));
             builder.addParam("name", "*");
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

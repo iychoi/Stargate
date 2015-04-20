@@ -135,6 +135,11 @@ public class RemoteClusterManager {
         
         this.remoteClusters.remove(name);
     }
+    
+    public synchronized void updateCluster(Cluster cluster) {
+        this.remoteClusters.remove(cluster.getName());
+        this.remoteClusters.put(cluster.getName(), cluster);
+    }
 
     @Override
     public synchronized String toString() {

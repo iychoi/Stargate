@@ -22,15 +22,14 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.dataexport;
+package edu.arizona.cs.stargate.gatekeeper.schedule;
 
 /**
  *
  * @author iychoi
  */
-public interface IDataExportConfigurationChangeEventHandler {
-    public String getName();
-    
-    public void addDataExport(DataExportManager manager, DataExport export);
-    public void removeDataExport(DataExportManager manager, DataExport export);
+public class ScheduleManager {
+    //TODO: need to implement schedule manager that manages all background scheduled work
+    // Recipe generation
+    // Cluster synchronization ...
 }

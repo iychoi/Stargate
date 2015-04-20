@@ -43,12 +43,10 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(DataExportManagerClient.class);
     
-    private GateKeeperClient gatekeeperClient;
     private GateKeeperRestfulClient gatekeeperRPCClient;
 
-    public DataExportManagerClient(GateKeeperClient gatekeeperClient) {
-        this.gatekeeperClient = gatekeeperClient;
-        this.gatekeeperRPCClient = gatekeeperClient.getRPCClient();
+    public DataExportManagerClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+        this.gatekeeperRPCClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
