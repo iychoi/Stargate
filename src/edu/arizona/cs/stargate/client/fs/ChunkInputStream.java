@@ -24,12 +24,10 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
+import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,18 +40,28 @@ public class ChunkInputStream extends InputStream {
     private static final Log LOG = LogFactory.getLog(ChunkInputStream.class);
     
     private FileSystemRestfulClient filesystemRestfulClient;
-    private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
-    private long offset;
+    private String clusterName;
+    private String virtualPath;
     private long size;
-    private FileChunkData chunkData;
+    private long blockSize;
+    private long offset;
+    private FileChunkData cachedChunkData;
     
-    public ChunkInputStream(FileSystemRestfulClient filesystemClient, Collection<RecipeChunk> chunks) {
+    public ChunkInputStream(FileSystemRestfulClient filesystemClient, String clusterName, String virtualPath, long size, long blockSize) {
+        initialize(filesystemClient, clusterName, virtualPath, size, blockSize);
+    }
+
+    public ChunkInputStream(FileSystemRestfulClient filesystemClient, VirtualFileStatus status) {
+        initialize(filesystemClient, status.getClusterName(), status.getVirtualPath(), status.getLength(), status.getBlockSize());
+    }
+    
+    private void initialize(FileSystemRestfulClient filesystemClient, String clusterName, String virtualPath, long size, long blockSize) {
         this.filesystemRestfulClient = filesystemClient;
-        this.chunks.addAll(chunks);
-        this.size = 0;
-        for(RecipeChunk chunk : this.chunks) {
-            this.size += chunk.getLength();
-        }
+        this.clusterName = clusterName;
+        this.virtualPath = virtualPath;
+        this.size = size;
+        this.blockSize = blockSize;
+        this.offset = 0;
     }
     
     public long getPos() throws IOException {
@@ -94,30 +102,36 @@ public class ChunkInputStream extends InputStream {
     
     @Override
     public synchronized int available() throws IOException {
-        RecipeChunk chunk = getChunk(this.offset);
-        return (int) (chunk.getOffset() + chunk.getLength() - this.offset);
-    }
-    
-    private RecipeChunk getChunk(long offset) {
-        for(RecipeChunk chunk : this.chunks) {
-            if(chunk.getOffset() <= offset) {
-                if(chunk.getOffset() + chunk.getLength() > offset) {
-                    return chunk;
-                }
+        if(this.cachedChunkData == null) {
+            return (int) Math.min(this.blockSize, this.size);
+        } else {
+            if(this.cachedChunkData.getOffset() <= this.offset &&
+                    this.cachedChunkData.getOffset() + this.cachedChunkData.getSize() > this.offset) {
+                return (int) (this.cachedChunkData.getOffset() + this.cachedChunkData.getSize() - this.offset);
             }
         }
-        return null;
+        
+        return (int) Math.min(this.blockSize, this.size);
     }
     
-    private synchronized void readChunk(RecipeChunk chunk) {
-        if(this.chunkData != null &&
-                this.chunkData.getChunk().getOffset() == chunk.getOffset()) {
-            return;
+    private synchronized void loadChunkData(long offsetStart) throws IOException {
+        long lavailable = this.size - offsetStart;
+        long csize = Math.min(lavailable, this.blockSize);
+        
+        if(this.cachedChunkData != null) {
+            if(this.cachedChunkData.getOffset() == offsetStart) {
+                // safe to reuse
+                return;
+            }
         }
         
-        byte[] data = this.filesystemRestfulClient.getChunkData(chunk);
-        FileChunkData chunkdata = new FileChunkData(chunk, data);
-        this.chunkData = chunkdata;
+        byte[] data = this.filesystemRestfulClient.readChunkData(this.clusterName, this.virtualPath, offset, csize);
+        if(data.length != csize) {
+            throw new IOException("received chunk data does not match to requested size");
+        }
+        
+        FileChunkData chunkdata = new FileChunkData(offset, csize, data);
+        this.cachedChunkData = chunkdata;
     }
     
     private synchronized boolean isEOF() {
@@ -133,12 +147,15 @@ public class ChunkInputStream extends InputStream {
             return -1;
         }
         
-        RecipeChunk chunk = getChunk(this.offset);
-        readChunk(chunk);
+        long blockStartOffset = (this.offset / this.blockSize) * this.blockSize;
+        loadChunkData(blockStartOffset);
         
-        int inoffset = (int) (this.offset - chunk.getOffset());
+        if(this.cachedChunkData == null) {
+            throw new IOException("could not access cached chunk data object");
+        }
         
-        byte ch = this.chunkData.getData()[inoffset];
+        int inoffset = (int) (this.offset - this.cachedChunkData.getOffset());
+        byte ch = this.cachedChunkData.getData()[inoffset];
         
         this.offset++;
         return ch;
@@ -160,13 +177,17 @@ public class ChunkInputStream extends InputStream {
         
         int doff = off;
         while(remain > 0) {
-            RecipeChunk chunk = getChunk(this.offset);
-            readChunk(chunk);
+            long blockStartOffset = (this.offset / this.blockSize) * this.blockSize;
+            loadChunkData(blockStartOffset);
 
-            int inoffset = (int) (this.offset - chunk.getOffset());
-            int inlength = (int) (chunk.getLength() - inoffset);
+            if(this.cachedChunkData == null) {
+                throw new IOException("could not access cached chunk data object");
+            }
+
+            int inoffset = (int) (this.offset - this.cachedChunkData.getOffset());
+            int inlength = (int) (this.cachedChunkData.getSize() - inoffset);
             
-            System.arraycopy(this.chunkData.getData(), inoffset, bytes, doff, inlength);
+            System.arraycopy(this.cachedChunkData.getData(), inoffset, bytes, doff, inlength);
             this.offset += inlength;
             doff += inlength;
             remain -= inlength;
@@ -178,7 +199,6 @@ public class ChunkInputStream extends InputStream {
     public void close() throws IOException {
         this.offset = 0;
         this.size = 0;
-        this.chunks.clear();
     }
     
     @Override

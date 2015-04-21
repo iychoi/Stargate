@@ -24,8 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.dataexport;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
+import java.net.URI;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
@@ -40,33 +39,27 @@ public class VirtualFileStatus {
     private long length;
     private long blockSize;
     private long modificationTime;
-    private LocalRecipe localRecipe;
-    private RemoteRecipe remoteRecipe;
+    private URI localHDFSResourcePath;
     
     public VirtualFileStatus() {
     }
     
     public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime) {
-        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, null, null);
+        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, null);
     }
     
-    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, LocalRecipe localRecipe) {
-        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, localRecipe, null);
+    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, URI localHDFSResourcePath) {
+        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, localHDFSResourcePath);
     }
     
-    public VirtualFileStatus(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, RemoteRecipe remoteRecipe) {
-        initialize(clusterName, vpath, dir, length, blockSize, modificationTime, null, remoteRecipe);
-    }
-    
-    private void initialize(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, LocalRecipe localRecipe, RemoteRecipe remoteRecipe) {
+    private void initialize(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, URI localHDFSResourcePath) {
         this.clusterName = clusterName;
         this.virtualPath = vpath;
         this.dir = dir;
         this.length = length;
         this.blockSize = blockSize;
         this.modificationTime = modificationTime;
-        this.localRecipe = localRecipe;
-        this.remoteRecipe = remoteRecipe;
+        this.localHDFSResourcePath = localHDFSResourcePath;
     }
     
     @JsonProperty("modificationTime")
@@ -129,23 +122,13 @@ public class VirtualFileStatus {
         this.virtualPath = virtualPath;
     }
 
-    @JsonProperty("localRecipe")
-    public LocalRecipe getLocalRecipe() {
-        return this.localRecipe;
+    @JsonProperty("localHDFSResourcePath")
+    public URI getLocalHDFSResourcePath() {
+        return this.localHDFSResourcePath;
     }
     
-    @JsonProperty("localRecipe")
-    public void setLocalRecipe(LocalRecipe localRecipe) {
-        this.localRecipe = localRecipe;
-    }
-    
-    @JsonProperty("remoteRecipe")
-    public RemoteRecipe getRemoteRecipe() {
-        return this.remoteRecipe;
-    }
-    
-    @JsonProperty("remoteRecipe")
-    public void setRemoteRecipe(RemoteRecipe remoteRecipe) {
-        this.remoteRecipe = remoteRecipe;
+    @JsonProperty("localHDFSResourcePath")
+    public void setLocalHDFSResourcePath(URI localHDFSResourcePath) {
+        this.localHDFSResourcePath = localHDFSResourcePath;
     }
 }

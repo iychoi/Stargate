@@ -24,10 +24,9 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
+import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
 import java.io.IOException;
-import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.PositionedReadable;
@@ -41,8 +40,12 @@ public class FSChunkInputStream extends ChunkInputStream implements Seekable, Po
 
     private static final Log LOG = LogFactory.getLog(FSChunkInputStream.class);
     
-    public FSChunkInputStream(FileSystemRestfulClient filesystemClient, Collection<RecipeChunk> chunks) {
-        super(filesystemClient, chunks);
+    public FSChunkInputStream(FileSystemRestfulClient filesystemClient, String clusterName, String virtualPath, long size, long blockSize) {
+        super(filesystemClient, clusterName, virtualPath, size, blockSize);
+    }
+
+    public FSChunkInputStream(FileSystemRestfulClient filesystemClient, VirtualFileStatus status) {
+        super(filesystemClient, status);
     }
     
     @Override

@@ -46,5 +46,5 @@ public abstract class AFileSystemRestfulAPI {
 
     public abstract Cluster getLocalCluster() throws Exception;
 
-    public abstract byte[] getChunkData(RecipeChunk chunk) throws Exception;
+    public abstract byte[] readChunkData(String clusterName, String virtualPath, long offset, long size) throws Exception;
 }

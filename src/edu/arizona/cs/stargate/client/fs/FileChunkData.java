@@ -24,30 +24,30 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
-
 /**
  *
  * @author iychoi
  */
 public class FileChunkData {
-    private RecipeChunk chunk;
+    private long offset;
+    private long size;
     private byte[] data;
     
-    public FileChunkData(RecipeChunk chunk, byte[] data) {
-        this.chunk = chunk;
+    public FileChunkData(long offset, long size, byte[] data) {
+        this.offset = offset;
+        this.size = size;
         this.data = data;
     }
     
-    public RecipeChunk getChunk() {
-        return this.chunk;
+    public long getOffset() {
+        return this.offset;
+    }
+    
+    public long getSize() {
+        return this.size;
     }
     
     public byte[] getData() {
         return this.data;
-    }
-    
-    public void setData(byte[] data) {
-        this.data = data;
     }
 }

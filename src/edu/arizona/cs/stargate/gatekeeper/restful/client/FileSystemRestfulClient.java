@@ -57,19 +57,23 @@ public class FileSystemRestfulClient extends AFileSystemRestfulAPI {
         }
     }
 
+    @Override
     public Collection<VirtualFileStatus> getAllVirtualFileStatus() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public long getBlockSize() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public Cluster getLocalCluster() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public byte[] getChunkData(RecipeChunk chunk) {
+    @Override
+    public byte[] readChunkData(String clusterName, String virtualPath, long offset, long size) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

@@ -48,7 +48,7 @@ public class RemoteRecipe {
     private String hashAlgorithm;
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
 
-    RemoteRecipe() {
+    public RemoteRecipe() {
     }
     
     public static RemoteRecipe createInstance(File file) throws IOException {
@@ -115,12 +115,12 @@ public class RemoteRecipe {
     }
     
     @JsonProperty("chunks")
-    void addChunks(Collection<RecipeChunk> chunks) {
+    public void addChunks(Collection<RecipeChunk> chunks) {
         this.chunks.addAll(chunks);
     }
     
     @JsonIgnore
-    void addChunk(RecipeChunk chunk) {
+    public void addChunk(RecipeChunk chunk) {
         this.chunks.add(chunk);
     }
     

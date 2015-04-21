@@ -49,7 +49,7 @@ public class LocalRecipe {
     private String hashAlgorithm;
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
 
-    LocalRecipe() {
+    public LocalRecipe() {
     }
     
     public static LocalRecipe createInstance(File file) throws IOException {
@@ -112,12 +112,12 @@ public class LocalRecipe {
     }
     
     @JsonProperty("chunks")
-    void addChunks(Collection<RecipeChunk> chunks) {
+    public void addChunks(Collection<RecipeChunk> chunks) {
         this.chunks.addAll(chunks);
     }
     
     @JsonIgnore
-    void addChunk(RecipeChunk chunk) {
+    public void addChunk(RecipeChunk chunk) {
         this.chunks.add(chunk);
     }
     

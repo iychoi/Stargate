@@ -44,9 +44,9 @@ import org.apache.hadoop.util.Progressable;
  *
  * @author iychoi
  */
-public class StargateFS extends FileSystem {
+public class StargateHDFS extends FileSystem {
 
-    private static final Log LOG = LogFactory.getLog(StargateFS.class);
+    private static final Log LOG = LogFactory.getLog(StargateHDFS.class);
     
     private static StargateFileSystem filesystem;
     
@@ -54,7 +54,7 @@ public class StargateFS extends FileSystem {
     private Path workingDir;
     private FileSystem localClusterHDFS;
     
-    public StargateFS() {
+    public StargateHDFS() {
     }
     
     @Override
@@ -83,7 +83,7 @@ public class StargateFS extends FileSystem {
         LOG.info("initializing uri for StargateFS : " + uri.toString());
         
         if(filesystem == null) {
-            String[] gateKeeperHosts = StargateFSConfigurationUtils.getGateKeeperHosts(conf);
+            String[] gateKeeperHosts = StargateHDFSConfigurationUtils.getGateKeeperHosts(conf);
             this.filesystem = new StargateFileSystem(getGateKeeperServiceAddress(gateKeeperHosts));
         }
         
@@ -174,10 +174,12 @@ public class StargateFS extends FileSystem {
     public FSDataInputStream open(Path path, int bufferSize) throws IOException {
         URI makeAbsoluteURI = makeAbsoluteURI(path);
         if(filesystem.isLocalClusterPath(makeAbsoluteURI)) {
-            URI localClusterPath = filesystem.getLocalClusterPath(makeAbsoluteURI);
-            return this.localClusterHDFS.open(new Path(localClusterPath));
+            // read from local 
+            URI localClusterPath = filesystem.getLocalClusterResourcePath(makeAbsoluteURI);
+            return this.localClusterHDFS.open(new Path(localClusterPath), bufferSize);
         } else {
-            return filesystem.getFSDataInputStream(makeAbsoluteURI(path), bufferSize);
+            // ask to gatekeeper
+            return filesystem.open2(makeAbsoluteURI(path), bufferSize);
         }
     }
 
