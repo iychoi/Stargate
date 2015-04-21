@@ -41,11 +41,13 @@ public class ClusterNode {
     private String name;
     private URI serviceURL;
     private String[] hostAddrs;
+    private boolean unreachable;
     
     ClusterNode() {
         this.name = null;
         this.serviceURL = null;
         this.hostAddrs = null;
+        this.unreachable = false;
     }
     
     public static ClusterNode createInstance(File file) throws IOException {
@@ -62,28 +64,34 @@ public class ClusterNode {
         this.name = that.name;
         this.serviceURL = that.serviceURL;
         this.hostAddrs = that.hostAddrs;
+        this.unreachable = that.unreachable;
     }
     
     public ClusterNode(String name, URI serviceURL) {
-        initializeClusterNodeInfo(name, serviceURL, null);
+        initialize(name, serviceURL, null, false);
     }
     
     public ClusterNode(String name, URI publicAddr, String[] hostAddrs) {
-        initializeClusterNodeInfo(name, publicAddr, hostAddrs);
+        initialize(name, publicAddr, hostAddrs, false);
     }
     
     public ClusterNode(String name, String publicAddr) throws URISyntaxException {
-        initializeClusterNodeInfo(name, new URI(publicAddr), null);
+        initialize(name, new URI(publicAddr), null, false);
     }
     
     public ClusterNode(String name, String publicAddr, String[] hostAddrs) throws URISyntaxException {
-        initializeClusterNodeInfo(name, new URI(publicAddr), hostAddrs);
+        initialize(name, new URI(publicAddr), hostAddrs, false);
     }
     
-    private void initializeClusterNodeInfo(String name, URI serviceURL, String[] hostAddrs) {
-        setName(name);
-        setServiceURL(serviceURL);
-        setHostAddrs(hostAddrs);
+    public ClusterNode(String name, String publicAddr, String[] hostAddrs, boolean unreachable) throws URISyntaxException {
+        initialize(name, new URI(publicAddr), hostAddrs, unreachable);
+    }
+    
+    private void initialize(String name, URI serviceURL, String[] hostAddrs, boolean unreachable) {
+        this.name = name;
+        this.serviceURL = serviceURL;
+        this.hostAddrs = hostAddrs;
+        this.unreachable = unreachable;
     }
 
     @JsonProperty("name")
@@ -92,7 +100,7 @@ public class ClusterNode {
     }
     
     @JsonProperty("name")
-    void setName(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -102,12 +110,12 @@ public class ClusterNode {
     }
 
     @JsonProperty("service_url")
-    void setServiceURL(URI serviceURL) {
+    public void setServiceURL(URI serviceURL) {
         this.serviceURL = serviceURL;
     }
     
     @JsonIgnore
-    void setServiceURL(String serviceURL) throws URISyntaxException {
+    public void setServiceURL(String serviceURL) throws URISyntaxException {
         this.serviceURL = new URI(serviceURL);
     }
     
@@ -117,7 +125,7 @@ public class ClusterNode {
     }
     
     @JsonProperty("host_addrs")
-    void setHostAddrs(String[] hostAddrs) {
+    public void setHostAddrs(String[] hostAddrs) {
         this.hostAddrs = hostAddrs;
     }
     
@@ -131,6 +139,16 @@ public class ClusterNode {
             }
         }
         return false;
+    }
+    
+    @JsonProperty("unreachable")
+    public boolean isUnreachable() {
+        return this.unreachable;
+    }
+    
+    @JsonProperty("unreachable")
+    public void setUnrechable(boolean unreachable) {
+        this.unreachable = unreachable;
     }
     
     @JsonIgnore

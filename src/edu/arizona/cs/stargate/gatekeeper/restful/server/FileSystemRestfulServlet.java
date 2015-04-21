@@ -32,7 +32,7 @@ import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;

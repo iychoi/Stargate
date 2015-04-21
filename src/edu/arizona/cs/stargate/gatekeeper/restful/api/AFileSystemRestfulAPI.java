@@ -25,7 +25,7 @@
 package edu.arizona.cs.stargate.gatekeeper.restful.api;
 
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import java.util.Collection;
 
 /**

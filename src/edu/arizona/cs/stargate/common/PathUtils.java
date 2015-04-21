@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.common;
 
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import java.net.URI;
 
 /**

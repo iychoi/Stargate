@@ -28,7 +28,7 @@ import com.sun.jersey.api.client.GenericType;
 import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AFileSystemRestfulAPI;
 import java.io.IOException;

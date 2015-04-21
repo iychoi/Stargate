@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import java.io.IOException;
 import java.net.URI;
@@ -70,6 +70,7 @@ public class StargateHDFS extends FileSystem {
             String gatekeeperHost = "localhost:" + rc.getServicePort();
             return gatekeeperHost;
         } else {
+            // random try
             Random random = new Random();
             int rnd = random.nextInt(hosts.length);
             return hosts[rnd];

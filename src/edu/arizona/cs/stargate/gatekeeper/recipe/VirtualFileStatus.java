@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.dataexport;
+package edu.arizona.cs.stargate.gatekeeper.recipe;
 
 import java.net.URI;
 import org.codehaus.jackson.annotate.JsonProperty;

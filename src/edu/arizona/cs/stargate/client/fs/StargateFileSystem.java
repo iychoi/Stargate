@@ -26,7 +26,7 @@ package edu.arizona.cs.stargate.client.fs;
 
 import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.common.PathUtils;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;

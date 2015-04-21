@@ -2,6 +2,7 @@ package edu.arizona.cs.stargate.common;
 
 
 import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
@@ -38,8 +39,16 @@ public class NodeSelectionUtils {
     
     public static ClusterNode selectBestNode(ClusterNode myNode, Collection<ClusterNode> remoteNodes) {
         Random random = new Random();
-        int rnd = random.nextInt(remoteNodes.size());
-        ClusterNode[] nodeArr = remoteNodes.toArray(new ClusterNode[0]);
+        ArrayList<ClusterNode> selectPool = new ArrayList<ClusterNode>();
+        
+        for(ClusterNode node : remoteNodes) {
+            if(!node.isUnreachable()) {
+                selectPool.add(node);
+            }
+        }
+        
+        int rnd = random.nextInt(selectPool.size());
+        ClusterNode[] nodeArr = selectPool.toArray(new ClusterNode[0]);
         return nodeArr[rnd];
     }
 }

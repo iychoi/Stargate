@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
