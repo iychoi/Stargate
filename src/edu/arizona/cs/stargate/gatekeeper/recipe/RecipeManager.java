@@ -281,51 +281,15 @@ public class RecipeManager {
                     LocalRecipe recipe = pendingRecipes.peekEntry();
                     LocalClusterManager lcm = LocalClusterManager.getInstance();
                     ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
-                    if(recipeGenerator instanceof FixedSizeLocalFileRecipeGenerator) {
-                        LOG.info("local file recipe generation " + recipe.getResourcePath());
-                        boolean local = true;
-                        Collection<RecipeChunk> chunks = recipe.getAllChunks();
-                        Iterator<RecipeChunk> iterator = chunks.iterator();
-                        while(iterator.hasNext()) {
-                            RecipeChunk chunk = iterator.next();
-                            boolean ownerhost = false;
-                            String[] ownerHosts = chunk.getOwnerHosts();
-                            for(String ownerHost : ownerHosts) {
-                                if(lcm.getLocalNode().getName().equals(ownerHost)) {
-                                    ownerhost = true;
-                                }
-                            }
-                            
-                            if(!ownerhost) {
-                                local = false;
-                                break;
-                            }
-                        }
-                        
-                        if(local) {
-                            recipe = pendingRecipes.get(recipe.getResourcePath());
-                            LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
-                            
-                            recipeGenerator.hashRecipe(recipe);
-                            recipes.put(recipe.getResourcePath(), recipe);
-                            Collection<RecipeChunk> allChunk = recipe.getAllChunks();
-                            for (RecipeChunk chunk : allChunk) {
-                                addChunk(chunk.getHashString(), recipe.getResourcePath());
-                            }
-                        } else {
-                            LOG.info("Ignoring hashing " + recipe.getResourcePath().toASCIIString());
-                        }
-                    } else {
-                        LOG.info("hdfs file recipe generation " + recipe.getResourcePath());
-                        recipe = pendingRecipes.get(recipe.getResourcePath());
-                        LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
+                    
+                    recipe = pendingRecipes.get(recipe.getResourcePath());
+                    LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
 
-                        recipeGenerator.hashRecipe(recipe);
-                        recipes.put(recipe.getResourcePath(), recipe);
-                        Collection<RecipeChunk> allChunk = recipe.getAllChunks();
-                        for (RecipeChunk chunk : allChunk) {
-                            addChunk(chunk.getHashString(), recipe.getResourcePath());
-                        }
+                    recipeGenerator.hashRecipe(recipe);
+                    recipes.put(recipe.getResourcePath(), recipe);
+                    Collection<RecipeChunk> allChunk = recipe.getAllChunks();
+                    for (RecipeChunk chunk : allChunk) {
+                        addChunk(chunk.getHashString(), recipe.getResourcePath());
                     }
                 } catch (IOException ex) {
                     LOG.error(ex);

@@ -39,13 +39,10 @@ public class RecipeGeneratorFactory {
     private static final Log LOG = LogFactory.getLog(RecipeGeneratorFactory.class);
     
     private static FixedSizeHDFSFileRecipeGenerator cachedFixedSizeHDFSFileRecipeGenerator;
-    private static FixedSizeLocalFileRecipeGenerator cachedFixedSizeLocalFileRecipeGenerator;
     
     public static ARecipeGenerator getRecipeGenerator(URI resourceUri, int chunkSize) throws IOException {
         if(resourceUri.getScheme().equalsIgnoreCase("hdfs") || resourceUri.getScheme().equalsIgnoreCase("dfs")) {
             return getFixedSizeHDFSFileRecipeGenerator(chunkSize);
-        } else if(resourceUri.getScheme().equalsIgnoreCase("file")) {
-            return getFixedSizeLocalFileRecipeGenerator(chunkSize);
         }
         
         throw new IOException("Unknown resource scheme");
@@ -57,15 +54,6 @@ public class RecipeGeneratorFactory {
                 cachedFixedSizeHDFSFileRecipeGenerator = new FixedSizeHDFSFileRecipeGenerator(new Configuration(), chunkSize);
             }
             return cachedFixedSizeHDFSFileRecipeGenerator;
-        }
-    }
-
-    public static FixedSizeLocalFileRecipeGenerator getFixedSizeLocalFileRecipeGenerator(int chunkSize) {
-        synchronized(RecipeGeneratorFactory.class) {
-            if(cachedFixedSizeLocalFileRecipeGenerator == null) {
-                cachedFixedSizeLocalFileRecipeGenerator = new FixedSizeLocalFileRecipeGenerator(chunkSize);
-            }
-            return cachedFixedSizeLocalFileRecipeGenerator;
         }
     }
 }
