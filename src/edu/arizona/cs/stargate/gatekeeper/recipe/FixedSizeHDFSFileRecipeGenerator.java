@@ -61,11 +61,8 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
         this.hadoopConf = hadoopConf;
     }
     
-    private Collection<RecipeChunk> chunk(Path path, int chunkSize) throws IOException, NoSuchAlgorithmException {
-        FileSystem fs = path.getFileSystem(this.hadoopConf);
-        FileStatus fileStatus = fs.getFileStatus(path);
-        
-        long fileLen = fileStatus.getLen();
+    private Collection<RecipeChunk> chunk(FileSystem fs, FileStatus status, int chunkSize) throws IOException, NoSuchAlgorithmException {
+        long fileLen = status.getLen();
         
         List<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
         int numChunks = (int) (fileLen / chunkSize);
@@ -82,7 +79,7 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
             curChunkSize = (int) Math.min(fileLen - chunkOffset, chunkSize);
             
             ArrayList<String> ownerHosts = new ArrayList<String>();
-            BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(fileStatus, chunkOffset, curChunkSize);
+            BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(status, chunkOffset, curChunkSize);
             for(BlockLocation blockLocation : fileBlockLocations) {
                 for(String host : blockLocation.getHosts()) {
                     if(host.equalsIgnoreCase("localhost")) {
@@ -138,14 +135,22 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
     @Override
     public LocalRecipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         Path path = new Path(resourcePath.normalize());
-        Collection<RecipeChunk> chunks = chunk(path, this.chunkSize);
-        return new LocalRecipe(resourcePath, hashAlgorithm, chunks);
+        FileSystem fs = path.getFileSystem(this.hadoopConf);
+        FileStatus fileStatus = fs.getFileStatus(path);
+        
+        Collection<RecipeChunk> chunks = chunk(fs, fileStatus, this.chunkSize);
+        
+        return new LocalRecipe(resourcePath, hashAlgorithm, fileStatus.getLen(), fileStatus.getModificationTime(), this.chunkSize, chunks);
     }
     
     public LocalRecipe generateRecipe(Path path, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
-        Collection<RecipeChunk> chunks = chunk(path, this.chunkSize);
+        FileSystem fs = path.getFileSystem(this.hadoopConf);
+        FileStatus fileStatus = fs.getFileStatus(path);
+        
+        Collection<RecipeChunk> chunks = chunk(fs, fileStatus, this.chunkSize);
+        
         URI resourceUri = path.toUri().normalize();
-        return new LocalRecipe(resourceUri, hashAlgorithm, chunks);
+        return new LocalRecipe(resourceUri, hashAlgorithm, fileStatus.getLen(), fileStatus.getModificationTime(), this.chunkSize, chunks);
     }
 
     @Override

@@ -125,11 +125,18 @@ public class ChunkInputStream extends InputStream {
             }
         }
         
-        byte[] data = this.filesystemRestfulClient.readChunkData(this.clusterName, this.virtualPath, offset, csize);
-        if(data.length != csize) {
-            throw new IOException("received chunk data does not match to requested size");
+        byte[] data = null;
+        try {
+            data = this.filesystemRestfulClient.readChunkData(this.clusterName, this.virtualPath, offset, csize);
+        } catch (Exception ex) {
+            LOG.error(ex);
+            throw new IOException(ex);
         }
         
+        if (data == null || data.length != csize) {
+            throw new IOException("received chunk data does not match to requested size");
+        }
+
         FileChunkData chunkdata = new FileChunkData(offset, csize, data);
         this.cachedChunkData = chunkdata;
     }

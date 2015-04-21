@@ -30,7 +30,7 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.Chunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.ChunkReaderFactory;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
-import edu.arizona.cs.stargate.gatekeeper.restful.api.ATransportRestfulAPI;
+import edu.arizona.cs.stargate.gatekeeper.restful.api.ASimpleTransferRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
@@ -56,14 +56,14 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-@Path(ATransportRestfulAPI.BASE_PATH)
+@Path(ASimpleTransferRestfulAPI.BASE_PATH)
 @Singleton
-public class TransportRestfulServlet extends ATransportRestfulAPI {
+public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
 
-    private static final Log LOG = LogFactory.getLog(TransportRestfulServlet.class);
+    private static final Log LOG = LogFactory.getLog(SimpleTransferRestfulServlet.class);
     
     @GET
-    @Path(ATransportRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
+    @Path(ASimpleTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetRecipeText(
             @DefaultValue("null") @PathParam("vpath") String vpath
@@ -77,7 +77,7 @@ public class TransportRestfulServlet extends ATransportRestfulAPI {
     }
     
     @GET
-    @Path(ATransportRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
+    @Path(ASimpleTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<RemoteRecipe> responseGetRecipeJSON(
             @DefaultValue("null") @PathParam("vpath") String vpath
@@ -109,7 +109,7 @@ public class TransportRestfulServlet extends ATransportRestfulAPI {
     }
     
     @GET
-    @Path(ATransportRestfulAPI.DATA_CHUNK_PATH + "/{param:.*}")
+    @Path(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH + "/{param:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response responseGetDataChunkURL(
             @DefaultValue("null") @PathParam("param") String param,

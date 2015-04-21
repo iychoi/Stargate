@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import com.sun.jersey.api.client.GenericType;
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.ADataExportManagerRestfulAPI;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
@@ -43,14 +44,14 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
     
     private static final Log LOG = LogFactory.getLog(DataExportManagerClient.class);
     
-    private GateKeeperRestfulClient gatekeeperRPCClient;
+    private GateKeeperRestfulClient gatekeeperRestfulClient;
 
     public DataExportManagerClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
-        this.gatekeeperRPCClient = gatekeeperRestfulClient;
+        this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
-        return ADataExportManagerRestfulAPI.BASE_PATH + path;
+        return PathUtils.concatPath(ADataExportManagerRestfulAPI.BASE_PATH, path);
     }
     
     @Override
@@ -60,7 +61,7 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH));
             builder.addParam("vpath", "*");
             String url = builder.build();
-            response = (RestfulResponse<Collection<DataExport>>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Collection<DataExport>>>(){});
+            response = (RestfulResponse<Collection<DataExport>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<DataExport>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -80,7 +81,7 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH));
             builder.addParam("vpath", vpath);
             String url = builder.build();
-            response = (RestfulResponse<Collection<DataExport>>) this.gatekeeperRPCClient.get(url, new GenericType<RestfulResponse<Collection<DataExport>>>(){});
+            response = (RestfulResponse<Collection<DataExport>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<DataExport>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -103,7 +104,7 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
         RestfulResponse<Boolean> response;
         try {
             String url = getResourcePath(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH);
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.post(url, export, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.post(url, export, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -121,7 +122,7 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH));
             builder.addParam("vpath", vpath);
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -139,7 +140,7 @@ public class DataExportManagerClient extends ADataExportManagerRestfulAPI {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ADataExportManagerRestfulAPI.DATA_EXPORT_PATH));
             builder.addParam("vpath", "*");
             String url = builder.build();
-            response = (RestfulResponse<Boolean>) this.gatekeeperRPCClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
+            response = (RestfulResponse<Boolean>) this.gatekeeperRestfulClient.delete(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

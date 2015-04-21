@@ -31,8 +31,8 @@ import java.io.InputStream;
  *
  * @author iychoi
  */
-public abstract class ATransportRestfulAPI {
-    public static final String BASE_PATH = "/transport";
+public abstract class ASimpleTransferRestfulAPI {
+    public static final String BASE_PATH = "/stransfer";
     public static final String RECIPE_PATH = "/recipe";
     public static final String DATA_CHUNK_PATH = "/chunk";
     

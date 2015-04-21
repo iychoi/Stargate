@@ -27,7 +27,7 @@ package edu.arizona.cs.stargate.gatekeeper.restful;
 import edu.arizona.cs.stargate.gatekeeper.restful.server.GateKeeperRestfulServlet;
 import edu.arizona.cs.stargate.gatekeeper.restful.server.DataExportManagerRestfulServlet;
 import edu.arizona.cs.stargate.gatekeeper.restful.server.RecipeManagerRestfulServlet;
-import edu.arizona.cs.stargate.gatekeeper.restful.server.TransportRestfulServlet;
+import edu.arizona.cs.stargate.gatekeeper.restful.server.SimpleTransferRestfulServlet;
 import edu.arizona.cs.stargate.gatekeeper.restful.server.ClusterManagerRestfulServlet;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.ServletModule;
@@ -51,7 +51,7 @@ public class GateKeeperServletModule extends ServletModule {
         bind(ClusterManagerRestfulServlet.class).in(Singleton.class); 
         bind(DataExportManagerRestfulServlet.class).in(Singleton.class);
         bind(RecipeManagerRestfulServlet.class).in(Singleton.class);
-        bind(TransportRestfulServlet.class).in(Singleton.class);
+        bind(SimpleTransferRestfulServlet.class).in(Singleton.class);
         bind(FileSystemRestfulServlet.class).in(Singleton.class);
 
         bind(MessageBodyReader.class).to(JacksonJsonProvider.class); 

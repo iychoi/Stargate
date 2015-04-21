@@ -118,13 +118,13 @@ public class FixedSizeLocalFileRecipeGenerator extends ARecipeGenerator {
     public LocalRecipe generateRecipe(URI resourcePath, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         File file = new File(resourcePath.normalize());
         Collection<RecipeChunk> chunks = chunk(file, this.chunkSize);
-        return new LocalRecipe(resourcePath, hashAlgorithm, chunks);
+        return new LocalRecipe(resourcePath, hashAlgorithm, file.length(), file.lastModified(), this.chunkSize, chunks);
     }
     
     public LocalRecipe generateRecipe(File file, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
         Collection<RecipeChunk> chunks = chunk(file, this.chunkSize);
         URI resourceUri = file.toURI().normalize();
-        return new LocalRecipe(resourceUri, hashAlgorithm, chunks);
+        return new LocalRecipe(resourceUri, hashAlgorithm, file.length(), file.lastModified(), this.chunkSize, chunks);
     }
 
     @Override

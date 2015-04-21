@@ -47,6 +47,10 @@ public class LocalRecipe {
     
     private URI resourcePath;
     private String hashAlgorithm;
+    private int chunkSize;
+    private long size;
+    private long lastModified;
+    
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
 
     public LocalRecipe() {
@@ -62,13 +66,16 @@ public class LocalRecipe {
         return (LocalRecipe) serializer.fromJson(json, LocalRecipe.class);
     }
     
-    public LocalRecipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunk> chunks) {
-        initializeLocalRecipe(resourcePath, hashAlgorithm, chunks);
+    public LocalRecipe(URI resourcePath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
+        initializeLocalRecipe(resourcePath, hashAlgorithm, size, lastModified, chunkSize, chunks);
     }
     
-    private void initializeLocalRecipe(URI resourcePath, String hashAlgorithm, Collection<RecipeChunk> chunks) {
+    private void initializeLocalRecipe(URI resourcePath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
         this.resourcePath = resourcePath;
         this.hashAlgorithm = hashAlgorithm;
+        this.size = size;
+        this.lastModified = lastModified;
+        this.chunkSize = chunkSize;
         if(chunks != null) {
             this.chunks.addAll(chunks);
         }
@@ -119,6 +126,36 @@ public class LocalRecipe {
     @JsonIgnore
     public void addChunk(RecipeChunk chunk) {
         this.chunks.add(chunk);
+    }
+    
+    @JsonProperty("size")
+    public long getSize() {
+        return this.size;
+    }
+    
+    @JsonProperty("size")
+    public void setSize(long size) {
+        this.size = size;
+    }
+    
+    @JsonProperty("chunkSize")
+    public int getChunkSize() {
+        return this.chunkSize;
+    }
+    
+    @JsonProperty("chunkSize")
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
+    }
+    
+    @JsonProperty("lastModifiedTime")
+    public long getLastModified() {
+        return this.lastModified;
+    }
+    
+    @JsonProperty("lastModifiedTime")
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
     }
     
     public String toString() {

@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AGateKeeperRestfulAPI;
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
     private ClusterManagerRestfulClient clusterManagerClient;
     private DataExportManagerClient dataExportManagerClient;
     private RecipeManagerRestfulClient recipeManagerClient;
-    private TransportRestfulClient transportClient;
+    private SimpleTransferRestfulClient simpleTransferClient;
     private FileSystemRestfulClient filesystemClient;
 
     public GateKeeperRestfulClient(GateKeeperClientConfiguration conf) {
@@ -73,7 +74,7 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
         this.clusterManagerClient = new ClusterManagerRestfulClient(this);
         this.dataExportManagerClient = new DataExportManagerClient(this);
         this.recipeManagerClient = new RecipeManagerRestfulClient(this);
-        this.transportClient = new TransportRestfulClient(this);
+        this.simpleTransferClient = new SimpleTransferRestfulClient(this);
         this.filesystemClient = new FileSystemRestfulClient(this);
     }
     
@@ -97,8 +98,8 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
         return this.recipeManagerClient;
     }
     
-    public TransportRestfulClient getTransportClient() {
-        return this.transportClient;
+    public SimpleTransferRestfulClient getSimpleTransferClient() {
+        return this.simpleTransferClient;
     }
     
     public FileSystemRestfulClient getFileSystemClient() {
@@ -190,11 +191,7 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
     }
     
     public String getResourcePath(String path) {
-        if(AGateKeeperRestfulAPI.BASE_PATH.endsWith("/") &&
-                path.startsWith("/")) {
-            return AGateKeeperRestfulAPI.BASE_PATH + path.substring(1);
-        }
-        return AGateKeeperRestfulAPI.BASE_PATH + path;
+        return PathUtils.concatPath(AGateKeeperRestfulAPI.BASE_PATH, path);
     }
 
     @Override

@@ -47,6 +47,9 @@ public class RemoteRecipe {
     private String virtualPath;
     private String hashAlgorithm;
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
+    private int chunkSize;
+    private long size;
+    private long lastModified;
 
     public RemoteRecipe() {
     }
@@ -61,17 +64,20 @@ public class RemoteRecipe {
         return (RemoteRecipe) serializer.fromJson(json, RemoteRecipe.class);
     }
     
-    public RemoteRecipe(String virtualPath, String hashAlgorithm, Collection<RecipeChunk> chunks) {
-        initializeRemoteRecipe(virtualPath, hashAlgorithm, chunks);
+    public RemoteRecipe(String virtualPath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
+        initializeRemoteRecipe(virtualPath, hashAlgorithm, size, lastModified, chunkSize, chunks);
     }
     
     public RemoteRecipe(String virtualPath, LocalRecipe recipe) {
-        initializeRemoteRecipe(virtualPath, recipe.getHashAlgorithm(), recipe.getAllChunks());
+        initializeRemoteRecipe(virtualPath, recipe.getHashAlgorithm(), recipe.getSize(), recipe.getLastModified(), recipe.getChunkSize(), recipe.getAllChunks());
     }
     
-    private void initializeRemoteRecipe(String virtualPath, String hashAlgorithm, Collection<RecipeChunk> chunks) {
+    private void initializeRemoteRecipe(String virtualPath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
         this.virtualPath = virtualPath;
         this.hashAlgorithm = hashAlgorithm;
+        this.size = size;
+        this.lastModified = lastModified;
+        this.chunkSize = chunkSize;
         if(chunks != null) {
             this.chunks.addAll(chunks);
         }
@@ -122,6 +128,36 @@ public class RemoteRecipe {
     @JsonIgnore
     public void addChunk(RecipeChunk chunk) {
         this.chunks.add(chunk);
+    }
+    
+    @JsonProperty("size")
+    public long getSize() {
+        return this.size;
+    }
+    
+    @JsonProperty("size")
+    public void setSize(long size) {
+        this.size = size;
+    }
+    
+    @JsonProperty("chunkSize")
+    public int getChunkSize() {
+        return this.chunkSize;
+    }
+    
+    @JsonProperty("chunkSize")
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
+    }
+    
+    @JsonProperty("lastModifiedTime")
+    public long getLastModified() {
+        return this.lastModified;
+    }
+    
+    @JsonProperty("lastModifiedTime")
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
     }
     
     public String toString() {

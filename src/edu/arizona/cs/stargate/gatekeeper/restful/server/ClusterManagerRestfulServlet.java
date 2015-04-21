@@ -64,7 +64,6 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_PATH)
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetLocalClusterText() {
-        LOG.info("request local cluster");
         try {
             return DataFormatUtils.toJSONFormat(responseGetLocalClusterJSON());
         } catch (IOException ex) {
@@ -76,7 +75,6 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     @Path(AClusterManagerRestfulAPI.LOCAL_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<Cluster> responseGetLocalClusterJSON() {
-        LOG.info("request local cluster");
         try {
             return new RestfulResponse<Cluster>(getLocalCluster());
         } catch(Exception ex) {
@@ -96,7 +94,6 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     public String responseGetRemoteClusterText(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
-        LOG.info("request remote cluster : name = " + name);
         try {
             return DataFormatUtils.toJSONFormat(responseGetRemoteClusterJSON(name));
         } catch (IOException ex) {
@@ -110,7 +107,6 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     public RestfulResponse<Collection<Cluster>> responseGetRemoteClusterJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
-        LOG.info("request remote cluster : name = " + name);
         try {
             if(name != null) {
                 if(name.equals("*")) {

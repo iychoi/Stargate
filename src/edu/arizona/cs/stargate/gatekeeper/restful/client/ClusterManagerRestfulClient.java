@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import com.sun.jersey.api.client.GenericType;
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AClusterManagerRestfulAPI;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
@@ -50,7 +51,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
     }
     
     public String getResourcePath(String path) {
-        return AClusterManagerRestfulAPI.BASE_PATH + path;
+        return PathUtils.concatPath(AClusterManagerRestfulAPI.BASE_PATH, path);
     }
     
     @Override

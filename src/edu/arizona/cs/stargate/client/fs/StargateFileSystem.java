@@ -99,7 +99,13 @@ public class StargateFileSystem {
     }
     
     private VirtualFileStatus makeRootDirectoryStatus() {
-        long blockSize = this.filesystemClient.getBlockSize();
+        long blockSize;
+        try {
+            blockSize = this.filesystemClient.getBlockSize();
+        } catch (Exception ex) {
+            LOG.error(ex);
+            blockSize = FileSystemRestfulClient.DEFAULT_BLOCK_SIZE;
+        }
         return new VirtualFileStatus("", "/", true, 4096, blockSize, this.lastUpdatedTime);
     }
     
@@ -138,29 +144,35 @@ public class StargateFileSystem {
         VirtualFileStatus rootFileStatus = makeRootDirectoryStatus();
         putMapping(rootFileStatus);
         
-        Collection<VirtualFileStatus> list_status = this.filesystemClient.getAllVirtualFileStatus();
-        for(VirtualFileStatus status : list_status) {
-            putMapping(status);
+        Collection<VirtualFileStatus> list_status;
+        try {
+            list_status = this.filesystemClient.getAllVirtualFileStatus();
+            for(VirtualFileStatus status : list_status) {
+                putMapping(status);
+            }
+        } catch (Exception ex) {
+            LOG.error(ex);
+            throw new IOException(ex);
         }
     }
     
     private synchronized String getClusterName(URI resourceURI) {
-        String clusterName = resourceURI.getHost();
-        if(clusterName.equalsIgnoreCase("localhost")) {
+        String clusterName = PathUtils.extractClusterNameFromPath(resourceURI);
+        if(clusterName.equalsIgnoreCase("localhost") || clusterName.isEmpty()) {
             return this.localCluster.getName();
         }
         return clusterName;
     }
     
     private synchronized String getVirtualPath(URI resourceURI) {
-        return resourceURI.getPath();
+        return PathUtils.extractVirtualPath(resourceURI);
     }
     
     private synchronized String makeMappedPath(URI resourceURI) {
         String clusterName = getClusterName(resourceURI);
         String virtualPath = getVirtualPath(resourceURI);
         
-        return PathUtils.getPath(clusterName, virtualPath);
+        return PathUtils.concatPath(clusterName, virtualPath);
     }
     
     public synchronized VirtualFileStatus[] listStatus(URI resourceURI) {

@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.common;
 
 import edu.arizona.cs.stargate.gatekeeper.dataexport.VirtualFileStatus;
+import java.net.URI;
 
 /**
  *
@@ -46,27 +47,97 @@ public class PathUtils {
     }
     
     public static String getPath(VirtualFileStatus status) {
-        return getPath(status.getClusterName(), status.getVirtualPath());
+        return concatPath(status.getClusterName(), status.getVirtualPath());
     }
     
-    public static String getPath(String clusterName, String virtualPath) {
-        String path = "/";
-        if(clusterName != null && !clusterName.isEmpty()) {
-            path += clusterName;
-        }
+    public static String concatPath(String path1, String path2) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("/");
         
-        if(virtualPath != null && !virtualPath.isEmpty()) {
-            if(virtualPath.startsWith("/")) {
-                path += virtualPath;
+        if(path1 != null && !path1.isEmpty()) {
+            if(path1.startsWith("/")) {
+                sb.append(path1.substring(1, path1.length()));
             } else {
-                path += "/" + virtualPath;
+                sb.append(path1);
             }
         }
         
-        if(!path.equals("/") && path.endsWith("/")) {
-            return path.substring(0, path.length() - 1);
-        } else {
-            return path;
+        if(!path1.endsWith("/")) {
+            sb.append("/");
         }
+        
+        if(path2 != null && !path2.isEmpty()) {
+            if(path2.startsWith("/")) {
+                sb.append(path2.substring(1, path2.length()));
+            } else {
+                sb.append(path2);
+            }
+        }
+        
+        return sb.toString();
+    }
+    
+    public static String extractClusterNameFromPath(URI path) {
+        return path.getHost();
+    }
+    
+    public static String extractClusterNameFromPath(String path) {
+        int startIdx = 0;
+        if(path.startsWith("/")) {
+            startIdx++;
+        }
+        
+        int endIdx = path.indexOf("/", startIdx);
+        if(endIdx > 0) {
+            return path.substring(startIdx, endIdx);
+        } else {
+            if(path.length() - startIdx > 0) {
+                return path.substring(startIdx, path.length());
+            }
+        }
+        return "";
+    }
+    
+    public static String extractVirtualPath(URI path) {
+        return path.getPath();
+    }
+    
+    public static String extractVirtualPath(String path) {
+        int startIdx = 0;
+        if(path.startsWith("/")) {
+            startIdx++;
+        }
+        
+        int endIdx = path.indexOf("/", startIdx);
+        if(endIdx > 0) {
+            return path.substring(endIdx, path.length());
+        } else {
+            return "";
+        }
+    }
+    
+    public static String[] splitPath(URI path) {
+        String[] paths = new String[2];
+        
+        String uriPath = path.getPath();
+        int startIdx = 0;
+        if(uriPath.startsWith("/")) {
+            startIdx++;
+        }
+        
+        int endIdx = uriPath.indexOf("/", startIdx);
+        if(endIdx > 0) {
+            // cluster
+            paths[0] = uriPath.substring(startIdx, endIdx);
+            // vpath
+            paths[1] = uriPath.substring(endIdx);
+        } else {
+            // cluster
+            paths[0] = "local";
+            // vpath
+            paths[1] = "/";
+        }
+        
+        return paths;
     }
 }

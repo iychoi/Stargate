@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import com.sun.jersey.api.client.GenericType;
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.recipe.Chunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.ARecipeManagerRestfulAPI;
@@ -50,7 +51,7 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
     }
     
     public String getResourcePath(String path) {
-        return ARecipeManagerRestfulAPI.BASE_PATH + path;
+        return PathUtils.concatPath(ARecipeManagerRestfulAPI.BASE_PATH, path);
     }
     
     @Override

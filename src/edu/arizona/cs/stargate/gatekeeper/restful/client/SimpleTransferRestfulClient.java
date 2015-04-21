@@ -26,8 +26,9 @@ package edu.arizona.cs.stargate.gatekeeper.restful.client;
 
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import com.sun.jersey.api.client.GenericType;
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
-import edu.arizona.cs.stargate.gatekeeper.restful.api.ATransportRestfulAPI;
+import edu.arizona.cs.stargate.gatekeeper.restful.api.ASimpleTransferRestfulAPI;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,33 +39,30 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class TransportRestfulClient extends ATransportRestfulAPI {
+public class SimpleTransferRestfulClient extends ASimpleTransferRestfulAPI {
     
-    private static final Log LOG = LogFactory.getLog(TransportRestfulClient.class);
+    private static final Log LOG = LogFactory.getLog(SimpleTransferRestfulClient.class);
     
     private GateKeeperRestfulClient gatekeeperRestfulClient;
 
-    public TransportRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+    public SimpleTransferRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
         this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
-        return ATransportRestfulAPI.BASE_PATH + path;
+        return PathUtils.concatPath(ASimpleTransferRestfulAPI.BASE_PATH, path);
     }
     
     public String getResourcePath(String path, String subpath) {
-        if(path.endsWith("/")) {
-            return ATransportRestfulAPI.BASE_PATH + path + subpath;
-        } else {
-            return ATransportRestfulAPI.BASE_PATH + path + "/" + subpath;
-        }
+        String str1 = PathUtils.concatPath(ASimpleTransferRestfulAPI.BASE_PATH, path);
+        return PathUtils.concatPath(str1, subpath);
     }
     
     @Override
     public RemoteRecipe getRecipe(String vpath) throws Exception {
         RestfulResponse<RemoteRecipe> response;
         try {
-            String url = getResourcePath(ATransportRestfulAPI.RECIPE_PATH, vpath);
+            String url = getResourcePath(ASimpleTransferRestfulAPI.RECIPE_PATH, vpath);
             response = (RestfulResponse<RemoteRecipe>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<RemoteRecipe>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
@@ -81,7 +79,7 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
     @Override
     public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
         try {
-            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ATransportRestfulAPI.DATA_CHUNK_PATH, vpath));
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH, vpath));
             builder.addParam("offset", Long.toString(offset));
             builder.addParam("len", Integer.toString(len));
             String url = builder.build();
@@ -95,7 +93,7 @@ public class TransportRestfulClient extends ATransportRestfulAPI {
     @Override
     public InputStream getDataChunk(String hash) throws Exception {
         try {
-            String url = getResourcePath(ATransportRestfulAPI.DATA_CHUNK_PATH, hash);
+            String url = getResourcePath(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH, hash);
             return this.gatekeeperRestfulClient.download(url);
         } catch (IOException ex) {
             LOG.error(ex);
