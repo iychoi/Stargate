@@ -41,7 +41,7 @@ public abstract class AClusterManagerRestfulAPI {
     
     public abstract Collection<Cluster> getAllRemoteClusters() throws Exception;
     
-    public abstract Cluster getRemoteClusters(String name) throws Exception;
+    public abstract Cluster getRemoteCluster(String name) throws Exception;
     
     public abstract void addRemoteCluster(Cluster cluster) throws Exception;
     

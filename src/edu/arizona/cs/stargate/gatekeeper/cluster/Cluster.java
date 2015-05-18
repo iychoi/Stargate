@@ -46,6 +46,7 @@ public class Cluster {
     private static final Log LOG = LogFactory.getLog(Cluster.class);
     
     private String name;
+    private long lastContact;
     private Map<String, ClusterNode> nodes = new HashMap<String, ClusterNode>();
     
     Cluster() {
@@ -64,6 +65,7 @@ public class Cluster {
     
     public Cluster(Cluster that) {
         this.name = that.name;
+        this.lastContact = that.lastContact;
         this.nodes.putAll(that.nodes);
     }
     
@@ -80,7 +82,7 @@ public class Cluster {
         
         if(node != null) {
             for(ClusterNode nodeinfo : node) {
-                addNode(nodeinfo);
+                Cluster.this.addNode(nodeinfo);
             }
         }
     }
@@ -97,6 +99,16 @@ public class Cluster {
         }
         
         this.name = name;
+    }
+    
+    @JsonProperty("last_contact")
+    public synchronized long getLastContact() {
+        return this.lastContact;
+    }
+    
+    @JsonProperty("last_contact")
+    public synchronized void setLastContact(long lastContact) {
+        this.lastContact = lastContact;
     }
     
     @JsonIgnore
@@ -144,9 +156,9 @@ public class Cluster {
     }
     
     @JsonProperty("nodes")
-    public synchronized void addNodes(Collection<ClusterNode> nodes) throws NodeAlreadyAddedException {
+    public synchronized void addNode(Collection<ClusterNode> nodes) throws NodeAlreadyAddedException {
         for(ClusterNode node : nodes) {
-            addNode(node);
+            Cluster.this.addNode(node);
         }
     }
     

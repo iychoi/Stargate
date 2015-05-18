@@ -51,7 +51,9 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
     
     @Override
     public void process() {
-        Collection<LocalRecipe> incompleteRecipes = this.recipeManager.getIncompleteRecipes();
+        LOG.info("Start - RecipeChunkHashTask");
+        
+        Collection<LocalRecipe> incompleteRecipes = this.recipeManager.getAllIncompleteRecipes();
         if(incompleteRecipes != null && incompleteRecipes.size() > 0) {
             for(LocalRecipe recipe : incompleteRecipes) {
                 try {
@@ -59,7 +61,7 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
                     LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
                     
                     recipeGenerator.hashRecipe(recipe);
-                    this.recipeManager.completeRecipe(recipe);
+                    this.recipeManager.completeRecipeHash(recipe);
                 } catch (IOException ex) {
                     LOG.error(ex);
                 } catch (NoSuchAlgorithmException ex) {
@@ -67,6 +69,8 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
                 }
             }
         }
+        
+        LOG.info("Done - RecipeChunkHashTask");
     }
 
     @Override

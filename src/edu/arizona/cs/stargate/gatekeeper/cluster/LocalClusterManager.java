@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.cluster;
 
+import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.gatekeeper.distributed.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
@@ -139,9 +140,9 @@ public class LocalClusterManager {
         keys.clear();
     }
     
-    public synchronized void addNodes(Collection<ClusterNode> nodes) throws NodeAlreadyAddedException {
+    public synchronized void addNode(Collection<ClusterNode> nodes) throws NodeAlreadyAddedException {
         for(ClusterNode node : nodes) {
-            addNode(node);
+            LocalClusterManager.this.addNode(node);
         }
     }
     
@@ -295,7 +296,8 @@ public class LocalClusterManager {
     public synchronized Cluster getCluster() {
         try {
             Cluster cluster = new Cluster(this.name);
-            cluster.addNodes(this.nodes.values());
+            cluster.addNode(this.nodes.values());
+            cluster.setLastContact(DateTimeUtils.getCurrentTime());
             return cluster;
         } catch (NodeAlreadyAddedException ex) {
             LOG.error(ex);

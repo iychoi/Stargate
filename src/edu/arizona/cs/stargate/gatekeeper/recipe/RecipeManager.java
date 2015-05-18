@@ -155,7 +155,7 @@ public class RecipeManager {
         return generateRecipe(resourceUri);
     }
     
-    public synchronized Collection<LocalRecipe> getIncompleteRecipes() {
+    public synchronized Collection<LocalRecipe> getAllIncompleteRecipes() {
          return this.incompleteRecipes.values();
     }
     
@@ -188,7 +188,7 @@ public class RecipeManager {
         this.chunks.clear();
     }
     
-    public synchronized void completeRecipe(LocalRecipe recipe) {
+    public synchronized void completeRecipeHash(LocalRecipe recipe) {
         this.recipes.put(recipe.getResourcePath(), recipe);
         Collection<RecipeChunk> allChunk = recipe.getAllChunks();
         for (RecipeChunk chunk : allChunk) {

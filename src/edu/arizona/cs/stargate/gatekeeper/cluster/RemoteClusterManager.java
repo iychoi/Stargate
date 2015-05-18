@@ -43,13 +43,15 @@ public class RemoteClusterManager {
 
     private static final Log LOG = LogFactory.getLog(RemoteClusterManager.class);
     
-    private static final String REMOTECLUSTERMANAGER_MAP_ID = "RemoteClusterManager";
+    private static final String REMOTECLUSTERMANAGER_CLUSTERS_MAP_ID = "RemoteClusterManager_Clusters";
+    private static final String REMOTECLUSTERMANAGER_PENDING_CLUSTERS_MAP_ID = "RemoteClusterManager_Pending_Clusters";
     
     private static RemoteClusterManager instance;
 
     private DistributedService distributedService;
     
-    private JsonReplicatedMap<String, Cluster> remoteClusters;
+    private JsonReplicatedMap<String, Cluster> clusters;
+    private JsonReplicatedMap<String, Cluster> pendingClusters;
     
     public static RemoteClusterManager getInstance(DistributedService distributedService) {
         synchronized (RemoteClusterManager.class) {
@@ -71,11 +73,12 @@ public class RemoteClusterManager {
     
     RemoteClusterManager(DistributedService distributedService) {
         this.distributedService = distributedService;
-        this.remoteClusters = new JsonReplicatedMap<String, Cluster>(this.distributedService.getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), Cluster.class);
+        this.clusters = new JsonReplicatedMap<String, Cluster>(this.distributedService.getReplicatedMap(REMOTECLUSTERMANAGER_CLUSTERS_MAP_ID), Cluster.class);
+        this.pendingClusters = new JsonReplicatedMap<String, Cluster>(this.distributedService.getReplicatedMap(REMOTECLUSTERMANAGER_PENDING_CLUSTERS_MAP_ID), Cluster.class);
     }
     
     public synchronized Collection<Cluster> getAllClusters() {
-        return Collections.unmodifiableCollection(this.remoteClusters.values());
+        return Collections.unmodifiableCollection(this.clusters.values());
     }
     
     public synchronized Cluster getCluster(String name) {
@@ -83,7 +86,7 @@ public class RemoteClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.remoteClusters.get(name);
+        return this.clusters.get(name);
     }
     
     public synchronized boolean hasCluster(String name) {
@@ -91,16 +94,16 @@ public class RemoteClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        return this.remoteClusters.containsKey(name);
+        return this.clusters.containsKey(name);
     }
     
     public synchronized void removeAllClusters() {
         ArrayList<String> toberemoved = new ArrayList<String>();
-        Set<String> keys = this.remoteClusters.keySet();
+        Set<String> keys = this.clusters.keySet();
         toberemoved.addAll(keys);
         
         for(String key : toberemoved) {
-            Cluster cluster = this.remoteClusters.get(key);
+            Cluster cluster = this.clusters.get(key);
 
             if(cluster != null) {
                 removeCluster(cluster);
@@ -108,7 +111,7 @@ public class RemoteClusterManager {
         }
     }
     
-    public synchronized void addClusters(Collection<Cluster> clusters) throws ClusterAlreadyAddedException {
+    public synchronized void addCluster(Collection<Cluster> clusters) throws ClusterAlreadyAddedException {
         for(Cluster cluster : clusters) {
             addCluster(cluster);
         }
@@ -119,11 +122,11 @@ public class RemoteClusterManager {
             throw new IllegalArgumentException("cluster is empty or null");
         }
         
-        if(this.remoteClusters.containsKey(cluster.getName())) {
+        if(this.clusters.containsKey(cluster.getName())) {
             throw new ClusterAlreadyAddedException("cluster " + cluster.getName() + " is already added");
         }
         
-        this.remoteClusters.put(cluster.getName(), cluster);
+        this.clusters.put(cluster.getName(), cluster);
     }
     
     public synchronized void removeCluster(Cluster cluster) {
@@ -139,12 +142,44 @@ public class RemoteClusterManager {
             throw new IllegalArgumentException("name is empty or null");
         }
         
-        this.remoteClusters.remove(name);
+        this.clusters.remove(name);
     }
     
     public synchronized void updateCluster(Cluster cluster) {
-        this.remoteClusters.remove(cluster.getName());
-        this.remoteClusters.put(cluster.getName(), cluster);
+        this.clusters.remove(cluster.getName());
+        this.clusters.put(cluster.getName(), cluster);
+    }
+    
+    public synchronized void addPendingCluster(Collection<Cluster> clusters) throws ClusterAlreadyAddedException {
+        for(Cluster cluster : clusters) {
+            addPendingCluster(cluster);
+        }
+    }
+    
+    public synchronized void addPendingCluster(Cluster cluster) throws ClusterAlreadyAddedException {
+        if(cluster == null || cluster.isEmpty()) {
+            throw new IllegalArgumentException("cluster is empty or null");
+        }
+        
+        if(this.pendingClusters.containsKey(cluster.getName())) {
+            throw new ClusterAlreadyAddedException("cluster " + cluster.getName() + " is already added");
+        }
+        
+        this.pendingClusters.put(cluster.getName(), cluster);
+    }
+    
+    public synchronized Collection<Cluster> getAllPendingClusters() {
+        return this.pendingClusters.values();
+    }
+    
+    public synchronized void completeClusterSync(Cluster prev, Cluster cluster) {
+        if(!this.clusters.containsKey(cluster.getName())) {
+            this.clusters.put(cluster.getName(), cluster);
+        } else {
+            updateCluster(cluster);
+        }
+        
+        this.pendingClusters.remove(prev.getName());
     }
 
     @Override

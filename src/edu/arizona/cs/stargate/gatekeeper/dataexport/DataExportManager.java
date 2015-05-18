@@ -107,9 +107,9 @@ public class DataExportManager {
         }
     }
     
-    public synchronized void addDataExports(Collection<DataExport> exports) throws DataExportAlreadyAddedException {
+    public synchronized void addDataExport(Collection<DataExport> exports) throws DataExportAlreadyAddedException {
         for(DataExport export : exports) {
-            addDataExport(export);
+            DataExportManager.this.addDataExport(export);
         }
     }
     

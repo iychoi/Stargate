@@ -93,7 +93,7 @@ public class ClusterManagerRestfulClient extends AClusterManagerRestfulAPI {
     }
     
     @Override
-    public Cluster getRemoteClusters(String name) throws Exception {
+    public Cluster getRemoteCluster(String name) throws Exception {
         RestfulResponse<Collection<Cluster>> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(AClusterManagerRestfulAPI.REMOTE_CLUSTER_PATH));

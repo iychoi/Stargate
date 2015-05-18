@@ -112,7 +112,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
                 if(name.equals("*")) {
                     return new RestfulResponse<Collection<Cluster>>(getAllRemoteClusters());
                 } else {
-                    Cluster cluster = getRemoteClusters(name);
+                    Cluster cluster = getRemoteCluster(name);
                     List<Cluster> clusters = new ArrayList<Cluster>();
                     clusters.add(cluster);
                     
@@ -127,7 +127,7 @@ public class ClusterManagerRestfulServlet extends AClusterManagerRestfulAPI {
     }
     
     @Override
-    public Cluster getRemoteClusters(String name) throws Exception {
+    public Cluster getRemoteCluster(String name) throws Exception {
         RemoteClusterManager rcm = getRemoteClusterManager();
         return rcm.getCluster(name);
     }
