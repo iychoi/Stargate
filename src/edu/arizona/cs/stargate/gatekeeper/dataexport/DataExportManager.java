@@ -24,9 +24,9 @@
 
 package edu.arizona.cs.stargate.gatekeeper.dataexport;
 
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.JsonReplicatedMap;
+import edu.arizona.cs.stargate.gatekeeper.distributed.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,8 +59,8 @@ public class DataExportManager {
     
     DataExportManager() {
         try {
-            DistributedCacheService distributedCacheService = DistributedCacheService.getInstance();
-            this.dataExports = new JsonReplicatedMap<String, DataExport>(distributedCacheService.getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExport.class);
+            DistributedService ds = DistributedService.getInstance();
+            this.dataExports = new JsonReplicatedMap<String, DataExport>(ds.getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExport.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);

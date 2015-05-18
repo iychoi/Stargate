@@ -122,7 +122,7 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
         for(DataExport export : local_exports) {
             LocalRecipe recipe = rcm.getRecipe(export.getResourcePath());
             if(recipe != null) {
-                VirtualFileStatus t_status = new VirtualFileStatus(lcm.getName(), export.getVirtualPath(), false, recipe.getSize(), recipe.getChunkSize(), recipe.getLastModified());
+                VirtualFileStatus t_status = new VirtualFileStatus(lcm.getName(), export.getVirtualPath(), false, recipe.getSize(), recipe.getChunkSize(), recipe.getModificationTime());
             }
         }
         return status;

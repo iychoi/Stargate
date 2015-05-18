@@ -24,9 +24,8 @@
 
 package edu.arizona.cs.stargate.gatekeeper.schedule;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,38 +33,21 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class ScheduleManager {
-
-    private static final Log LOG = LogFactory.getLog(ScheduleManager.class);
+public abstract class ALeaderScheduledTask extends AScheduledTask {
     
-    private static final int SCHEDULE_BACKGROUND_WORKER_THREADS = 4;
+    private static final Log LOG = LogFactory.getLog(ALeaderScheduledTask.class);
     
-    private static ScheduleManager instance;
-    
-    private ScheduledExecutorService taskWorker;
-    
-    public static ScheduleManager getInstance() {
-        synchronized (ScheduleManager.class) {
-            if(instance == null) {
-                instance = new ScheduleManager();
+    public void run() {
+        try {
+            GateKeeperService instance = GateKeeperService.getInstance();
+            
+            if(instance.getDistributedService().isLeaderNode()) {
+                process();
             }
-            return instance;
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
         }
     }
     
-    ScheduleManager() {
-        this.taskWorker = Executors.newScheduledThreadPool(SCHEDULE_BACKGROUND_WORKER_THREADS);
-    }
-
-    public synchronized void scheduleTask(AScheduledTask task) {
-        if(task.isRepeatedTask()) {
-            this.taskWorker.scheduleWithFixedDelay(task, task.getDelay(), task.getPeriod(), TimeUnit.SECONDS);
-        } else {
-            this.taskWorker.schedule(task, task.getDelay(), TimeUnit.SECONDS);
-        }
-    }
-    
-    public void stop() {
-        this.taskWorker.shutdown();
-    }
+    public abstract void process();
 }

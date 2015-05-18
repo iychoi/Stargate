@@ -46,10 +46,11 @@ public class RemoteRecipe {
     
     private String virtualPath;
     private String hashAlgorithm;
-    private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
     private int chunkSize;
     private long size;
-    private long lastModified;
+    private long modificationTime;
+    
+    private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
 
     public RemoteRecipe() {
     }
@@ -64,19 +65,19 @@ public class RemoteRecipe {
         return (RemoteRecipe) serializer.fromJson(json, RemoteRecipe.class);
     }
     
-    public RemoteRecipe(String virtualPath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
-        initializeRemoteRecipe(virtualPath, hashAlgorithm, size, lastModified, chunkSize, chunks);
+    public RemoteRecipe(String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
+        initializeRemoteRecipe(virtualPath, hashAlgorithm, size, modificationTime, chunkSize, chunks);
     }
     
     public RemoteRecipe(String virtualPath, LocalRecipe recipe) {
-        initializeRemoteRecipe(virtualPath, recipe.getHashAlgorithm(), recipe.getSize(), recipe.getLastModified(), recipe.getChunkSize(), recipe.getAllChunks());
+        initializeRemoteRecipe(virtualPath, recipe.getHashAlgorithm(), recipe.getSize(), recipe.getModificationTime(), recipe.getChunkSize(), recipe.getAllChunks());
     }
     
-    private void initializeRemoteRecipe(String virtualPath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
+    private void initializeRemoteRecipe(String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
         this.virtualPath = virtualPath;
         this.hashAlgorithm = hashAlgorithm;
         this.size = size;
-        this.lastModified = lastModified;
+        this.modificationTime = modificationTime;
         this.chunkSize = chunkSize;
         if(chunks != null) {
             this.chunks.addAll(chunks);
@@ -150,14 +151,14 @@ public class RemoteRecipe {
         this.chunkSize = chunkSize;
     }
     
-    @JsonProperty("lastModifiedTime")
-    public long getLastModified() {
-        return this.lastModified;
+    @JsonProperty("modificationTime")
+    public long getModificationTime() {
+        return this.modificationTime;
     }
     
-    @JsonProperty("lastModifiedTime")
-    public void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
+    @JsonProperty("modificationTime")
+    public void setModificationTime(long time) {
+        this.modificationTime = time;
     }
     
     public String toString() {

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.distributedcache;
+package edu.arizona.cs.stargate.gatekeeper.distributed;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.MapConfig;
@@ -30,10 +30,11 @@ import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.IQueue;
+import com.hazelcast.core.Member;
 import com.hazelcast.core.MultiMap;
 import com.hazelcast.core.ReplicatedMap;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import java.util.Queue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,25 +42,25 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class DistributedCacheService {
-    private static final Log LOG = LogFactory.getLog(DistributedCacheService.class);
+public class DistributedService {
+    private static final Log LOG = LogFactory.getLog(DistributedService.class);
     
-    private static DistributedCacheService instance;
+    private static DistributedService instance;
 
-    private DistributedCacheServiceConfiguration config;
+    private DistributedServiceConfiguration config;
     private HazelcastInstance hazelcastInstance;
     
-    public static DistributedCacheService getInstance(DistributedCacheServiceConfiguration config) throws Exception {
-        synchronized (DistributedCacheService.class) {
+    public static DistributedService getInstance(DistributedServiceConfiguration config) throws Exception {
+        synchronized (DistributedService.class) {
             if(instance == null) {
-                instance = new DistributedCacheService(config);
+                instance = new DistributedService(config);
             }
             return instance;
         }
     }
     
-    public static DistributedCacheService getInstance() throws ServiceNotStartedException {
-        synchronized (DistributedCacheService.class) {
+    public static DistributedService getInstance() throws ServiceNotStartedException {
+        synchronized (DistributedService.class) {
             if(instance == null) {
                 throw new ServiceNotStartedException("Cache service is not started");
             }
@@ -67,9 +68,9 @@ public class DistributedCacheService {
         }
     }
     
-    DistributedCacheService(DistributedCacheServiceConfiguration config) throws Exception {
+    DistributedService(DistributedServiceConfiguration config) throws Exception {
         if(config == null) {
-            throw new Exception("DistributedCacheServiceConfiguration is null. Failed to start DistributedCacheService.");
+            throw new Exception("DistributedServiceConfiguration is null. Failed to start DistributedService.");
         }
         
         this.config = config;
@@ -77,7 +78,7 @@ public class DistributedCacheService {
     
     public synchronized void start() throws Exception {
         startHazelcast();
-        LOG.info("Distributed Cache service started");
+        LOG.info("Distributed service started");
     }
     
     private synchronized void startHazelcast() throws Exception {
@@ -127,7 +128,7 @@ public class DistributedCacheService {
     
     public synchronized void stop() throws InterruptedException {
         stopHazelcast();
-        LOG.info("Distributed Cache service stopped");
+        LOG.info("Distributed service stopped");
     }
     
     private synchronized void stopHazelcast() throws InterruptedException {
@@ -146,7 +147,12 @@ public class DistributedCacheService {
         return this.hazelcastInstance.getReplicatedMap(name);
     }
     
-    public synchronized Queue getDistributedQueue(String name) {
+    public synchronized IQueue getDistributedQueue(String name) {
         return this.hazelcastInstance.getQueue(name);
+    }
+    
+    public synchronized boolean isLeaderNode() {
+        Member member = this.hazelcastInstance.getCluster().getMembers().iterator().next();
+        return member.localMember();
     }
 }

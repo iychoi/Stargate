@@ -43,28 +43,36 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class CachedRemoteGateKeeperClientManager {
-    private static final Log LOG = LogFactory.getLog(CachedRemoteGateKeeperClientManager.class);
+public class RemoteGateKeeperClientManager {
+    private static final Log LOG = LogFactory.getLog(RemoteGateKeeperClientManager.class);
 
     private static final long REMOTECLUSTER_CONNECTION_EXPIRATION_PERIOD = 600;
     private static final long REMOTECLUSTER_UNREACHABLE_RECORD_EXPIRATION_PERIOD = 600;
     
-    private static CachedRemoteGateKeeperClientManager instance;
+    private static RemoteGateKeeperClientManager instance;
     
     private Map<String, GateKeeperClient> gatekeeperClients = new HashMap<String, GateKeeperClient>();
     private Map<String, Long> lastUpdates = new HashMap<String, Long>();
     private Map<URI, Long> unreachableURIs = new HashMap<URI, Long>();
     
-    public static CachedRemoteGateKeeperClientManager getInstance() {
-        synchronized (CachedRemoteGateKeeperClientManager.class) {
+    public static RemoteGateKeeperClientManager getInstance() {
+        synchronized (RemoteGateKeeperClientManager.class) {
             if(instance == null) {
-                instance = new CachedRemoteGateKeeperClientManager();
+                instance = new RemoteGateKeeperClientManager();
             }
             return instance;
         }
     }
     
-    CachedRemoteGateKeeperClientManager() {
+    RemoteGateKeeperClientManager() {
+    }
+    
+    public synchronized GateKeeperClient getTempGateKeeperClient(URI serviceURL) {
+        GateKeeperClientConfiguration gateKeeperClientConfiguration = new GateKeeperClientConfiguration(serviceURL);
+        GateKeeperClient gateKeeperClient = new GateKeeperClient(gateKeeperClientConfiguration);
+        gateKeeperClient.start();
+
+        return gateKeeperClient;
     }
     
     public synchronized GateKeeperClient getGateKeeperClient(String cluster) {
@@ -131,6 +139,6 @@ public class CachedRemoteGateKeeperClientManager {
     
     @Override
     public synchronized String toString() {
-        return "CachedRemoteGateKeeperClientManager";
+        return "RemoteGateKeeperClientManager";
     }
 }

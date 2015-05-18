@@ -22,11 +22,11 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.schedule;
+package edu.arizona.cs.stargate.gatekeeper.distributed;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import edu.arizona.cs.stargate.common.JsonSerializer;
+import java.io.IOException;
+import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,38 +34,47 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class ScheduleManager {
+public class JsonQueueIterator<V> implements Iterator<V> {
 
-    private static final Log LOG = LogFactory.getLog(ScheduleManager.class);
+    private static final Log LOG = LogFactory.getLog(JsonQueueIterator.class);
     
-    private static final int SCHEDULE_BACKGROUND_WORKER_THREADS = 4;
+    private Iterator<String> internalIterator;
+    private JsonSerializer serializer;
+    private Class<? extends V> valueClass;
     
-    private static ScheduleManager instance;
-    
-    private ScheduledExecutorService taskWorker;
-    
-    public static ScheduleManager getInstance() {
-        synchronized (ScheduleManager.class) {
-            if(instance == null) {
-                instance = new ScheduleManager();
-            }
-            return instance;
-        }
+    public JsonQueueIterator(Iterator<String> internalIterator, Class<? extends V> clazz) {
+        this.internalIterator = internalIterator;
+        this.valueClass = clazz;
+        this.serializer = new JsonSerializer();
     }
     
-    ScheduleManager() {
-        this.taskWorker = Executors.newScheduledThreadPool(SCHEDULE_BACKGROUND_WORKER_THREADS);
+    public Iterator<String> getInternalIterator() {
+        return this.internalIterator;
+    }
+    
+    @Override
+    public boolean hasNext() {
+        return this.internalIterator.hasNext();
     }
 
-    public synchronized void scheduleTask(AScheduledTask task) {
-        if(task.isRepeatedTask()) {
-            this.taskWorker.scheduleWithFixedDelay(task, task.getDelay(), task.getPeriod(), TimeUnit.SECONDS);
+    @Override
+    public V next() {
+        String json = this.internalIterator.next();
+        if(json == null) {
+            return null;
         } else {
-            this.taskWorker.schedule(task, task.getDelay(), TimeUnit.SECONDS);
+            try {
+                return (V) this.serializer.fromJson(json, this.valueClass);
+            } catch (IOException ex) {
+                LOG.error(ex);
+                return null;
+            }
         }
     }
-    
-    public void stop() {
-        this.taskWorker.shutdown();
+
+    @Override
+    public void remove() {
+        this.internalIterator.remove();
     }
+    
 }

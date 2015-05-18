@@ -26,13 +26,9 @@ package edu.arizona.cs.stargate.service;
 
 import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
-import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -45,7 +41,6 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
     public static final String DEFAULT_CONFIG_FILEPATH = "service.json";
     
     private GateKeeperServiceConfiguration gatekeeperServiceConfig;
-    private ArrayList<GateKeeperClientConfiguration> gatekeeperClientConfigs = new ArrayList<GateKeeperClientConfiguration>();
     
     public static StargateServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -58,27 +53,6 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
     }
     
     public StargateServiceConfiguration() {
-    }
-    
-    @JsonIgnore
-    public void addGatekeeperClientConfiguration(GateKeeperClientConfiguration conf) {
-        super.verifyMutable();
-        
-        this.gatekeeperClientConfigs.add(conf);
-    }
-    
-    @JsonProperty("gatekeeperClient")
-    public Collection<GateKeeperClientConfiguration> getGatekeeperClientConfigurations() {
-        return Collections.unmodifiableCollection(this.gatekeeperClientConfigs);
-    }
-    
-    @JsonProperty("gatekeeperClient")
-    public void addGatekeeperClientConfigurations(Collection<GateKeeperClientConfiguration> configurations) {
-        super.verifyMutable();
-        
-        for(GateKeeperClientConfiguration conf : configurations) {
-            addGatekeeperClientConfiguration(conf);
-        }
     }
     
     @JsonProperty("gatekeeperService")
@@ -99,8 +73,5 @@ public class StargateServiceConfiguration extends ImmutableConfiguration {
         super.setImmutable();
         
         this.gatekeeperServiceConfig.setImmutable();
-        for(GateKeeperClientConfiguration conf : this.gatekeeperClientConfigs) {
-            conf.setImmutable();
-        }
     }
 }

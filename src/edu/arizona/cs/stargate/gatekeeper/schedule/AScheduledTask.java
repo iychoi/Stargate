@@ -22,35 +22,16 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.intercluster;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+package edu.arizona.cs.stargate.gatekeeper.schedule;
 
 /**
  *
  * @author iychoi
  */
-public class ClusterSynchronizationManager {
-    private static final Log LOG = LogFactory.getLog(ClusterSynchronizationManager.class);
+public abstract class AScheduledTask implements Runnable {
     
-    private static ClusterSynchronizationManager instance;
-    
-    public static ClusterSynchronizationManager getInstance() {
-        synchronized (ClusterSynchronizationManager.class) {
-            if(instance == null) {
-                instance = new ClusterSynchronizationManager();
-            }
-            return instance;
-        }
-    }
-    
-    ClusterSynchronizationManager() {
-        
-    }
-    
-    @Override
-    public synchronized String toString() {
-        return "RemoteClusterManager";
-    }
+    public abstract String getName();
+    public abstract boolean isRepeatedTask();
+    public abstract long getDelay();
+    public abstract long getPeriod();
 }

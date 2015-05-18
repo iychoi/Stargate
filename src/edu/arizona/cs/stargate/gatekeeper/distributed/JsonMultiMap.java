@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.distributedcache;
+package edu.arizona.cs.stargate.gatekeeper.distributed;
 
 import com.hazelcast.core.BaseMultiMap;
 import com.hazelcast.core.MultiMap;

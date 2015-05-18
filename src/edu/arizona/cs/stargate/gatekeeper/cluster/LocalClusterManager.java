@@ -24,9 +24,9 @@
 
 package edu.arizona.cs.stargate.gatekeeper.cluster;
 
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.JsonReplicatedMap;
+import edu.arizona.cs.stargate.gatekeeper.distributed.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,8 +61,8 @@ public class LocalClusterManager {
     
     LocalClusterManager() {
         try {
-            DistributedCacheService distributedCacheService = DistributedCacheService.getInstance();
-            this.nodes = new JsonReplicatedMap<String, ClusterNode>(distributedCacheService.getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNode.class);
+            DistributedService ds = DistributedService.getInstance();
+            this.nodes = new JsonReplicatedMap<String, ClusterNode>(ds.getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNode.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);
@@ -196,6 +196,44 @@ public class LocalClusterManager {
         if(nodeRemoved != null) {
             raiseEventForRemoveNode(nodeRemoved);
         }
+    }
+    
+    public synchronized void setNodeUnreachable(ClusterNode node, boolean unreachable) {
+        if(node == null || node.isEmpty()) {
+            throw new IllegalArgumentException("node is empty or null");
+        }
+        
+        setNodeUnreachable(node.getName(), unreachable);
+    }
+    
+    public synchronized void setNodeUnreachable(String name, boolean unreachable) {
+        if(name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("name is empty or null");
+        }
+        
+        if(this.localNode != null) {
+            if(this.localNode.getName().equals(name)) {
+                this.localNode.setUnrechable(unreachable);
+            }
+        }
+        
+        ClusterNode node = this.nodes.remove(name);
+        this.nodes.put(node.getName(), node);
+    }
+    
+    public synchronized void updateNode(ClusterNode node) {
+        if(node == null || node.isEmpty()) {
+            throw new IllegalArgumentException("node is empty or null");
+        }
+        
+        if(this.localNode != null) {
+            if(this.localNode.getName().equals(node.getName())) {
+                this.localNode = node;
+            }
+        }
+        
+        this.nodes.remove(node.getName());
+        this.nodes.put(node.getName(), node);
     }
     
     @Override

@@ -28,11 +28,11 @@ import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.MapEvent;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.JsonIMap;
+import edu.arizona.cs.stargate.gatekeeper.distributed.JsonIMap;
 import edu.arizona.cs.stargate.common.DataFormatUtils;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
@@ -95,9 +95,9 @@ public class RecipeManager {
         }
         
         try {
-            DistributedCacheService distributedCacheService = DistributedCacheService.getInstance();
-            this.recipes = new JsonIMap<URI, LocalRecipe>(distributedCacheService.getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
-            this.pendingRecipes = new JsonIMap<URI, LocalRecipe>(distributedCacheService.getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), LocalRecipe.class);
+            DistributedService ds = DistributedService.getInstance();
+            this.recipes = new JsonIMap<URI, LocalRecipe>(ds.getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
+            this.pendingRecipes = new JsonIMap<URI, LocalRecipe>(ds.getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), LocalRecipe.class);
             this.pendingRecipes.addEntryListener(new EntryListener<URI, LocalRecipe>(){
 
                 @Override
@@ -127,7 +127,7 @@ public class RecipeManager {
                 }
             }, true);
             
-            this.chunks = new JsonIMap<String, URI[]>(distributedCacheService.getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
+            this.chunks = new JsonIMap<String, URI[]>(ds.getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);

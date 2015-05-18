@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.distributedcache;
+package edu.arizona.cs.stargate.gatekeeper.distributed;
 
 import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
@@ -35,7 +35,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class DistributedCacheServiceConfiguration extends ImmutableConfiguration {
+public class DistributedServiceConfiguration extends ImmutableConfiguration {
     
     public static final int DEFAULT_SERVICE_PORT = 21010;
     
@@ -43,17 +43,17 @@ public class DistributedCacheServiceConfiguration extends ImmutableConfiguration
     private String myHostAddr;
     private int port = DEFAULT_SERVICE_PORT;
     
-    public static DistributedCacheServiceConfiguration createInstance(File file) throws IOException {
+    public static DistributedServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (DistributedCacheServiceConfiguration) serializer.fromJsonFile(file, DistributedCacheServiceConfiguration.class);
+        return (DistributedServiceConfiguration) serializer.fromJsonFile(file, DistributedServiceConfiguration.class);
     }
     
-    public static DistributedCacheServiceConfiguration createInstance(String json) throws IOException {
+    public static DistributedServiceConfiguration createInstance(String json) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
-        return (DistributedCacheServiceConfiguration) serializer.fromJson(json, DistributedCacheServiceConfiguration.class);
+        return (DistributedServiceConfiguration) serializer.fromJson(json, DistributedServiceConfiguration.class);
     }
     
-    public DistributedCacheServiceConfiguration() {
+    public DistributedServiceConfiguration() {
     }
     
     @JsonProperty("knownHostAddr")

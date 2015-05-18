@@ -24,10 +24,10 @@
 
 package edu.arizona.cs.stargate.gatekeeper.cluster;
 
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.JsonReplicatedMap;
+import edu.arizona.cs.stargate.gatekeeper.distributed.JsonReplicatedMap;
 import edu.arizona.cs.stargate.common.ClusterAlreadyAddedException;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,8 +60,8 @@ public class RemoteClusterManager {
     
     RemoteClusterManager() {
         try {
-            DistributedCacheService distributedCacheService = DistributedCacheService.getInstance();
-            this.remoteClusters = new JsonReplicatedMap<String, Cluster>(distributedCacheService.getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), Cluster.class);
+            DistributedService ds = DistributedService.getInstance();
+            this.remoteClusters = new JsonReplicatedMap<String, Cluster>(ds.getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), Cluster.class);
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             throw new RuntimeException(ex);

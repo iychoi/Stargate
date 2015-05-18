@@ -49,7 +49,7 @@ public class LocalRecipe {
     private String hashAlgorithm;
     private int chunkSize;
     private long size;
-    private long lastModified;
+    private long modificationTime;
     
     private ArrayList<RecipeChunk> chunks = new ArrayList<RecipeChunk>();
 
@@ -66,15 +66,15 @@ public class LocalRecipe {
         return (LocalRecipe) serializer.fromJson(json, LocalRecipe.class);
     }
     
-    public LocalRecipe(URI resourcePath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
-        initializeLocalRecipe(resourcePath, hashAlgorithm, size, lastModified, chunkSize, chunks);
+    public LocalRecipe(URI resourcePath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
+        initializeLocalRecipe(resourcePath, hashAlgorithm, size, modificationTime, chunkSize, chunks);
     }
     
-    private void initializeLocalRecipe(URI resourcePath, String hashAlgorithm, long size, long lastModified, int chunkSize, Collection<RecipeChunk> chunks) {
+    private void initializeLocalRecipe(URI resourcePath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
         this.resourcePath = resourcePath;
         this.hashAlgorithm = hashAlgorithm;
         this.size = size;
-        this.lastModified = lastModified;
+        this.modificationTime = modificationTime;
         this.chunkSize = chunkSize;
         if(chunks != null) {
             this.chunks.addAll(chunks);
@@ -148,14 +148,14 @@ public class LocalRecipe {
         this.chunkSize = chunkSize;
     }
     
-    @JsonProperty("lastModifiedTime")
-    public long getLastModified() {
-        return this.lastModified;
+    @JsonProperty("modificationTime")
+    public long getModificationTime() {
+        return this.modificationTime;
     }
     
-    @JsonProperty("lastModifiedTime")
-    public void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
+    @JsonProperty("modificationTime")
+    public void setModificationTime(long time) {
+        this.modificationTime = time;
     }
     
     public String toString() {

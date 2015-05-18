@@ -28,7 +28,7 @@ import edu.arizona.cs.stargate.common.ImmutableConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedServiceConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManagerConfiguration;
 import java.io.File;
 import java.io.IOException;
@@ -45,10 +45,12 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     
     public static final int DEFAULT_SERVICE_PORT = 11010;
+    public static final int DEFAULT_SYNCHRONIZATION_PERIOD = 60*60; // 1hour
     
     private int servicePort = DEFAULT_SERVICE_PORT;
+    private int synchronizationPeriod = DEFAULT_SYNCHRONIZATION_PERIOD;
     
-    private DistributedCacheServiceConfiguration distributedCacheServiceConfig;
+    private DistributedServiceConfiguration distributedCacheServiceConfig;
     
     private Cluster localCluster;
     private ArrayList<Cluster> remoteClusters = new ArrayList<Cluster>();
@@ -67,6 +69,7 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     }
     
     public GateKeeperServiceConfiguration() {
+        this.distributedCacheServiceConfig = new DistributedServiceConfiguration();
         this.recipeManagerConfiguration = new RecipeManagerConfiguration();
     }
     
@@ -82,15 +85,25 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
         return this.servicePort;
     }
     
+    @JsonProperty("synchronizationPeriod")
+    public void setSynchronizationPeriod(int sec) {
+        this.synchronizationPeriod = sec;
+    }
+    
+    @JsonProperty("synchronizationPeriod")
+    public int getSynchronizationPeriod() {
+        return this.synchronizationPeriod;
+    }
+    
     @JsonProperty("dhtService")
-    public void setDistributedCacheServiceConfiguration(DistributedCacheServiceConfiguration conf) {
+    public void setDistributedCacheServiceConfiguration(DistributedServiceConfiguration conf) {
         super.verifyMutable();
         
         this.distributedCacheServiceConfig = conf;
     }
     
     @JsonProperty("dhtService")
-    public DistributedCacheServiceConfiguration getDistributedCacheServiceConfiguration() {
+    public DistributedServiceConfiguration getDistributedCacheServiceConfiguration() {
         return this.distributedCacheServiceConfig;
     }
     

@@ -22,8 +22,11 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.distributedcache;
+package edu.arizona.cs.stargate.gatekeeper.distributed;
 
+import com.hazelcast.core.IQueue;
+import com.hazelcast.core.ItemEvent;
+import com.hazelcast.core.ItemListener;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,17 +44,17 @@ public class JsonQueue<V extends Object> implements Queue<V> {
 
     private static final Log LOG = LogFactory.getLog(JsonQueue.class);
     
-    private Queue<String> internalQueue;
+    private IQueue<String> internalQueue;
     private JsonSerializer serializer;
     private Class<? extends V> valueClass;
     
-    public JsonQueue(Queue<String> internalQueue, Class<? extends V> clazz) {
+    public JsonQueue(IQueue<String> internalQueue, Class<? extends V> clazz) {
         this.internalQueue = internalQueue;
         this.valueClass = clazz;
         this.serializer = new JsonSerializer();
     }
     
-    public Queue<String> getInternalQueue() {
+    public IQueue<String> getInternalQueue() {
         return this.internalQueue;
     }
     
@@ -268,4 +271,31 @@ public class JsonQueue<V extends Object> implements Queue<V> {
         this.internalQueue.clear();
     }
     
+    public synchronized String addItemListener(final ItemListener<V> il, boolean bln) {
+        return this.internalQueue.addItemListener(new ItemListener<String>() {
+            
+            private ItemEvent<V> convEntry(ItemEvent<String> ie) {
+                String valueJson = ie.getItem();
+                V value = null;
+                if(valueJson != null) {
+                    try {
+                        value = (V) serializer.fromJson(valueJson, valueClass);
+                    } catch (IOException ex) {
+                    }
+                }
+                
+                return new ItemEvent<V>(ie.getEventType().name(), ie.getEventType(), value, ie.getMember());
+            }
+            
+            @Override
+            public void itemAdded(ItemEvent<String> ie) {
+                il.itemAdded(convEntry(ie));
+            }
+
+            @Override
+            public void itemRemoved(ItemEvent<String> ie) {
+                il.itemRemoved(convEntry(ie));
+            }
+        }, bln);
+    }
 }

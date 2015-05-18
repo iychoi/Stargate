@@ -21,12 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package edu.arizona.cs.stargate.gatekeeper.intercluster;
 
-package edu.arizona.cs.stargate.gatekeeper.distributedcache;
-
-import edu.arizona.cs.stargate.common.JsonSerializer;
-import java.io.IOException;
-import java.util.Iterator;
+import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
+import edu.arizona.cs.stargate.gatekeeper.schedule.ALeaderScheduledTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,47 +33,36 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class JsonQueueIterator<V> implements Iterator<V> {
-
-    private static final Log LOG = LogFactory.getLog(JsonQueueIterator.class);
+public class InterclusterRecipeSyncTask extends ALeaderScheduledTask {
+    private static final Log LOG = LogFactory.getLog(InterclusterRecipeSyncTask.class);
     
-    private Iterator<String> internalIterator;
-    private JsonSerializer serializer;
-    private Class<? extends V> valueClass;
-    
-    public JsonQueueIterator(Iterator<String> internalIterator, Class<? extends V> clazz) {
-        this.internalIterator = internalIterator;
-        this.valueClass = clazz;
-        this.serializer = new JsonSerializer();
-    }
-    
-    public Iterator<String> getInternalIterator() {
-        return this.internalIterator;
-    }
-    
-    @Override
-    public boolean hasNext() {
-        return this.internalIterator.hasNext();
+    private static final int INTERCLUSTER_RECIPE_SYNC_PERIOD_SEC = 60;
+        
+    public InterclusterRecipeSyncTask() {
     }
 
     @Override
-    public V next() {
-        String json = this.internalIterator.next();
-        if(json == null) {
-            return null;
-        } else {
-            try {
-                return (V) this.serializer.fromJson(json, this.valueClass);
-            } catch (IOException ex) {
-                LOG.error(ex);
-                return null;
-            }
-        }
+    public String getName() {
+        return "InterclusterRecipeSyncTask";
     }
 
     @Override
-    public void remove() {
-        this.internalIterator.remove();
+    public boolean isRepeatedTask() {
+        return true;
     }
-    
+
+    @Override
+    public long getDelay() {
+        return 0;
+    }
+
+    @Override
+    public long getPeriod() {
+        return INTERCLUSTER_RECIPE_SYNC_PERIOD_SEC;
+    }
+
+    @Override
+    public void process() {
+        //TODO
+    }
 }

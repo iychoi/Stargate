@@ -35,12 +35,14 @@ import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
 import edu.arizona.cs.stargate.common.LocalNodeInfoUtils;
 import edu.arizona.cs.stargate.gatekeeper.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheService;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.intercluster.CachedRemoteGateKeeperClientManager;
+import edu.arizona.cs.stargate.gatekeeper.intercluster.InterclusterRecipeSyncTask;
+import edu.arizona.cs.stargate.gatekeeper.intercluster.RemoteGateKeeperClientManager;
 import edu.arizona.cs.stargate.gatekeeper.restful.GateKeeperRestfulInterface;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.schedule.ScheduleManager;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -62,14 +64,15 @@ public class GateKeeperService {
     
     private GateKeeperRestfulInterface restfulInterface;
     
-    private DistributedCacheService distributedCacheService;
+    private DistributedService distributedService;
     
     private LocalClusterManager localClusterManager;
     private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
     private RecipeManager recipeManager;
     
-    private CachedRemoteGateKeeperClientManager gatekeeperClientManager;
+    private ScheduleManager scheduleManager;
+    private RemoteGateKeeperClientManager gatekeeperClientManager;
     
     private GateKeeperRuntimeInfo runtimeInfo;
     
@@ -98,12 +101,13 @@ public class GateKeeperService {
             this.config = config;
             this.config.setImmutable();
             
-            this.distributedCacheService = DistributedCacheService.getInstance(config.getDistributedCacheServiceConfiguration());
+            this.distributedService = DistributedService.getInstance(config.getDistributedCacheServiceConfiguration());
+            
             // start distributed cache service
-            this.distributedCacheService.start();
+            this.distributedService.start();
             
             this.localClusterManager = LocalClusterManager.getInstance();
-            registerLocalClusterInfo(this.config.getLocalCluster());
+            registerLocalClusterNodes(this.config.getLocalCluster());
 
             this.remoteClusterManager = RemoteClusterManager.getInstance();
 
@@ -116,13 +120,19 @@ public class GateKeeperService {
             
             this.restfulInterface = GateKeeperRestfulInterface.getInstance();
             
-            this.gatekeeperClientManager = CachedRemoteGateKeeperClientManager.getInstance();
+            this.gatekeeperClientManager = RemoteGateKeeperClientManager.getInstance();
+            this.scheduleManager = ScheduleManager.getInstance();
+            
+            registerRemoteClusters(this.config.getRemoteClusters());
         }
     }
     
     public synchronized void start() throws Exception {
         // start restful interface
         this.restfulInterface.start(this.config.getServicePort());
+        
+        // start schedules
+        registerSchedules();
         
         // write runtime info
         writeRuntimeConfiguration();
@@ -143,14 +153,12 @@ public class GateKeeperService {
             LOG.error(ex);
         }
         
-        /*
-        // start distributed cache service
+        // stop distributed cache service
         try {
-            this.distributedCacheService.stop();
+            this.distributedService.stop();
         } catch(Exception ex) {
             LOG.error(ex);
         }
-        */
     }
     
     private void writeRuntimeConfiguration() throws IOException {
@@ -165,10 +173,10 @@ public class GateKeeperService {
         TemporaryFileUtils.clearTempRoot();
     }
     
-    private void registerLocalClusterInfo(Cluster clusterInfo) {
+    private void registerLocalClusterNodes(Cluster cluster) {
         // name
         if(this.localClusterManager.getName() == null || this.localClusterManager.getName().isEmpty()) {
-            if(clusterInfo != null && clusterInfo.getName() != null && !clusterInfo.getName().isEmpty()) {
+            if(cluster != null && cluster.getName() != null && !cluster.getName().isEmpty()) {
                 this.localClusterManager.setName(this.config.getLocalCluster().getName());
             } else {
                 this.localClusterManager.setName("Stargate_" + NameUtils.generateRandomString(10));
@@ -176,7 +184,7 @@ public class GateKeeperService {
         }
         
         // node
-        if(clusterInfo != null) {
+        if(cluster != null) {
             try {
                 Collection<ClusterNode> nodes = this.config.getLocalCluster().getAllNodes();
                 if(nodes != null) {
@@ -209,6 +217,28 @@ public class GateKeeperService {
         }
     }
     
+    private void registerRemoteClusters(Collection<Cluster> clusters) {
+        for(Cluster cluster : clusters) {
+            Cluster remoteCluster = null;
+            Collection<ClusterNode> nodes = cluster.getAllNodes();
+            for(ClusterNode node : nodes) {
+                try {
+                    GateKeeperClient client = this.gatekeeperClientManager.getTempGateKeeperClient(node.getServiceURL());
+                    remoteCluster = client.getRestfulClient().getClusterManagerClient().getLocalCluster();
+                    client.stop();
+                    
+                    if(remoteCluster != null && remoteCluster.getName() != null && !remoteCluster.getName().isEmpty()) {
+                        // register
+                        this.remoteClusterManager.addCluster(remoteCluster);
+                        break;
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("remote cluster service is unreachable - " + node.getServiceURL());
+                }
+            }
+        }
+    }
+    
     private void addDataExportListener() {
         this.dataExportManager.addConfigChangeEventHandler(new IDataExportConfigurationChangeEventHandler(){
 
@@ -235,8 +265,8 @@ public class GateKeeperService {
         return this.config;
     }
     
-    public synchronized DistributedCacheService getDistributedCacheService() {
-        return this.distributedCacheService;
+    public synchronized DistributedService getDistributedService() {
+        return this.distributedService;
     }
     
     public synchronized LocalClusterManager getLocalClusterManager() {
@@ -255,12 +285,20 @@ public class GateKeeperService {
         return this.recipeManager;
     }
     
-    public synchronized CachedRemoteGateKeeperClientManager getRemoteGateKeeperClientManager() {
+    public synchronized ScheduleManager getScheduleManager() {
+        return this.scheduleManager;
+    }
+    
+    public synchronized RemoteGateKeeperClientManager getRemoteGateKeeperClientManager() {
         return this.gatekeeperClientManager;
     }
     
     @Override
     public synchronized String toString() {
         return "GateKeeperService";
+    }
+
+    private void registerSchedules() {
+        this.scheduleManager.scheduleTask(new InterclusterRecipeSyncTask());
     }
 }

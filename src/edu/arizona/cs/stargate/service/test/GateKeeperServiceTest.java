@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.service.test;
 
-import edu.arizona.cs.stargate.gatekeeper.distributedcache.DistributedCacheServiceConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedServiceConfiguration;
 import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.common.LocalResourceLocator;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
@@ -49,7 +49,7 @@ public class GateKeeperServiceTest {
         try {
             StargateServiceConfiguration serviceConf = new StargateServiceConfiguration();
             
-            DistributedCacheServiceConfiguration dhtConf = new DistributedCacheServiceConfiguration();
+            DistributedServiceConfiguration dhtConf = new DistributedServiceConfiguration();
             dhtConf.setMyHostAddr("localhost:10111");
             
             GateKeeperServiceConfiguration gatekeeperConf = new GateKeeperServiceConfiguration();
