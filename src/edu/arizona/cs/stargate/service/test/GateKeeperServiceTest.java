@@ -32,7 +32,7 @@ import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
 import edu.arizona.cs.stargate.gatekeeper.cluster.NodeAlreadyAddedException;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperServiceConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManagerConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManagerConfiguration;
 import edu.arizona.cs.stargate.service.StargateService;
 import edu.arizona.cs.stargate.service.StargateServiceConfiguration;
 import java.io.File;
@@ -64,7 +64,7 @@ public class GateKeeperServiceTest {
             
             gatekeeperConf.setLocalCluster(clusterInfo);
             
-            RecipeManagerConfiguration recipeConfiguration = new RecipeManagerConfiguration();
+            LocalRecipeManagerConfiguration recipeConfiguration = new LocalRecipeManagerConfiguration();
             recipeConfiguration.setChunkSize(1024*1024);
             recipeConfiguration.setHashAlgorithm("SHA-1");
             

@@ -32,10 +32,11 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.ASimpleTransferRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -91,18 +92,13 @@ public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
     
     @Override
     public RemoteRecipe getRecipe(String vpath) throws Exception {
-        DataExportManager dem = DataExportManager.getInstance();
+        DataExportManager dem = getDataExportManager();
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        
         DataExport export = dem.getDataExport(vpath);
         if(export != null) {
-            try {
-                RecipeManager rm = RecipeManager.getInstance();
-                LocalRecipe recipe = rm.getRecipe(export.getResourcePath());
-                
-                return new RemoteRecipe(export.getVirtualPath(), recipe);
-            } catch (ServiceNotStartedException ex) {
-                LOG.error(ex);
-                return null;
-            }
+            LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
+            return new RemoteRecipe(export.getVirtualPath(), recipe);
         } else {
             return null;
         }
@@ -188,7 +184,7 @@ public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
 
     @Override
     public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
-        DataExportManager dem = DataExportManager.getInstance();
+        DataExportManager dem = getDataExportManager();
         DataExport export = dem.getDataExport(vpath);
         if(export != null) {
             return ChunkReaderFactory.getChunkReader(export.getResourcePath(), offset, len);
@@ -199,14 +195,29 @@ public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
     
     @Override
     public InputStream getDataChunk(String hash) throws Exception {
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        Chunk chunk = lrm.getChunk(hash);
+        if(chunk != null) {
+            return ChunkReaderFactory.getChunkReader(chunk.getResourcePath(), chunk.getOffset(), chunk.getLength());
+        } else {
+            return null;
+        }
+    }
+    
+    private LocalRecipeManager getLocalRecipeManager() {
         try {
-            RecipeManager rm = RecipeManager.getInstance();
-            Chunk chunk = rm.getChunk(hash);
-            if(chunk != null) {
-                return ChunkReaderFactory.getChunkReader(chunk.getResourcePath(), chunk.getOffset(), chunk.getLength());
-            } else {
-                return null;
-            }
+            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
+            return gatekeeperService.getLocalRecipeManager();
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
+            return null;
+        }
+    }
+    
+    private DataExportManager getDataExportManager() {
+        try {
+            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
+            return gatekeeperService.getDataExportManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

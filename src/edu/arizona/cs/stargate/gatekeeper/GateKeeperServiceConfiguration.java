@@ -29,7 +29,7 @@ import edu.arizona.cs.stargate.common.JsonSerializer;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedServiceConfiguration;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManagerConfiguration;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManagerConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     private ArrayList<Cluster> remoteClusters = new ArrayList<Cluster>();
     private ArrayList<DataExport> dataExports = new ArrayList<DataExport>();
     
-    private RecipeManagerConfiguration recipeManagerConfiguration;
+    private LocalRecipeManagerConfiguration recipeManagerConfiguration;
     
     public static GateKeeperServiceConfiguration createInstance(File file) throws IOException {
         JsonSerializer serializer = new JsonSerializer();
@@ -70,7 +70,7 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     
     public GateKeeperServiceConfiguration() {
         this.distributedCacheServiceConfig = new DistributedServiceConfiguration();
-        this.recipeManagerConfiguration = new RecipeManagerConfiguration();
+        this.recipeManagerConfiguration = new LocalRecipeManagerConfiguration();
     }
     
     @JsonProperty("port")
@@ -158,12 +158,12 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
     }
     
     @JsonProperty("recipe")
-    public RecipeManagerConfiguration getRecipeManagerConfiguration() {
+    public LocalRecipeManagerConfiguration getRecipeManagerConfiguration() {
         return this.recipeManagerConfiguration;
     }
     
     @JsonProperty("recipe")
-    public void setRecipeManagerConfiguration(RecipeManagerConfiguration config) {
+    public void setRecipeManagerConfiguration(LocalRecipeManagerConfiguration config) {
         super.verifyMutable();
         
         this.recipeManagerConfiguration = config;

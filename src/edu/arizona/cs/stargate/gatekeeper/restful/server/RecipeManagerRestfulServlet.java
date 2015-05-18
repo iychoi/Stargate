@@ -29,7 +29,7 @@ import edu.arizona.cs.stargate.common.DataFormatUtils;
 import edu.arizona.cs.stargate.gatekeeper.recipe.Chunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.ARecipeManagerRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
@@ -83,8 +83,8 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     
     @Override
     public LocalRecipe getRecipe(URI resourceURI) throws Exception {
-        RecipeManager rm = getRecipeManager();
-        return rm.getRecipe(resourceURI);
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        return lrm.getRecipe(resourceURI);
     }
     
     @GET
@@ -115,8 +115,8 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     
     @Override
     public Chunk getChunk(String hash) throws Exception {
-        RecipeManager rm = getRecipeManager();
-        return rm.getChunk(hash);
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        return lrm.getChunk(hash);
     }
     
     @DELETE
@@ -156,20 +156,20 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     
     @Override
     public void removeRecipe(URI resourceURI) throws Exception {
-        RecipeManager rm = getRecipeManager();
-        rm.removeRecipe(resourceURI);
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        lrm.removeRecipe(resourceURI);
     }
 
     @Override
     public void removeAllRecipes() throws Exception {
-        RecipeManager rm = getRecipeManager();
-        rm.removeAllRecipes();
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        lrm.removeAllRecipes();
     }
     
-    private RecipeManager getRecipeManager() {
+    private LocalRecipeManager getLocalRecipeManager() {
         try {
             GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getRecipeManager();
+            return gatekeeperService.getLocalRecipeManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

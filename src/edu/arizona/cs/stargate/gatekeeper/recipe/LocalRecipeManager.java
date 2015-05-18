@@ -42,16 +42,16 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class RecipeManager {
-    private static final Log LOG = LogFactory.getLog(RecipeManager.class);
+public class LocalRecipeManager {
+    private static final Log LOG = LogFactory.getLog(LocalRecipeManager.class);
     
-    private static final String RECIPEMANAGER_RECIPES_MAP_ID = "RecipeManager_Recipes";
-    private static final String RECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
-    private static final String RECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID = "RecipeManager_Incomplete_Recipes";
+    private static final String LOCALRECIPEMANAGER_RECIPES_MAP_ID = "LocalRecipeManager_Recipes";
+    private static final String LOCALRECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
+    private static final String LOCALRECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID = "RecipeManager_Incomplete_Recipes";
     
-    private static RecipeManager instance;
+    private static LocalRecipeManager instance;
 
-    private RecipeManagerConfiguration config;
+    private LocalRecipeManagerConfiguration config;
     private DistributedService distributedService;
     private LocalClusterManager localClusterManager;
     private DataExportManager dataExportManager;
@@ -60,17 +60,17 @@ public class RecipeManager {
     private JsonIMap<URI, LocalRecipe> incompleteRecipes;
     private JsonIMap<String, URI[]> chunks;
     
-    public static RecipeManager getInstance(RecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
-        synchronized (RecipeManager.class) {
+    public static LocalRecipeManager getInstance(LocalRecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
+        synchronized (LocalRecipeManager.class) {
             if(instance == null) {
-                instance = new RecipeManager(config, distributedService, localClusterManager, dataExportManager);
+                instance = new LocalRecipeManager(config, distributedService, localClusterManager, dataExportManager);
             }
             return instance;
         }
     }
     
-    public static RecipeManager getInstance() throws ServiceNotStartedException {
-        synchronized (RecipeManager.class) {
+    public static LocalRecipeManager getInstance() throws ServiceNotStartedException {
+        synchronized (LocalRecipeManager.class) {
             if(instance == null) {
                 throw new ServiceNotStartedException("RecipeManager is not started");
             }
@@ -78,9 +78,9 @@ public class RecipeManager {
         }
     }
     
-    RecipeManager(RecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
+    LocalRecipeManager(LocalRecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
         if(config == null) {
-            this.config = new RecipeManagerConfiguration();
+            this.config = new LocalRecipeManagerConfiguration();
         } else {
             this.config = config;
             this.config.setImmutable();
@@ -90,9 +90,9 @@ public class RecipeManager {
         this.localClusterManager = localClusterManager;
         this.dataExportManager = dataExportManager;
         
-        this.recipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
-        this.incompleteRecipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(RECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID), LocalRecipe.class);
-        this.chunks = new JsonIMap<String, URI[]>(this.distributedService.getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
+        this.recipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(LOCALRECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
+        this.incompleteRecipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(LOCALRECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID), LocalRecipe.class);
+        this.chunks = new JsonIMap<String, URI[]>(this.distributedService.getDistributedMap(LOCALRECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
 
         // register eventhandler
         this.dataExportManager.addConfigChangeEventHandler(new IDataExportConfigurationChangeEventHandler(){
@@ -114,7 +114,7 @@ public class RecipeManager {
         });
     }
     
-    public RecipeManagerConfiguration getConfiguration() {
+    public LocalRecipeManagerConfiguration getConfiguration() {
         return this.config;
     }
     
@@ -254,6 +254,6 @@ public class RecipeManager {
     
     @Override
     public synchronized String toString() {
-        return "RecipeManager";
+        return "LocalRecipeManager";
     }
 }

@@ -35,7 +35,7 @@ import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
 import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AFileSystemRestfulAPI;
 import java.io.IOException;
@@ -114,13 +114,13 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
     public Collection<VirtualFileStatus> getAllVirtualFileStatus() throws Exception {
         LocalClusterManager lcm = getLocalClusterManager();
         DataExportManager dem = getDataExportManager();
-        RecipeManager rcm = getRecipeManager();
+        LocalRecipeManager lrm = getLocalRecipeManager();
         
         ArrayList<VirtualFileStatus> status = new ArrayList<VirtualFileStatus>();
         
         Collection<DataExport> local_exports = dem.getAllDataExports();
         for(DataExport export : local_exports) {
-            LocalRecipe recipe = rcm.getRecipe(export.getResourcePath());
+            LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
             if(recipe != null) {
                 VirtualFileStatus t_status = new VirtualFileStatus(lcm.getName(), export.getVirtualPath(), false, recipe.getSize(), recipe.getChunkSize(), recipe.getModificationTime());
             }
@@ -152,8 +152,8 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
     
     @Override
     public long getBlockSize() throws Exception {
-        RecipeManager rm = getRecipeManager();
-        return rm.getConfiguration().getChunkSize();
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        return lrm.getConfiguration().getChunkSize();
     }
 
     @Override
@@ -171,10 +171,10 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
         }
     }
     
-    private RecipeManager getRecipeManager() {
+    private LocalRecipeManager getLocalRecipeManager() {
         try {
             GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getRecipeManager();
+            return gatekeeperService.getLocalRecipeManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

@@ -41,7 +41,7 @@ import edu.arizona.cs.stargate.gatekeeper.intercluster.InterclusterRecipeSyncTas
 import edu.arizona.cs.stargate.gatekeeper.intercluster.RemoteGateKeeperClientManager;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunkHashTask;
 import edu.arizona.cs.stargate.gatekeeper.restful.GateKeeperRestfulInterface;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
 import edu.arizona.cs.stargate.gatekeeper.schedule.ScheduleManager;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -70,7 +70,7 @@ public class GateKeeperService {
     private LocalClusterManager localClusterManager;
     private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
-    private RecipeManager recipeManager;
+    private LocalRecipeManager localRecipeManager;
     
     private RemoteGateKeeperClientManager gatekeeperClientManager;
     
@@ -120,7 +120,7 @@ public class GateKeeperService {
         this.dataExportManager = DataExportManager.getInstance(this.distributedService);
         
         // recipe
-        this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration(), this.distributedService, this.localClusterManager, this.dataExportManager);
+        this.localRecipeManager = LocalRecipeManager.getInstance(this.config.getRecipeManagerConfiguration(), this.distributedService, this.localClusterManager, this.dataExportManager);
 
         // restful interface
         this.restfulInterface = GateKeeperRestfulInterface.getInstance();
@@ -250,8 +250,8 @@ public class GateKeeperService {
         return this.dataExportManager;
     }
     
-    public synchronized RecipeManager getRecipeManager() {
-        return this.recipeManager;
+    public synchronized LocalRecipeManager getLocalRecipeManager() {
+        return this.localRecipeManager;
     }
     
     public synchronized ScheduleManager getScheduleManager() {
@@ -270,7 +270,7 @@ public class GateKeeperService {
     private void registerSchedules() {
         // register schedule
         this.scheduleManager.scheduleTask(new RemoteClusterSyncTask(this.remoteClusterManager, this.gatekeeperClientManager));
-        this.scheduleManager.scheduleTask(new RecipeChunkHashTask(this.localClusterManager, this.recipeManager));
-        this.scheduleManager.scheduleTask(new InterclusterRecipeSyncTask());
+        this.scheduleManager.scheduleTask(new RecipeChunkHashTask(this.localClusterManager, this.localRecipeManager));
+        this.scheduleManager.scheduleTask(new InterclusterRecipeSyncTask(this.remoteClusterManager));
     }
 }

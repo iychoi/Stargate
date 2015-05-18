@@ -42,18 +42,18 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
     private static final int RECIPE_CHUNK_HASH_PERIOD_SEC = 5;
     
     private LocalClusterManager localClusterManager;
-    private RecipeManager recipeManager;
+    private LocalRecipeManager localRecipeManager;
     
-    public RecipeChunkHashTask(LocalClusterManager localClusterManager, RecipeManager recipeManager) {
+    public RecipeChunkHashTask(LocalClusterManager localClusterManager, LocalRecipeManager localRecipeManager) {
         this.localClusterManager = localClusterManager;
-        this.recipeManager = recipeManager;
+        this.localRecipeManager = localRecipeManager;
     }
     
     @Override
     public void process() {
         LOG.info("Start - RecipeChunkHashTask");
         
-        Collection<LocalRecipe> incompleteRecipes = this.recipeManager.getAllIncompleteRecipes();
+        Collection<LocalRecipe> incompleteRecipes = this.localRecipeManager.getAllIncompleteRecipes();
         if(incompleteRecipes != null && incompleteRecipes.size() > 0) {
             for(LocalRecipe recipe : incompleteRecipes) {
                 try {
@@ -61,7 +61,7 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
                     LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
                     
                     recipeGenerator.hashRecipe(recipe);
-                    this.recipeManager.completeRecipeHash(recipe);
+                    this.localRecipeManager.completeRecipeHash(recipe);
                 } catch (IOException ex) {
                     LOG.error(ex);
                 } catch (NoSuchAlgorithmException ex) {

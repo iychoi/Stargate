@@ -31,7 +31,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class RecipeManagerConfiguration extends ImmutableConfiguration {
+public class LocalRecipeManagerConfiguration extends ImmutableConfiguration {
     
     private static final int DEFAULT_CHUNK_SIZE = 1024*1024;
     private static final String DEFAULT_HASH_ALGORITHM = "SHA-1";

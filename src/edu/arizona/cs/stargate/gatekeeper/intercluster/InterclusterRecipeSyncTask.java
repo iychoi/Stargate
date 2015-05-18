@@ -23,6 +23,7 @@
  */
 package edu.arizona.cs.stargate.gatekeeper.intercluster;
 
+import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.schedule.ALeaderScheduledTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,8 +36,11 @@ public class InterclusterRecipeSyncTask extends ALeaderScheduledTask {
     private static final Log LOG = LogFactory.getLog(InterclusterRecipeSyncTask.class);
     
     private static final int INTERCLUSTER_RECIPE_SYNC_PERIOD_SEC = 60;
+    
+    private final RemoteClusterManager remoteClusterManager;
         
-    public InterclusterRecipeSyncTask() {
+    public InterclusterRecipeSyncTask(RemoteClusterManager remoteClusterManager) {
+        this.remoteClusterManager = remoteClusterManager;
     }
 
     @Override
