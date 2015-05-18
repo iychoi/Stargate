@@ -35,6 +35,10 @@ import edu.arizona.cs.stargate.gatekeeper.restful.api.ARecipeManagerRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -71,13 +75,25 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     @GET
     @Path(ARecipeManagerRestfulAPI.RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<LocalRecipe> responseGetRecipeJSON(
+    public RestfulResponse<Collection<LocalRecipe>> responseGetRecipeJSON(
             @DefaultValue("null") @QueryParam("name") String name
     ) {
         try {
-            return new RestfulResponse<LocalRecipe>(getRecipe(new URI(name)));
+            if(name != null) {
+                if(name.equals("*")) {
+                    return new RestfulResponse<Collection<LocalRecipe>>(getAllRecipes());
+                } else {
+                    LocalRecipe recipe = getRecipe(new URI(name));
+                    List<LocalRecipe> recipes = new ArrayList<LocalRecipe>();
+                    recipes.add(recipe);
+                    
+                    return new RestfulResponse<Collection<LocalRecipe>>(Collections.unmodifiableCollection(recipes));
+                }
+            } else {
+                return new RestfulResponse<Collection<LocalRecipe>>(new Exception("invalid parameter"));
+            }
         } catch(Exception ex) {
-            return new RestfulResponse<LocalRecipe>(ex);
+            return new RestfulResponse<Collection<LocalRecipe>>(ex);
         }
     }
     
@@ -85,6 +101,12 @@ public class RecipeManagerRestfulServlet extends ARecipeManagerRestfulAPI {
     public LocalRecipe getRecipe(URI resourceURI) throws Exception {
         LocalRecipeManager lrm = getLocalRecipeManager();
         return lrm.getRecipe(resourceURI);
+    }
+    
+    @Override
+    public Collection<LocalRecipe> getAllRecipes() throws Exception {
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        return lrm.getAllRecipes();
     }
     
     @GET

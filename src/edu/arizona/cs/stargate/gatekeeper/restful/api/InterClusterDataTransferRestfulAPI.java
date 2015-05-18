@@ -21,50 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package edu.arizona.cs.stargate.gatekeeper.intercluster;
 
-import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterManager;
-import edu.arizona.cs.stargate.gatekeeper.schedule.ALeaderScheduledTask;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+package edu.arizona.cs.stargate.gatekeeper.restful.api;
+
+import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
+import java.io.InputStream;
+import java.util.Collection;
 
 /**
  *
  * @author iychoi
  */
-public class InterclusterRecipeSyncTask extends ALeaderScheduledTask {
-    private static final Log LOG = LogFactory.getLog(InterclusterRecipeSyncTask.class);
+public abstract class InterClusterDataTransferRestfulAPI {
+    public static final String BASE_PATH = "/itransfer";
+    public static final String RECIPE_PATH = "/recipe";
+    public static final String DATA_CHUNK_PATH = "/chunk";
     
-    private static final int INTERCLUSTER_RECIPE_SYNC_PERIOD_SEC = 60;
+    public abstract Collection<RemoteRecipe> getAllRecipes() throws Exception;
     
-    private final RemoteClusterManager remoteClusterManager;
-        
-    public InterclusterRecipeSyncTask(RemoteClusterManager remoteClusterManager) {
-        this.remoteClusterManager = remoteClusterManager;
-    }
-
-    @Override
-    public String getName() {
-        return "InterclusterRecipeSyncTask";
-    }
-
-    @Override
-    public boolean isRepeatedTask() {
-        return true;
-    }
-
-    @Override
-    public long getDelay() {
-        return 0;
-    }
-
-    @Override
-    public long getPeriod() {
-        return INTERCLUSTER_RECIPE_SYNC_PERIOD_SEC;
-    }
-
-    @Override
-    public void process() {
-        //TODO
-    }
+    public abstract RemoteRecipe getRecipe(String vpath) throws Exception;
+    
+    public abstract InputStream getDataChunk(String vpath, long offset, int len) throws Exception;
+    
+    public abstract InputStream getDataChunk(String hash) throws Exception;
 }

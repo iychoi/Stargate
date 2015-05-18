@@ -297,7 +297,7 @@ public class LocalClusterManager {
         try {
             Cluster cluster = new Cluster(this.name);
             cluster.addNode(this.nodes.values());
-            cluster.setLastContact(DateTimeUtils.getCurrentTime());
+            cluster.setLastContactTime(DateTimeUtils.getCurrentTime());
             return cluster;
         } catch (NodeAlreadyAddedException ex) {
             LOG.error(ex);

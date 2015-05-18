@@ -33,6 +33,8 @@ import edu.arizona.cs.stargate.gatekeeper.restful.api.ARecipeManagerRestfulAPI;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,13 +57,13 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
     }
     
     @Override
-    public LocalRecipe getRecipe(URI resourceURI) throws Exception {
-        RestfulResponse<LocalRecipe> response;
+    public Collection<LocalRecipe> getAllRecipes() throws Exception {
+        RestfulResponse<Collection<LocalRecipe>> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));
-            builder.addParam("name", resourceURI.toASCIIString());
+            builder.addParam("name", "*");
             String url = builder.build();
-            response = (RestfulResponse<LocalRecipe>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<LocalRecipe>>(){});
+            response = (RestfulResponse<Collection<LocalRecipe>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<LocalRecipe>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -71,6 +73,31 @@ public class RecipeManagerRestfulClient extends ARecipeManagerRestfulAPI {
             throw response.getException();
         } else {
             return response.getResponse();
+        }
+    }
+    
+    @Override
+    public LocalRecipe getRecipe(URI resourceURI) throws Exception {
+        RestfulResponse<Collection<LocalRecipe>> response;
+        try {
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ARecipeManagerRestfulAPI.RECIPE_PATH));
+            builder.addParam("name", resourceURI.toASCIIString());
+            String url = builder.build();
+            response = (RestfulResponse<Collection<LocalRecipe>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<LocalRecipe>>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw response.getException();
+        } else {
+            Collection<LocalRecipe> recipes = response.getResponse();
+            Iterator<LocalRecipe> iterator = recipes.iterator();
+            if(iterator.hasNext()) {
+                return iterator.next();
+            }
+            return null;
         }
     }
 

@@ -28,10 +28,12 @@ import edu.arizona.cs.stargate.common.WebParamBuilder;
 import com.sun.jersey.api.client.GenericType;
 import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
-import edu.arizona.cs.stargate.gatekeeper.restful.api.ASimpleTransferRestfulAPI;
+import edu.arizona.cs.stargate.gatekeeper.restful.api.InterClusterDataTransferRestfulAPI;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,31 +41,31 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class SimpleTransferRestfulClient extends ASimpleTransferRestfulAPI {
+public class InterClusterDataTransferRestfulClient extends InterClusterDataTransferRestfulAPI {
     
-    private static final Log LOG = LogFactory.getLog(SimpleTransferRestfulClient.class);
+    private static final Log LOG = LogFactory.getLog(InterClusterDataTransferRestfulClient.class);
     
     private GateKeeperRestfulClient gatekeeperRestfulClient;
 
-    public SimpleTransferRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
+    public InterClusterDataTransferRestfulClient(GateKeeperRestfulClient gatekeeperRestfulClient) {
         this.gatekeeperRestfulClient = gatekeeperRestfulClient;
     }
     
     public String getResourcePath(String path) {
-        return PathUtils.concatPath(ASimpleTransferRestfulAPI.BASE_PATH, path);
+        return PathUtils.concatPath(InterClusterDataTransferRestfulAPI.BASE_PATH, path);
     }
     
     public String getResourcePath(String path, String subpath) {
-        String str1 = PathUtils.concatPath(ASimpleTransferRestfulAPI.BASE_PATH, path);
+        String str1 = PathUtils.concatPath(InterClusterDataTransferRestfulAPI.BASE_PATH, path);
         return PathUtils.concatPath(str1, subpath);
     }
     
     @Override
-    public RemoteRecipe getRecipe(String vpath) throws Exception {
-        RestfulResponse<RemoteRecipe> response;
+    public Collection<RemoteRecipe> getAllRecipes() throws Exception {
+        RestfulResponse<Collection<RemoteRecipe>> response;
         try {
-            String url = getResourcePath(ASimpleTransferRestfulAPI.RECIPE_PATH, vpath);
-            response = (RestfulResponse<RemoteRecipe>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<RemoteRecipe>>(){});
+            String url = getResourcePath(InterClusterDataTransferRestfulAPI.RECIPE_PATH, "*");
+            response = (RestfulResponse<Collection<RemoteRecipe>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<RemoteRecipe>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
@@ -75,11 +77,34 @@ public class SimpleTransferRestfulClient extends ASimpleTransferRestfulAPI {
             return response.getResponse();
         }
     }
+    
+    @Override
+    public RemoteRecipe getRecipe(String vpath) throws Exception {
+        RestfulResponse<Collection<RemoteRecipe>> response;
+        try {
+            String url = getResourcePath(InterClusterDataTransferRestfulAPI.RECIPE_PATH, vpath);
+            response = (RestfulResponse<Collection<RemoteRecipe>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<RemoteRecipe>>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw response.getException();
+        } else {
+            Collection<RemoteRecipe> recipes = response.getResponse();
+            Iterator<RemoteRecipe> iterator = recipes.iterator();
+            if(iterator.hasNext()) {
+                return iterator.next();
+            }
+            return null;
+        }
+    }
 
     @Override
     public InputStream getDataChunk(String vpath, long offset, int len) throws Exception {
         try {
-            WebParamBuilder builder = new WebParamBuilder(getResourcePath(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH, vpath));
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(InterClusterDataTransferRestfulAPI.DATA_CHUNK_PATH, vpath));
             builder.addParam("offset", Long.toString(offset));
             builder.addParam("len", Integer.toString(len));
             String url = builder.build();
@@ -93,7 +118,7 @@ public class SimpleTransferRestfulClient extends ASimpleTransferRestfulAPI {
     @Override
     public InputStream getDataChunk(String hash) throws Exception {
         try {
-            String url = getResourcePath(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH, hash);
+            String url = getResourcePath(InterClusterDataTransferRestfulAPI.DATA_CHUNK_PATH, hash);
             return this.gatekeeperRestfulClient.download(url);
         } catch (IOException ex) {
             LOG.error(ex);

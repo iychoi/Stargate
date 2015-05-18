@@ -46,7 +46,7 @@ public class Cluster {
     private static final Log LOG = LogFactory.getLog(Cluster.class);
     
     private String name;
-    private long lastContact;
+    private long lastContactTime;
     private Map<String, ClusterNode> nodes = new HashMap<String, ClusterNode>();
     
     Cluster() {
@@ -65,7 +65,7 @@ public class Cluster {
     
     public Cluster(Cluster that) {
         this.name = that.name;
-        this.lastContact = that.lastContact;
+        this.lastContactTime = that.lastContactTime;
         this.nodes.putAll(that.nodes);
     }
     
@@ -101,14 +101,14 @@ public class Cluster {
         this.name = name;
     }
     
-    @JsonProperty("last_contact")
-    public synchronized long getLastContact() {
-        return this.lastContact;
+    @JsonProperty("last_contact_time")
+    public synchronized long getLastContactTime() {
+        return this.lastContactTime;
     }
     
-    @JsonProperty("last_contact")
-    public synchronized void setLastContact(long lastContact) {
-        this.lastContact = lastContact;
+    @JsonProperty("last_contact_time")
+    public synchronized void setLastContactTime(long lastContactTime) {
+        this.lastContactTime = lastContactTime;
     }
     
     @JsonIgnore

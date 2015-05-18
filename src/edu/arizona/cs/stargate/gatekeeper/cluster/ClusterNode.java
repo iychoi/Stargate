@@ -42,7 +42,7 @@ public class ClusterNode {
     private URI serviceURL;
     private String[] hostAddrs;
     private boolean unreachable;
-    private long lastContact;
+    private long lastContactTime;
     
     ClusterNode() {
         this.name = null;
@@ -66,7 +66,7 @@ public class ClusterNode {
         this.serviceURL = that.serviceURL;
         this.hostAddrs = that.hostAddrs;
         this.unreachable = that.unreachable;
-        this.lastContact = that.lastContact;
+        this.lastContactTime = that.lastContactTime;
     }
     
     public ClusterNode(String name, URI serviceURL) {
@@ -153,14 +153,14 @@ public class ClusterNode {
         this.unreachable = unreachable;
     }
     
-    @JsonProperty("last_contact")
-    public synchronized long getLastContact() {
-        return this.lastContact;
+    @JsonProperty("last_contact_time")
+    public synchronized long getLastContactTime() {
+        return this.lastContactTime;
     }
     
-    @JsonProperty("last_contact")
-    public synchronized void setLastContact(long lastContact) {
-        this.lastContact = lastContact;
+    @JsonProperty("last_contact_time")
+    public synchronized void setLastContactTime(long lastContactTime) {
+        this.lastContactTime = lastContactTime;
     }
     
     @JsonIgnore

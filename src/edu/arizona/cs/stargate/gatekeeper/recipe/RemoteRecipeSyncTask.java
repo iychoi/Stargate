@@ -21,10 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package edu.arizona.cs.stargate.gatekeeper.cluster;
+package edu.arizona.cs.stargate.gatekeeper.recipe;
 
-import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
+import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
+import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
+import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.intercluster.RemoteGateKeeperClientManager;
 import edu.arizona.cs.stargate.gatekeeper.schedule.ALeaderScheduledTask;
 import java.util.Collection;
@@ -35,75 +37,63 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-public class RemoteClusterSyncTask extends ALeaderScheduledTask {
-
-    private static final Log LOG = LogFactory.getLog(RemoteClusterSyncTask.class);
+public class RemoteRecipeSyncTask extends ALeaderScheduledTask {
+    private static final Log LOG = LogFactory.getLog(RemoteRecipeSyncTask.class);
     
-    private static final int REMOTE_CLUSTER_NODE_SYNC_PERIOD_SEC = 60;
+    private static final int REMOTE_RECIPE_SYNC_PERIOD_SEC = 600;
     
     private RemoteClusterManager remoteClusterManager;
+    private RemoteRecipeManager remoteRecipeManager;
     private RemoteGateKeeperClientManager gatekeeperClientManager;
     
-    public RemoteClusterSyncTask(RemoteClusterManager remoteClusterManager, RemoteGateKeeperClientManager gatekeeperClientManager) {
+    public RemoteRecipeSyncTask(RemoteClusterManager remoteClusterManager, RemoteRecipeManager remoteRecipeManager, RemoteGateKeeperClientManager gatekeeperClientManager) {
         this.remoteClusterManager = remoteClusterManager;
+        this.remoteRecipeManager = remoteRecipeManager;
         this.gatekeeperClientManager = gatekeeperClientManager;
     }
     
     @Override
     public void process() {
-        LOG.info("Start - RemoteClusterNodeSyncTask");
-        
-        long currentTime = DateTimeUtils.getCurrentTime();
-        
-        Collection<Cluster> pendingClusters = this.remoteClusterManager.getAllPendingClusters();
-        
-        for(Cluster cluster : pendingClusters) {
-            Cluster remoteCluster = retrieveClusterInfo(cluster);
-            if(remoteCluster != null) {
-                // update time
-                remoteCluster.setLastContactTime(currentTime);
-                this.remoteClusterManager.completeClusterSync(cluster, remoteCluster);
-            }
-        }
+        LOG.info("Start - RemoteRecipeSyncTask");
         
         Collection<Cluster> remoteClusters = this.remoteClusterManager.getAllClusters();
         for(Cluster cluster : remoteClusters) {
-            if(DateTimeUtils.timeElapsedSecond(cluster.getLastContactTime(), currentTime, REMOTE_CLUSTER_NODE_SYNC_PERIOD_SEC)) {
-                Cluster remoteCluster = retrieveClusterInfo(cluster);
-                if (remoteCluster != null) {
-                    // update time
-                    remoteCluster.setLastContactTime(currentTime);
-                    this.remoteClusterManager.updateCluster(remoteCluster);
+            Collection<RemoteRecipe> recipes = retrieveRecipes(cluster);
+            if(recipes != null) {
+                for(RemoteRecipe recipe : recipes) {
+                    this.remoteRecipeManager.updateRecipe(recipe);
                 }
             }
         }
         
-        LOG.info("Done - RemoteClusterNodeSyncTask");
+        LOG.info("Done - RemoteRecipeSyncTask");
     }
-    
-    private Cluster retrieveClusterInfo(Cluster cluster) {
-        Cluster remoteCluster = null;
-        
+
+    private Collection<RemoteRecipe> retrieveRecipes(Cluster cluster) {
         Collection<ClusterNode> nodes = cluster.getAllNodes();
         for(ClusterNode node : nodes) {
-            try {
-                GateKeeperClient client = this.gatekeeperClientManager.getTempGateKeeperClient(node.getServiceURL());
-                remoteCluster = client.getRestfulClient().getClusterManagerClient().getLocalCluster();
-                client.stop();
+            if(!node.isUnreachable()) {
+                try {
+                    GateKeeperClient client = this.gatekeeperClientManager.getTempGateKeeperClient(node.getServiceURL());
+                    Collection<RemoteRecipe> recipes = client.getRestfulClient().getInterClusterDataTransferClient().getAllRecipes();
+                    client.stop();
 
-                if(remoteCluster != null && remoteCluster.getName() != null && !remoteCluster.getName().isEmpty()) {
-                    break;
+                    if(recipes != null) {
+                        return recipes;
+                    }
+                } catch (Exception ex) {
+                    LOG.info("remote cluster service is unreachable - " + node.getServiceURL());
+                    node.setUnrechable(true);
+                    this.remoteClusterManager.updateCluster(cluster);
                 }
-            } catch (Exception ex) {
-                LOG.info("remote cluster service is unreachable - " + node.getServiceURL());
             }
         }
-        return remoteCluster;
+        return null;
     }
     
     @Override
     public String getName() {
-        return "RemoteClusterNodeSyncTask";
+        return "RemoteRecipeSyncTask";
     }
 
     @Override
@@ -118,7 +108,6 @@ public class RemoteClusterSyncTask extends ALeaderScheduledTask {
 
     @Override
     public long getPeriod() {
-        return REMOTE_CLUSTER_NODE_SYNC_PERIOD_SEC;
+        return REMOTE_RECIPE_SYNC_PERIOD_SEC;
     }
-    
 }

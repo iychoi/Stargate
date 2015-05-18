@@ -30,7 +30,7 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.Chunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.ChunkReaderFactory;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
-import edu.arizona.cs.stargate.gatekeeper.restful.api.ASimpleTransferRestfulAPI;
+import edu.arizona.cs.stargate.gatekeeper.restful.api.InterClusterDataTransferRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
@@ -40,6 +40,10 @@ import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -57,14 +61,14 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author iychoi
  */
-@Path(ASimpleTransferRestfulAPI.BASE_PATH)
+@Path(InterClusterDataTransferRestfulAPI.BASE_PATH)
 @Singleton
-public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
+public class InterClusterDataTransferRestfulServlet extends InterClusterDataTransferRestfulAPI {
 
-    private static final Log LOG = LogFactory.getLog(SimpleTransferRestfulServlet.class);
+    private static final Log LOG = LogFactory.getLog(InterClusterDataTransferRestfulServlet.class);
     
     @GET
-    @Path(ASimpleTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
+    @Path(InterClusterDataTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
     @Produces(MediaType.TEXT_PLAIN)
     public String responseGetRecipeText(
             @DefaultValue("null") @PathParam("vpath") String vpath
@@ -78,15 +82,27 @@ public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
     }
     
     @GET
-    @Path(ASimpleTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
+    @Path(InterClusterDataTransferRestfulAPI.RECIPE_PATH + "/{vpath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<RemoteRecipe> responseGetRecipeJSON(
+    public RestfulResponse<Collection<RemoteRecipe>> responseGetRecipeJSON(
             @DefaultValue("null") @PathParam("vpath") String vpath
     ) {
         try {
-            return new RestfulResponse<RemoteRecipe>(getRecipe(vpath));
+            if(vpath != null) {
+                if(vpath.equals("*")) {
+                    return new RestfulResponse<Collection<RemoteRecipe>>(getAllRecipes());
+                } else {
+                    RemoteRecipe recipe = getRecipe(vpath);
+                    List<RemoteRecipe> recipes = new ArrayList<RemoteRecipe>();
+                    recipes.add(recipe);
+                    
+                    return new RestfulResponse<Collection<RemoteRecipe>>(Collections.unmodifiableCollection(recipes));
+                }
+            } else {
+                return new RestfulResponse<Collection<RemoteRecipe>>(new Exception("invalid parameter"));
+            }
         } catch(Exception ex) {
-            return new RestfulResponse<RemoteRecipe>(ex);
+            return new RestfulResponse<Collection<RemoteRecipe>>(ex);
         }
     }
     
@@ -104,8 +120,24 @@ public class SimpleTransferRestfulServlet extends ASimpleTransferRestfulAPI {
         }
     }
     
+    @Override
+    public Collection<RemoteRecipe> getAllRecipes() throws Exception {
+        DataExportManager dem = getDataExportManager();
+        LocalRecipeManager lrm = getLocalRecipeManager();
+        
+        Collection<DataExport> exports = dem.getAllDataExports();
+        ArrayList<RemoteRecipe> remoteRecipes = new ArrayList<RemoteRecipe>();
+        if(exports != null) {
+            for(DataExport export : exports) {
+                LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
+                remoteRecipes.add(new RemoteRecipe(export.getVirtualPath(), recipe));
+            }
+        }
+        return remoteRecipes;
+    }
+    
     @GET
-    @Path(ASimpleTransferRestfulAPI.DATA_CHUNK_PATH + "/{param:.*}")
+    @Path(InterClusterDataTransferRestfulAPI.DATA_CHUNK_PATH + "/{param:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response responseGetDataChunkURL(
             @DefaultValue("null") @PathParam("param") String param,

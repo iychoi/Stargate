@@ -46,8 +46,8 @@ public class LocalRecipeManager {
     private static final Log LOG = LogFactory.getLog(LocalRecipeManager.class);
     
     private static final String LOCALRECIPEMANAGER_RECIPES_MAP_ID = "LocalRecipeManager_Recipes";
-    private static final String LOCALRECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
-    private static final String LOCALRECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID = "RecipeManager_Incomplete_Recipes";
+    private static final String LOCALRECIPEMANAGER_CHUNKINFO_MAP_ID = "LocalRecipeManager_Chunkinfo";
+    private static final String LOCALRECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID = "LocalRecipeManager_Incomplete_Recipes";
     
     private static LocalRecipeManager instance;
 
@@ -72,7 +72,7 @@ public class LocalRecipeManager {
     public static LocalRecipeManager getInstance() throws ServiceNotStartedException {
         synchronized (LocalRecipeManager.class) {
             if(instance == null) {
-                throw new ServiceNotStartedException("RecipeManager is not started");
+                throw new ServiceNotStartedException("LocalRecipeManager is not started");
             }
             return instance;
         }
@@ -138,6 +138,10 @@ public class LocalRecipeManager {
             return null;
         }
         return null;
+    }
+    
+    public Collection<LocalRecipe> getAllRecipes() {
+        return this.recipes.values();
     }
     
     public synchronized LocalRecipe getRecipe(URI resourceUri) {

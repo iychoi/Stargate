@@ -59,7 +59,7 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
     private ClusterManagerRestfulClient clusterManagerClient;
     private DataExportManagerClient dataExportManagerClient;
     private RecipeManagerRestfulClient recipeManagerClient;
-    private SimpleTransferRestfulClient simpleTransferClient;
+    private InterClusterDataTransferRestfulClient interClusterDataTransferClient;
     private FileSystemRestfulClient filesystemClient;
 
     public GateKeeperRestfulClient(GateKeeperClientConfiguration conf) {
@@ -74,7 +74,7 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
         this.clusterManagerClient = new ClusterManagerRestfulClient(this);
         this.dataExportManagerClient = new DataExportManagerClient(this);
         this.recipeManagerClient = new RecipeManagerRestfulClient(this);
-        this.simpleTransferClient = new SimpleTransferRestfulClient(this);
+        this.interClusterDataTransferClient = new InterClusterDataTransferRestfulClient(this);
         this.filesystemClient = new FileSystemRestfulClient(this);
     }
     
@@ -98,8 +98,8 @@ public class GateKeeperRestfulClient extends AGateKeeperRestfulAPI {
         return this.recipeManagerClient;
     }
     
-    public SimpleTransferRestfulClient getSimpleTransferClient() {
-        return this.simpleTransferClient;
+    public InterClusterDataTransferRestfulClient getInterClusterDataTransferClient() {
+        return this.interClusterDataTransferClient;
     }
     
     public FileSystemRestfulClient getFileSystemClient() {

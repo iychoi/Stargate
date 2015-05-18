@@ -27,6 +27,7 @@ package edu.arizona.cs.stargate.gatekeeper.restful.api;
 import edu.arizona.cs.stargate.gatekeeper.recipe.Chunk;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
 import java.net.URI;
+import java.util.Collection;
 
 /**
  *
@@ -37,6 +38,8 @@ public abstract class ARecipeManagerRestfulAPI {
     public static final String BASE_PATH = "/recipemgr";
     public static final String RECIPE_PATH = "/recipe";
     public static final String CHUNK_PATH = "/chunk";
+    
+    public abstract Collection<LocalRecipe> getAllRecipes() throws Exception;
     
     public abstract LocalRecipe getRecipe(URI resourceURI) throws Exception;
     
