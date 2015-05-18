@@ -26,7 +26,6 @@ package edu.arizona.cs.stargate.gatekeeper;
 
 import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.IDataExportConfigurationChangeEventHandler;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
 import edu.arizona.cs.stargate.common.NameUtils;
 import edu.arizona.cs.stargate.common.TemporaryFileUtils;
@@ -34,12 +33,12 @@ import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
 import edu.arizona.cs.stargate.common.LocalNodeInfoUtils;
 import edu.arizona.cs.stargate.gatekeeper.cluster.NodeAlreadyAddedException;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.intercluster.InterclusterRecipeSyncTask;
 import edu.arizona.cs.stargate.gatekeeper.intercluster.RemoteGateKeeperClientManager;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunkHashTask;
 import edu.arizona.cs.stargate.gatekeeper.restful.GateKeeperRestfulInterface;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeManager;
 import edu.arizona.cs.stargate.gatekeeper.schedule.ScheduleManager;
@@ -65,13 +64,13 @@ public class GateKeeperService {
     private GateKeeperRestfulInterface restfulInterface;
     
     private DistributedService distributedService;
+    private ScheduleManager scheduleManager;
     
     private LocalClusterManager localClusterManager;
     private RemoteClusterManager remoteClusterManager;
     private DataExportManager dataExportManager;
     private RecipeManager recipeManager;
     
-    private ScheduleManager scheduleManager;
     private RemoteGateKeeperClientManager gatekeeperClientManager;
     
     private GateKeeperRuntimeInfo runtimeInfo;
@@ -97,34 +96,41 @@ public class GateKeeperService {
     GateKeeperService(GateKeeperServiceConfiguration config) throws Exception {
         if(config == null) {
             throw new Exception("GateKeeperServiceConfiguration is null. Failed to start GateKeeperService.");
-        } else {
-            this.config = config;
-            this.config.setImmutable();
-            
-            this.distributedService = DistributedService.getInstance(config.getDistributedCacheServiceConfiguration());
-            
-            // start distributed cache service
-            this.distributedService.start();
-            
-            this.localClusterManager = LocalClusterManager.getInstance();
-            registerLocalClusterNodes(this.config.getLocalCluster());
-
-            this.remoteClusterManager = RemoteClusterManager.getInstance();
-
-            this.dataExportManager = DataExportManager.getInstance();
-            this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration());
-
-            addDataExportListener();
-
-            this.dataExportManager.addDataExports(this.config.getDataExports());
-            
-            this.restfulInterface = GateKeeperRestfulInterface.getInstance();
-            
-            this.gatekeeperClientManager = RemoteGateKeeperClientManager.getInstance();
-            this.scheduleManager = ScheduleManager.getInstance();
-            
-            registerRemoteClusters(this.config.getRemoteClusters());
         }
+
+        this.config = config;
+        this.config.setImmutable();
+
+        this.distributedService = DistributedService.getInstance(config.getDistributedCacheServiceConfiguration());
+
+        // start distributed cache service
+        this.distributedService.start();
+
+        // schedule
+        this.scheduleManager = ScheduleManager.getInstance(this.distributedService);
+
+        // local cluster
+        this.localClusterManager = LocalClusterManager.getInstance(this.distributedService);
+        
+        // remote cluster
+        this.remoteClusterManager = RemoteClusterManager.getInstance(this.distributedService);
+
+        // data export
+        this.dataExportManager = DataExportManager.getInstance(this.distributedService);
+        
+        // recipe
+        this.recipeManager = RecipeManager.getInstance(this.config.getRecipeManagerConfiguration(), this.distributedService, this.localClusterManager, this.dataExportManager);
+
+        // restful interface
+        this.restfulInterface = GateKeeperRestfulInterface.getInstance();
+
+        // gatekeeper client
+        this.gatekeeperClientManager = RemoteGateKeeperClientManager.getInstance(this.localClusterManager, this.remoteClusterManager);
+
+        // add data
+        registerLocalClusterNodes(this.config.getLocalCluster());
+        this.dataExportManager.addDataExports(this.config.getDataExports());
+        registerRemoteClusters(this.config.getRemoteClusters());
     }
     
     public synchronized void start() throws Exception {
@@ -139,6 +145,12 @@ public class GateKeeperService {
     }
     
     public synchronized void stop() throws InterruptedException {
+        try {
+            this.scheduleManager.stop();
+        } catch(Exception ex) {
+            LOG.error(ex);
+        }
+        
         // cleanup runtime info
         try {
             cleanupRuntimeConfiguration();
@@ -239,28 +251,6 @@ public class GateKeeperService {
         }
     }
     
-    private void addDataExportListener() {
-        this.dataExportManager.addConfigChangeEventHandler(new IDataExportConfigurationChangeEventHandler(){
-
-            @Override
-            public String getName() {
-                return "GateKeeperService";
-            }
-
-            @Override
-            public void addDataExport(DataExportManager manager, DataExport info) {
-                // pass to RecipeManager
-                recipeManager.generateRecipe(info);
-            }
-
-            @Override
-            public void removeDataExport(DataExportManager manager, DataExport info) {
-                // pass to RecipeManager
-                recipeManager.removeRecipe(info);
-            }
-        });
-    }
-    
     public GateKeeperServiceConfiguration getConfiguration() {
         return this.config;
     }
@@ -299,6 +289,8 @@ public class GateKeeperService {
     }
 
     private void registerSchedules() {
+        // register schedule
+        this.scheduleManager.scheduleTask(new RecipeChunkHashTask(this.localClusterManager, this.recipeManager));
         this.scheduleManager.scheduleTask(new InterclusterRecipeSyncTask());
     }
 }

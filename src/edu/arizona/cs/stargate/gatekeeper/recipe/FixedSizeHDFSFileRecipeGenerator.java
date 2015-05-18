@@ -53,10 +53,13 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
     private static final Log LOG = LogFactory.getLog(FixedSizeHDFSFileRecipeGenerator.class);
     
     private static final int BUFFER_SIZE = 100*1024;
-    private int chunkSize;
-    private Configuration hadoopConf;
     
-    public FixedSizeHDFSFileRecipeGenerator(Configuration hadoopConf, int chunkSize) {
+    private final LocalClusterManager localClusterManager;
+    private Configuration hadoopConf;
+    private int chunkSize;
+    
+    public FixedSizeHDFSFileRecipeGenerator(LocalClusterManager localClusterManager, Configuration hadoopConf, int chunkSize) {
+        this.localClusterManager = localClusterManager;
         this.chunkSize = chunkSize;
         this.hadoopConf = hadoopConf;
     }
@@ -70,8 +73,6 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
             numChunks++;
         }
         
-        LocalClusterManager lcm = LocalClusterManager.getInstance();
-        
         long chunkOffset = 0;
         int curChunkSize = 0;
         for(int i=0;i<numChunks;i++) {
@@ -79,18 +80,25 @@ public class FixedSizeHDFSFileRecipeGenerator extends ARecipeGenerator {
             curChunkSize = (int) Math.min(fileLen - chunkOffset, chunkSize);
             
             ArrayList<String> ownerHosts = new ArrayList<String>();
+            boolean bAllNode = false;
             BlockLocation[] fileBlockLocations = fs.getFileBlockLocations(status, chunkOffset, curChunkSize);
             for(BlockLocation blockLocation : fileBlockLocations) {
                 for(String host : blockLocation.getHosts()) {
                     if(host.equalsIgnoreCase("localhost")) {
-                        ownerHosts.add("*");
+                        if(!bAllNode) {
+                            ownerHosts.add("*");
+                            bAllNode = true;
+                        }
                     } else {
-                        ClusterNode node = lcm.findNodeByAddress(host);
+                        ClusterNode node = this.localClusterManager.findNodeByAddress(host);
                         if(node != null) {
                             ownerHosts.add(node.getName());
                         } else {
                             LOG.info("unable to find host : " + host);
-                            ownerHosts.add("*");
+                            if(!bAllNode) {
+                                ownerHosts.add("*");
+                                bAllNode = true;
+                            }
                         }
                     }
                 }

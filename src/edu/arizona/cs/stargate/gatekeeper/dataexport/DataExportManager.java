@@ -45,26 +45,32 @@ public class DataExportManager {
     
     private static DataExportManager instance;
     
+    private DistributedService distributedService;
+
     private JsonReplicatedMap<String, DataExport> dataExports;
     private ArrayList<IDataExportConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IDataExportConfigurationChangeEventHandler>();
     
-    public static DataExportManager getInstance() {
+    public static DataExportManager getInstance(DistributedService distributedService) {
         synchronized (DataExportManager.class) {
             if(instance == null) {
-                instance = new DataExportManager();
+                instance = new DataExportManager(distributedService);
             }
             return instance;
         }
     }
     
-    DataExportManager() {
-        try {
-            DistributedService ds = DistributedService.getInstance();
-            this.dataExports = new JsonReplicatedMap<String, DataExport>(ds.getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExport.class);
-        } catch (ServiceNotStartedException ex) {
-            LOG.error(ex);
-            throw new RuntimeException(ex);
+    public static DataExportManager getInstance() throws ServiceNotStartedException {
+        synchronized (DataExportManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("DataExportManager is not started");
+            }
+            return instance;
         }
+    }
+    
+    DataExportManager(DistributedService distributedService) {
+        this.distributedService = distributedService;
+        this.dataExports = new JsonReplicatedMap<String, DataExport>(this.distributedService.getReplicatedMap(DATAEXPORTMANAGER_MAP_ID), DataExport.class);
     }
     
     public synchronized Collection<DataExport> getAllDataExports() {

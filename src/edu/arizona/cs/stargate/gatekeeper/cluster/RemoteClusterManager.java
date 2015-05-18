@@ -46,26 +46,32 @@ public class RemoteClusterManager {
     private static final String REMOTECLUSTERMANAGER_MAP_ID = "RemoteClusterManager";
     
     private static RemoteClusterManager instance;
+
+    private DistributedService distributedService;
     
     private JsonReplicatedMap<String, Cluster> remoteClusters;
     
-    public static RemoteClusterManager getInstance() {
+    public static RemoteClusterManager getInstance(DistributedService distributedService) {
         synchronized (RemoteClusterManager.class) {
             if(instance == null) {
-                instance = new RemoteClusterManager();
+                instance = new RemoteClusterManager(distributedService);
             }
             return instance;
         }
     }
     
-    RemoteClusterManager() {
-        try {
-            DistributedService ds = DistributedService.getInstance();
-            this.remoteClusters = new JsonReplicatedMap<String, Cluster>(ds.getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), Cluster.class);
-        } catch (ServiceNotStartedException ex) {
-            LOG.error(ex);
-            throw new RuntimeException(ex);
+    public static RemoteClusterManager getInstance() throws ServiceNotStartedException {
+        synchronized (RemoteClusterManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("RemoteClusterManager is not started");
+            }
+            return instance;
         }
+    }
+    
+    RemoteClusterManager(DistributedService distributedService) {
+        this.distributedService = distributedService;
+        this.remoteClusters = new JsonReplicatedMap<String, Cluster>(this.distributedService.getReplicatedMap(REMOTECLUSTERMANAGER_MAP_ID), Cluster.class);
     }
     
     public synchronized Collection<Cluster> getAllClusters() {

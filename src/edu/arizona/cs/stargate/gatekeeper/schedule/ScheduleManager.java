@@ -24,6 +24,8 @@
 
 package edu.arizona.cs.stargate.gatekeeper.schedule;
 
+import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -41,19 +43,31 @@ public class ScheduleManager {
     private static final int SCHEDULE_BACKGROUND_WORKER_THREADS = 4;
     
     private static ScheduleManager instance;
-    
+
+    private DistributedService distributedService;
     private ScheduledExecutorService taskWorker;
     
-    public static ScheduleManager getInstance() {
+    public static ScheduleManager getInstance(DistributedService distributedService) {
         synchronized (ScheduleManager.class) {
             if(instance == null) {
-                instance = new ScheduleManager();
+                instance = new ScheduleManager(distributedService);
             }
             return instance;
         }
     }
     
-    ScheduleManager() {
+    public static ScheduleManager getInstance() throws ServiceNotStartedException {
+        synchronized (ScheduleManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("ScheduleManager is not started");
+            }
+            return instance;
+        }
+    }
+    
+    ScheduleManager(DistributedService distributedService) {
+        this.distributedService = distributedService;
+        
         this.taskWorker = Executors.newScheduledThreadPool(SCHEDULE_BACKGROUND_WORKER_THREADS);
     }
 

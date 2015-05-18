@@ -23,8 +23,6 @@
  */
 package edu.arizona.cs.stargate.gatekeeper.intercluster;
 
-import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import edu.arizona.cs.stargate.gatekeeper.schedule.ALeaderScheduledTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

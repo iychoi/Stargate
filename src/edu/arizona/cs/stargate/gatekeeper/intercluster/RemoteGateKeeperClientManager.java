@@ -26,6 +26,7 @@ package edu.arizona.cs.stargate.gatekeeper.intercluster;
 
 import edu.arizona.cs.stargate.common.NodeSelectionUtils;
 import edu.arizona.cs.stargate.common.DateTimeUtils;
+import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
 import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
@@ -51,20 +52,34 @@ public class RemoteGateKeeperClientManager {
     
     private static RemoteGateKeeperClientManager instance;
     
+    private LocalClusterManager localClusterManager;
+    private RemoteClusterManager remoteClusterManager;
+    
     private Map<String, GateKeeperClient> gatekeeperClients = new HashMap<String, GateKeeperClient>();
     private Map<String, Long> lastUpdates = new HashMap<String, Long>();
     private Map<URI, Long> unreachableURIs = new HashMap<URI, Long>();
     
-    public static RemoteGateKeeperClientManager getInstance() {
+    public static RemoteGateKeeperClientManager getInstance(LocalClusterManager localClusterManager, RemoteClusterManager remoteClusterManager) {
         synchronized (RemoteGateKeeperClientManager.class) {
             if(instance == null) {
-                instance = new RemoteGateKeeperClientManager();
+                instance = new RemoteGateKeeperClientManager(localClusterManager, remoteClusterManager);
             }
             return instance;
         }
     }
     
-    RemoteGateKeeperClientManager() {
+    public static RemoteGateKeeperClientManager getInstance() throws ServiceNotStartedException {
+        synchronized (RemoteGateKeeperClientManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("DataExportManager is not started");
+            }
+            return instance;
+        }
+    }
+    
+    RemoteGateKeeperClientManager(LocalClusterManager localClusterManager, RemoteClusterManager remoteClusterManager) {
+        this.localClusterManager = localClusterManager;
+        this.remoteClusterManager = remoteClusterManager;
     }
     
     public synchronized GateKeeperClient getTempGateKeeperClient(URI serviceURL) {
@@ -99,9 +114,7 @@ public class RemoteGateKeeperClientManager {
             }
         }
         
-        LocalClusterManager lcm = LocalClusterManager.getInstance();
-        RemoteClusterManager rcm = RemoteClusterManager.getInstance();
-        Cluster rcluster = rcm.getCluster(cluster);
+        Cluster rcluster = this.remoteClusterManager.getCluster(cluster);
         if(rcluster == null) {
             return null;
         }
@@ -116,7 +129,7 @@ public class RemoteGateKeeperClientManager {
         }
         
         while(contactList.size() > 0) {
-            ClusterNode bestRNode = NodeSelectionUtils.selectBestNode(lcm.getLocalNode(), contactList);
+            ClusterNode bestRNode = NodeSelectionUtils.selectBestNode(this.localClusterManager.getLocalNode(), contactList);
             
             GateKeeperClientConfiguration gateKeeperClientConfiguration = new GateKeeperClientConfiguration(bestRNode.getServiceURL());
             GateKeeperClient gateKeeperClient = new GateKeeperClient(gateKeeperClientConfiguration);

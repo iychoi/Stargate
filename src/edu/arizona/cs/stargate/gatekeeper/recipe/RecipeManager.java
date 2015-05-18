@@ -24,23 +24,17 @@
 
 package edu.arizona.cs.stargate.gatekeeper.recipe;
 
-import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
-import com.hazelcast.core.EntryEvent;
-import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
 import edu.arizona.cs.stargate.gatekeeper.distributed.JsonIMap;
 import edu.arizona.cs.stargate.common.DataFormatUtils;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
+import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
+import edu.arizona.cs.stargate.gatekeeper.dataexport.IDataExportConfigurationChangeEventHandler;
 import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
-import java.io.IOException;
 import java.net.URI;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,27 +45,25 @@ import org.apache.commons.logging.LogFactory;
 public class RecipeManager {
     private static final Log LOG = LogFactory.getLog(RecipeManager.class);
     
-    private static final int RECIPE_BACKGROUND_WORKER_THREADS = 1;
-    
     private static final String RECIPEMANAGER_RECIPES_MAP_ID = "RecipeManager_Recipes";
     private static final String RECIPEMANAGER_CHUNKINFO_MAP_ID = "RecipeManager_Chunkinfo";
-    private static final String RECIPEMANAGER_PENDING_RECIPES_MAP_ID = "RecipeManager_Pending_Recipes";
+    private static final String RECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID = "RecipeManager_Incomplete_Recipes";
     
     private static RecipeManager instance;
 
     private RecipeManagerConfiguration config;
+    private DistributedService distributedService;
+    private LocalClusterManager localClusterManager;
+    private DataExportManager dataExportManager;
     
     private JsonIMap<URI, LocalRecipe> recipes;
-    private JsonIMap<URI, LocalRecipe> pendingRecipes;
+    private JsonIMap<URI, LocalRecipe> incompleteRecipes;
     private JsonIMap<String, URI[]> chunks;
     
-    // check message and start hashing
-    private ExecutorService backgroundWorker;
-    
-    public static RecipeManager getInstance(RecipeManagerConfiguration config) {
+    public static RecipeManager getInstance(RecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
         synchronized (RecipeManager.class) {
             if(instance == null) {
-                instance = new RecipeManager(config);
+                instance = new RecipeManager(config, distributedService, localClusterManager, dataExportManager);
             }
             return instance;
         }
@@ -86,7 +78,7 @@ public class RecipeManager {
         }
     }
     
-    RecipeManager(RecipeManagerConfiguration config) {
+    RecipeManager(RecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
         if(config == null) {
             this.config = new RecipeManagerConfiguration();
         } else {
@@ -94,46 +86,32 @@ public class RecipeManager {
             this.config.setImmutable();
         }
         
-        try {
-            DistributedService ds = DistributedService.getInstance();
-            this.recipes = new JsonIMap<URI, LocalRecipe>(ds.getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
-            this.pendingRecipes = new JsonIMap<URI, LocalRecipe>(ds.getDistributedMap(RECIPEMANAGER_PENDING_RECIPES_MAP_ID), LocalRecipe.class);
-            this.pendingRecipes.addEntryListener(new EntryListener<URI, LocalRecipe>(){
-
-                @Override
-                public void entryAdded(EntryEvent<URI, LocalRecipe> ee) {
-                    Runnable worker = new BackgroundWorker(); 
-                    backgroundWorker.execute(worker);
-                }
-
-                @Override
-                public void entryRemoved(EntryEvent<URI, LocalRecipe> ee) {
-                }
-
-                @Override
-                public void entryUpdated(EntryEvent<URI, LocalRecipe> ee) {
-                }
-
-                @Override
-                public void entryEvicted(EntryEvent<URI, LocalRecipe> ee) {
-                }
-
-                @Override
-                public void mapEvicted(MapEvent me) {
-                }
-
-                @Override
-                public void mapCleared(MapEvent me) {
-                }
-            }, true);
-            
-            this.chunks = new JsonIMap<String, URI[]>(ds.getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
-        } catch (ServiceNotStartedException ex) {
-            LOG.error(ex);
-            throw new RuntimeException(ex);
-        }
+        this.distributedService = distributedService;
+        this.localClusterManager = localClusterManager;
+        this.dataExportManager = dataExportManager;
         
-        this.backgroundWorker = Executors.newFixedThreadPool(RECIPE_BACKGROUND_WORKER_THREADS);
+        this.recipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(RECIPEMANAGER_RECIPES_MAP_ID), LocalRecipe.class);
+        this.incompleteRecipes = new JsonIMap<URI, LocalRecipe>(this.distributedService.getDistributedMap(RECIPEMANAGER_INCOMPLETE_RECIPES_MAP_ID), LocalRecipe.class);
+        this.chunks = new JsonIMap<String, URI[]>(this.distributedService.getDistributedMap(RECIPEMANAGER_CHUNKINFO_MAP_ID), URI[].class);
+
+        // register eventhandler
+        this.dataExportManager.addConfigChangeEventHandler(new IDataExportConfigurationChangeEventHandler(){
+
+            @Override
+            public String getName() {
+                return "RecipeManager";
+            }
+
+            @Override
+            public void addDataExport(DataExportManager manager, DataExport info) {
+                generateRecipe(info);
+            }
+
+            @Override
+            public void removeDataExport(DataExportManager manager, DataExport info) {
+                removeRecipe(info);
+            }
+        });
     }
     
     public RecipeManagerConfiguration getConfiguration() {
@@ -148,11 +126,11 @@ public class RecipeManager {
     public synchronized LocalRecipe generateRecipe(URI resourceUri) {
         try {
             if(!this.recipes.containsKey(resourceUri) && 
-                    !this.pendingRecipes.containsKey(resourceUri)) {
+                    !this.incompleteRecipes.containsKey(resourceUri)) {
                 LOG.info("Generating a new recipe of " + resourceUri.toASCIIString());
-                ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(resourceUri, this.config.getChunkSize());
+                ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(this.localClusterManager, resourceUri, this.config.getChunkSize());
                 LocalRecipe recipe = recipeGenerator.generateRecipe(resourceUri, this.config.getHashAlgorithm());
-                this.pendingRecipes.put(resourceUri, recipe);
+                this.incompleteRecipes.put(resourceUri, recipe);
                 return recipe;
             }
         } catch(Exception ex) {
@@ -169,12 +147,16 @@ public class RecipeManager {
             return recipe;
         }
         
-        recipe = this.pendingRecipes.get(resourceUri);
+        recipe = this.incompleteRecipes.get(resourceUri);
         if(recipe != null) {
             return recipe;
         }
         
         return generateRecipe(resourceUri);
+    }
+    
+    public synchronized Collection<LocalRecipe> getIncompleteRecipes() {
+         return this.incompleteRecipes.values();
     }
     
     public synchronized void removeRecipe(DataExport export) {
@@ -183,7 +165,7 @@ public class RecipeManager {
     
     public synchronized void removeRecipe(URI resourceUri) {
         LocalRecipe recipe1 = this.recipes.remove(resourceUri);
-        LocalRecipe recipe2 = this.pendingRecipes.remove(resourceUri);
+        LocalRecipe recipe2 = this.incompleteRecipes.remove(resourceUri);
         
         LocalRecipe recipe = null;
         if(recipe1 != null) {
@@ -202,8 +184,17 @@ public class RecipeManager {
     
     public synchronized void removeAllRecipes() {
         this.recipes.clear();
-        this.pendingRecipes.clear();
+        this.incompleteRecipes.clear();
         this.chunks.clear();
+    }
+    
+    public synchronized void completeRecipe(LocalRecipe recipe) {
+        this.recipes.put(recipe.getResourcePath(), recipe);
+        Collection<RecipeChunk> allChunk = recipe.getAllChunks();
+        for (RecipeChunk chunk : allChunk) {
+            addChunk(chunk.getHashString(), recipe.getResourcePath());
+        }
+        this.incompleteRecipes.remove(recipe.getResourcePath());
     }
     
     private synchronized void addChunk(String hash, URI resourceURI) {
@@ -264,39 +255,5 @@ public class RecipeManager {
     @Override
     public synchronized String toString() {
         return "RecipeManager";
-    }
-
-    private class BackgroundWorker implements Runnable {
-        
-        private int chunkSize;
-        
-        public BackgroundWorker() {
-            chunkSize = config.getChunkSize();
-        }
-        
-        @Override
-        public void run() {
-            if(pendingRecipes.size() > 0) {
-                try {
-                    LocalRecipe recipe = pendingRecipes.peekEntry();
-                    LocalClusterManager lcm = LocalClusterManager.getInstance();
-                    ARecipeGenerator recipeGenerator = RecipeGeneratorFactory.getRecipeGenerator(recipe.getResourcePath(), this.chunkSize);
-                    
-                    recipe = pendingRecipes.get(recipe.getResourcePath());
-                    LOG.info("Hashing a recipe of " + recipe.getResourcePath().toASCIIString());
-
-                    recipeGenerator.hashRecipe(recipe);
-                    recipes.put(recipe.getResourcePath(), recipe);
-                    Collection<RecipeChunk> allChunk = recipe.getAllChunks();
-                    for (RecipeChunk chunk : allChunk) {
-                        addChunk(chunk.getHashString(), recipe.getResourcePath());
-                    }
-                } catch (IOException ex) {
-                    LOG.error(ex);
-                } catch (NoSuchAlgorithmException ex) {
-                    LOG.error(ex);
-                }
-            }
-        }
     }
 }

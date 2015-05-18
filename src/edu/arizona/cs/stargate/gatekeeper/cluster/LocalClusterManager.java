@@ -44,29 +44,35 @@ public class LocalClusterManager {
     private static final String LOCALCLUSTERMANAGER_MAP_ID = "LocalClusterManager";
     
     private static LocalClusterManager instance;
+
+    private DistributedService distributedService;
     
     private String name;
     private ClusterNode localNode;
     private JsonReplicatedMap<String, ClusterNode> nodes;
     private ArrayList<ILocalClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<ILocalClusterConfigurationChangeEventHandler>();
     
-    public static LocalClusterManager getInstance() {
+    public static LocalClusterManager getInstance(DistributedService distributedService) {
         synchronized (LocalClusterManager.class) {
             if(instance == null) {
-                instance = new LocalClusterManager();
+                instance = new LocalClusterManager(distributedService);
             }
             return instance;
         }
     }
     
-    LocalClusterManager() {
-        try {
-            DistributedService ds = DistributedService.getInstance();
-            this.nodes = new JsonReplicatedMap<String, ClusterNode>(ds.getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNode.class);
-        } catch (ServiceNotStartedException ex) {
-            LOG.error(ex);
-            throw new RuntimeException(ex);
+    public static LocalClusterManager getInstance() throws ServiceNotStartedException {
+        synchronized (LocalClusterManager.class) {
+            if(instance == null) {
+                throw new ServiceNotStartedException("LocalClusterManager is not started");
+            }
+            return instance;
         }
+    }
+    
+    LocalClusterManager(DistributedService distributedService) {
+        this.distributedService = distributedService;
+        this.nodes = new JsonReplicatedMap<String, ClusterNode>(this.distributedService.getReplicatedMap(LOCALCLUSTERMANAGER_MAP_ID), ClusterNode.class);
     }
     
     public synchronized String getName() {

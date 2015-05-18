@@ -24,6 +24,7 @@
 
 package edu.arizona.cs.stargate.gatekeeper.recipe;
 
+import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
 import java.io.IOException;
 import java.net.URI;
 import org.apache.commons.logging.Log;
@@ -40,18 +41,28 @@ public class RecipeGeneratorFactory {
     
     private static FixedSizeHDFSFileRecipeGenerator cachedFixedSizeHDFSFileRecipeGenerator;
     
-    public static ARecipeGenerator getRecipeGenerator(URI resourceUri, int chunkSize) throws IOException {
+    public static ARecipeGenerator getRecipeGenerator(LocalClusterManager localClusterManager, URI resourceUri, int chunkSize) throws IOException {
         if(resourceUri.getScheme().equalsIgnoreCase("hdfs") || resourceUri.getScheme().equalsIgnoreCase("dfs")) {
-            return getFixedSizeHDFSFileRecipeGenerator(chunkSize);
+            return getFixedSizeHDFSFileRecipeGenerator(localClusterManager, chunkSize);
         }
         
         throw new IOException("Unknown resource scheme");
     }
     
-    public static FixedSizeHDFSFileRecipeGenerator getFixedSizeHDFSFileRecipeGenerator(int chunkSize) {
+    public static ARecipeGenerator getRecipeGenerator(LocalClusterManager localClusterManager, LocalRecipe recipe) throws IOException {
+        if(recipe.getResourcePath().getScheme().equalsIgnoreCase("hdfs") || recipe.getResourcePath().getScheme().equalsIgnoreCase("dfs")) {
+            if(recipe.getChunkSize() > 0) {
+                return getFixedSizeHDFSFileRecipeGenerator(localClusterManager, recipe.getChunkSize());
+            }
+        }
+        
+        throw new IOException("Unknown resource scheme");
+    }
+    
+    public static FixedSizeHDFSFileRecipeGenerator getFixedSizeHDFSFileRecipeGenerator(LocalClusterManager localClusterManager, int chunkSize) {
         synchronized(RecipeGeneratorFactory.class) {
             if(cachedFixedSizeHDFSFileRecipeGenerator == null) {
-                cachedFixedSizeHDFSFileRecipeGenerator = new FixedSizeHDFSFileRecipeGenerator(new Configuration(), chunkSize);
+                cachedFixedSizeHDFSFileRecipeGenerator = new FixedSizeHDFSFileRecipeGenerator(localClusterManager, new Configuration(), chunkSize);
             }
             return cachedFixedSizeHDFSFileRecipeGenerator;
         }
