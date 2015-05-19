@@ -138,22 +138,22 @@ public class LocalRecipe {
         this.size = size;
     }
     
-    @JsonProperty("chunkSize")
+    @JsonProperty("chunk_size")
     public int getChunkSize() {
         return this.chunkSize;
     }
     
-    @JsonProperty("chunkSize")
+    @JsonProperty("chunk_size")
     public void setChunkSize(int chunkSize) {
         this.chunkSize = chunkSize;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public long getModificationTime() {
         return this.modificationTime;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public void setModificationTime(long time) {
         this.modificationTime = time;
     }

@@ -25,6 +25,7 @@
 package edu.arizona.cs.stargate.gatekeeper.dataexport;
 
 import edu.arizona.cs.stargate.common.JsonSerializer;
+import edu.arizona.cs.stargate.common.PathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -82,29 +83,25 @@ public class DataExport {
             filename = path.substring(idx+1, path.length());
         }
         
-        if(mappingPath.endsWith("/")) {
-            return mappingPath + filename;
-        } else {
-            return mappingPath + "/" + filename;
-        }
+        return PathUtils.concatPath(mappingPath, filename);
     }
 
-    @JsonProperty("mappingPath")
+    @JsonProperty("mapping_path")
     public String getMappingPath() {
         return this.mappingPath;
     }
     
-    @JsonProperty("mappingPath")
+    @JsonProperty("mapping_path")
     void setMappingPath(String mappingPath) {
         this.mappingPath = mappingPath;
     }
 
-    @JsonProperty("resourcePath")
+    @JsonProperty("resource_path")
     public URI getResourcePath() {
         return resourcePath;
     }
 
-    @JsonProperty("resourcePath")
+    @JsonProperty("resource_path")
     void setResourceUri(URI resourcePath) {
         this.resourcePath = resourcePath;
     }

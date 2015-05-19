@@ -179,7 +179,7 @@ public class RecipeChunk {
         return hasHash(DataFormatUtils.hexToBytes(hash));
     }
     
-    @JsonProperty("ownerHosts")
+    @JsonProperty("owner_hosts")
     public String[] getOwnerHosts() {
         return this.ownerHosts;
     }
@@ -189,7 +189,7 @@ public class RecipeChunk {
         this.ownerHosts = new String[] {ownerHost};
     }
     
-    @JsonProperty("ownerHosts")
+    @JsonProperty("owner_hosts")
     public void setOwnerHosts(String[] ownerHost) {
         this.ownerHosts = ownerHost;
     }

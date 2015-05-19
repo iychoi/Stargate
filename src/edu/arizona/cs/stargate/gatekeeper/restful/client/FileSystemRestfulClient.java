@@ -28,13 +28,12 @@ import com.sun.jersey.api.client.GenericType;
 import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.common.WebParamBuilder;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AFileSystemRestfulAPI;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,8 +43,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class FileSystemRestfulClient extends AFileSystemRestfulAPI {
     private static final Log LOG = LogFactory.getLog(FileSystemRestfulClient.class);
-    
-    public static final int DEFAULT_BLOCK_SIZE = 1024*1024;
     
     private GateKeeperRestfulClient gatekeeperRestfulClient;
 
@@ -57,47 +54,6 @@ public class FileSystemRestfulClient extends AFileSystemRestfulAPI {
         return PathUtils.concatPath(AFileSystemRestfulAPI.BASE_PATH, path);
     }
     
-    public String getResourcePath(String path, String subpath) {
-        String str1 = PathUtils.concatPath(AFileSystemRestfulAPI.BASE_PATH, path);
-        return PathUtils.concatPath(str1, subpath);
-    }
-    
-    @Override
-    public Collection<VirtualFileStatus> getAllVirtualFileStatus() throws Exception {
-        RestfulResponse<Collection<VirtualFileStatus>> response;
-        try {
-            String url = getResourcePath(AFileSystemRestfulAPI.VIRTUAL_FILE_STATUS_PATH);
-            response = (RestfulResponse<Collection<VirtualFileStatus>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<VirtualFileStatus>>>(){});
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw ex;
-        }
-        
-        if(response.getException() != null) {
-            throw response.getException();
-        } else {
-            return response.getResponse();
-        }
-    }
-
-    @Override
-    public long getBlockSize() throws Exception {
-        RestfulResponse<Long> response;
-        try {
-            String url = getResourcePath(AFileSystemRestfulAPI.FS_BLOCK_SIZE_PATH);
-            response = (RestfulResponse<Long>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Long>>(){});
-        } catch (IOException ex) {
-            LOG.error(ex);
-            return DEFAULT_BLOCK_SIZE;
-        }
-        
-        if(response.getException() != null) {
-            throw response.getException();
-        } else {
-            return response.getResponse().longValue();
-        }
-    }
-
     @Override
     public Cluster getLocalCluster() throws Exception {
         RestfulResponse<Cluster> response;
@@ -115,19 +71,56 @@ public class FileSystemRestfulClient extends AFileSystemRestfulAPI {
             return response.getResponse();
         }
     }
+    
+    @Override
+    public Collection<VirtualFileStatus> listStatus(String mappedPath) throws Exception {
+        RestfulResponse<Collection<VirtualFileStatus>> response;
+        try {
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(AFileSystemRestfulAPI.LIST_FILE_STATUS_PATH));
+            builder.addParam("mpath", mappedPath);
+            String url = builder.build();
+            response = (RestfulResponse<Collection<VirtualFileStatus>>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<Collection<VirtualFileStatus>>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw response.getException();
+        } else {
+            return response.getResponse();
+        }
+    }
 
     @Override
-    public byte[] readChunkData(String clusterName, String virtualPath, long offset, long size) throws Exception {
+    public VirtualFileStatus getFileStatus(String mappedPath) throws Exception {
+        RestfulResponse<VirtualFileStatus> response;
         try {
-            WebParamBuilder builder = new WebParamBuilder(getResourcePath(AFileSystemRestfulAPI.CHUNK_DATA_PATH, PathUtils.concatPath(clusterName, virtualPath)));
-            builder.addParam("offset", Long.toString(offset));
-            builder.addParam("len", Long.toString(size));
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(AFileSystemRestfulAPI.FILE_STATUS_PATH));
+            builder.addParam("mpath", mappedPath);
             String url = builder.build();
-            InputStream is = this.gatekeeperRestfulClient.download(url);
-            if(is == null) {
-                return null;
-            }
-            return IOUtils.toByteArray(is); 
+            response = (RestfulResponse<VirtualFileStatus>) this.gatekeeperRestfulClient.get(url, new GenericType<RestfulResponse<VirtualFileStatus>>(){});
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw response.getException();
+        } else {
+            return response.getResponse();
+        }
+    }
+
+    @Override
+    public InputStream getDataChunk(String mappedPath, long offset, int size) throws Exception {
+        try {
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(AFileSystemRestfulAPI.DATA_CHUNK_PATH));
+            builder.addParam("mpath", mappedPath);
+            builder.addParam("offset", Long.toString(offset));
+            builder.addParam("len", Integer.toString(size));
+            String url = builder.build();
+            return this.gatekeeperRestfulClient.download(url);
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;

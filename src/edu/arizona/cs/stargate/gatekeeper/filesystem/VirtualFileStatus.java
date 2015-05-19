@@ -22,8 +22,10 @@
  * THE SOFTWARE.
  */
 
-package edu.arizona.cs.stargate.gatekeeper.recipe;
+package edu.arizona.cs.stargate.gatekeeper.filesystem;
 
+import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
+import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipe;
 import java.net.URI;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -39,7 +41,7 @@ public class VirtualFileStatus {
     private long length;
     private long blockSize;
     private long modificationTime;
-    private URI localHDFSResourcePath;
+    private URI localResourcePath;
     
     public VirtualFileStatus() {
     }
@@ -52,6 +54,14 @@ public class VirtualFileStatus {
         initialize(clusterName, vpath, dir, length, blockSize, modificationTime, localHDFSResourcePath);
     }
     
+    public VirtualFileStatus(RemoteRecipe recipe) {
+        initialize(recipe.getClusterName(), recipe.getVirtualPath(), false, recipe.getSize(), recipe.getChunkSize(), recipe.getModificationTime(), null);
+    }
+    
+    public VirtualFileStatus(String clusterName, String vpath, LocalRecipe recipe) {
+        initialize(clusterName, vpath, false, recipe.getSize(), recipe.getChunkSize(), recipe.getModificationTime(), recipe.getResourcePath());
+    }
+    
     private void initialize(String clusterName, String vpath, boolean dir, long length, long blockSize, long modificationTime, URI localHDFSResourcePath) {
         this.clusterName = clusterName;
         this.virtualPath = vpath;
@@ -59,25 +69,25 @@ public class VirtualFileStatus {
         this.length = length;
         this.blockSize = blockSize;
         this.modificationTime = modificationTime;
-        this.localHDFSResourcePath = localHDFSResourcePath;
+        this.localResourcePath = localHDFSResourcePath;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public long getModificationTime() {
         return this.modificationTime;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public void setModificationTime(long time) {
         this.modificationTime = time;
     }
  
-    @JsonProperty("blockSize")
+    @JsonProperty("block_size")
     public long getBlockSize() {
         return this.blockSize;
     }
     
-    @JsonProperty("blockSize")
+    @JsonProperty("block_size")
     public void setBlockSize(long blockSize) {
         this.blockSize = blockSize;
     }
@@ -102,33 +112,33 @@ public class VirtualFileStatus {
         this.length = length;
     }
     
-    @JsonProperty("clusterName")
+    @JsonProperty("cluster_name")
     public String getClusterName() {
         return this.clusterName;
     }
     
-    @JsonProperty("clusterName")
+    @JsonProperty("cluster_name")
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
     }
     
-    @JsonProperty("virtualPath")
+    @JsonProperty("virtual_path")
     public String getVirtualPath() {
         return this.virtualPath;
     }
     
-    @JsonProperty("virtualPath")
+    @JsonProperty("virtual_path")
     public void setVirtualPath(String virtualPath) {
         this.virtualPath = virtualPath;
     }
 
-    @JsonProperty("localHDFSResourcePath")
-    public URI getLocalHDFSResourcePath() {
-        return this.localHDFSResourcePath;
+    @JsonProperty("local_resource_path")
+    public URI getLocalResourcePath() {
+        return this.localResourcePath;
     }
     
-    @JsonProperty("localHDFSResourcePath")
-    public void setLocalHDFSResourcePath(URI localHDFSResourcePath) {
-        this.localHDFSResourcePath = localHDFSResourcePath;
+    @JsonProperty("local_resource_path")
+    public void setLocalResourcePath(URI localResourcePath) {
+        this.localResourcePath = localResourcePath;
     }
 }

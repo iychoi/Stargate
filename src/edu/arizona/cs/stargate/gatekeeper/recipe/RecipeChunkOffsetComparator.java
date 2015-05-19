@@ -21,29 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package edu.arizona.cs.stargate.gatekeeper.recipe;
 
-package edu.arizona.cs.stargate.gatekeeper.restful.api;
-
-import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
-import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
-import java.io.InputStream;
-import java.util.Collection;
+import java.util.Comparator;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AFileSystemRestfulAPI {
-    public static final String BASE_PATH = "/filesystem";
-    public static final String LOCAL_CLUSTER_PATH = "/localcluster";
-    public static final String FILE_STATUS_PATH = "/status";
-    public static final String LIST_FILE_STATUS_PATH = "/liststatus";
-    public static final String DATA_CHUNK_PATH = "/chunk";
-    
-    public abstract Cluster getLocalCluster() throws Exception;
+public class RecipeChunkOffsetComparator implements Comparator<RecipeChunk> {
 
-    public abstract Collection<VirtualFileStatus> listStatus(String mappedPath) throws Exception;
-    public abstract VirtualFileStatus getFileStatus(String mappedPath) throws Exception;
-    
-    public abstract InputStream getDataChunk(String mappedPath, long offset, int size) throws Exception;
+    @Override
+    public int compare(RecipeChunk t, RecipeChunk t1) {
+        long diff = t.getOffset() - t1.getOffset();
+        if(diff > 0) {
+            return 1;
+        } else if (diff < 0) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
 }

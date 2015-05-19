@@ -44,6 +44,7 @@ public class RemoteRecipe {
     
     private static final Log LOG = LogFactory.getLog(RemoteRecipe.class);
     
+    private String clusterName;
     private String virtualPath;
     private String hashAlgorithm;
     private int chunkSize;
@@ -65,15 +66,16 @@ public class RemoteRecipe {
         return (RemoteRecipe) serializer.fromJson(json, RemoteRecipe.class);
     }
     
-    public RemoteRecipe(String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
-        initializeRemoteRecipe(virtualPath, hashAlgorithm, size, modificationTime, chunkSize, chunks);
+    public RemoteRecipe(String clusterName, String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
+        initializeRemoteRecipe(clusterName, virtualPath, hashAlgorithm, size, modificationTime, chunkSize, chunks);
     }
     
-    public RemoteRecipe(String virtualPath, LocalRecipe recipe) {
-        initializeRemoteRecipe(virtualPath, recipe.getHashAlgorithm(), recipe.getSize(), recipe.getModificationTime(), recipe.getChunkSize(), recipe.getAllChunks());
+    public RemoteRecipe(String clusterName, String virtualPath, LocalRecipe recipe) {
+        initializeRemoteRecipe(clusterName, virtualPath, recipe.getHashAlgorithm(), recipe.getSize(), recipe.getModificationTime(), recipe.getChunkSize(), recipe.getAllChunks());
     }
     
-    private void initializeRemoteRecipe(String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
+    private void initializeRemoteRecipe(String clusterName, String virtualPath, String hashAlgorithm, long size, long modificationTime, int chunkSize, Collection<RecipeChunk> chunks) {
+        this.clusterName = clusterName;
         this.virtualPath = virtualPath;
         this.hashAlgorithm = hashAlgorithm;
         this.size = size;
@@ -84,12 +86,22 @@ public class RemoteRecipe {
         }
     }
     
-    @JsonProperty("virthalPath")
+    @JsonProperty("cluster_name")
+    public String getClusterName() {
+        return this.clusterName;
+    }
+    
+    @JsonProperty("cluster_name")
+    void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+    
+    @JsonProperty("virthal_path")
     public String getVirtualPath() {
         return this.virtualPath;
     }
     
-    @JsonProperty("virthalPath")
+    @JsonProperty("virthal_path")
     void setVirtualPath(String virtualPath) {
         this.virtualPath = virtualPath;
     }
@@ -141,27 +153,27 @@ public class RemoteRecipe {
         this.size = size;
     }
     
-    @JsonProperty("chunkSize")
+    @JsonProperty("chunk_size")
     public int getChunkSize() {
         return this.chunkSize;
     }
     
-    @JsonProperty("chunkSize")
+    @JsonProperty("chunk_size")
     public void setChunkSize(int chunkSize) {
         this.chunkSize = chunkSize;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public long getModificationTime() {
         return this.modificationTime;
     }
     
-    @JsonProperty("modificationTime")
+    @JsonProperty("modification_time")
     public void setModificationTime(long time) {
         this.modificationTime = time;
     }
     
     public String toString() {
-        return this.virtualPath + ", " + this.hashAlgorithm + ", #entries = " + this.chunks.size();
+        return this.clusterName + ", " + this.virtualPath + ", " + this.hashAlgorithm + ", #entries = " + this.chunks.size();
     }
 }

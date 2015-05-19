@@ -33,6 +33,7 @@ import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.InterClusterDataTransferRestfulAPI;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
+import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
 import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
 import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
@@ -108,13 +109,14 @@ public class InterClusterDataTransferRestfulServlet extends InterClusterDataTran
     
     @Override
     public RemoteRecipe getRecipe(String vpath) throws Exception {
+        LocalClusterManager lcm = getLocalClusterManager();
         DataExportManager dem = getDataExportManager();
         LocalRecipeManager lrm = getLocalRecipeManager();
         
         DataExport export = dem.getDataExport(vpath);
         if(export != null) {
             LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
-            return new RemoteRecipe(export.getVirtualPath(), recipe);
+            return new RemoteRecipe(lcm.getName(), export.getVirtualPath(), recipe);
         } else {
             return null;
         }
@@ -122,6 +124,7 @@ public class InterClusterDataTransferRestfulServlet extends InterClusterDataTran
     
     @Override
     public Collection<RemoteRecipe> getAllRecipes() throws Exception {
+        LocalClusterManager lcm = getLocalClusterManager();
         DataExportManager dem = getDataExportManager();
         LocalRecipeManager lrm = getLocalRecipeManager();
         
@@ -130,7 +133,7 @@ public class InterClusterDataTransferRestfulServlet extends InterClusterDataTran
         if(exports != null) {
             for(DataExport export : exports) {
                 LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
-                remoteRecipes.add(new RemoteRecipe(export.getVirtualPath(), recipe));
+                remoteRecipes.add(new RemoteRecipe(lcm.getName(), export.getVirtualPath(), recipe));
             }
         }
         return remoteRecipes;
@@ -232,6 +235,16 @@ public class InterClusterDataTransferRestfulServlet extends InterClusterDataTran
         if(chunk != null) {
             return ChunkReaderFactory.getChunkReader(chunk.getResourcePath(), chunk.getOffset(), chunk.getLength());
         } else {
+            return null;
+        }
+    }
+    
+    private LocalClusterManager getLocalClusterManager() {
+        try {
+            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
+            return gatekeeperService.getLocalClusterManager();
+        } catch (ServiceNotStartedException ex) {
+            LOG.error(ex);
             return null;
         }
     }

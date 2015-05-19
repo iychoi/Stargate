@@ -50,6 +50,8 @@ public class DataExportManager {
     private JsonReplicatedMap<String, DataExport> dataExports;
     private ArrayList<IDataExportConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<IDataExportConfigurationChangeEventHandler>();
     
+    private boolean updated;
+    
     public static DataExportManager getInstance(DistributedService distributedService) {
         synchronized (DataExportManager.class) {
             if(instance == null) {
@@ -105,11 +107,13 @@ public class DataExportManager {
                 removeDataExport(export);
             }
         }
+        
+        this.updated = true;
     }
     
     public synchronized void addDataExport(Collection<DataExport> exports) throws DataExportAlreadyAddedException {
         for(DataExport export : exports) {
-            DataExportManager.this.addDataExport(export);
+            addDataExport(export);
         }
     }
     
@@ -123,6 +127,9 @@ public class DataExportManager {
         }
         
         DataExport exportAdded = this.dataExports.put(export.getVirtualPath(), export);
+        
+        this.updated = true;
+        
         if(exportAdded != null) {
             raiseEventForAddDataExport(exportAdded);
         }
@@ -164,6 +171,9 @@ public class DataExportManager {
         }
         
         DataExport removed = this.dataExports.remove(vpath);
+        
+        this.updated = true;
+        
         if(removed != null) {
             raiseEventForRemoveDataExport(removed);
         }
@@ -183,6 +193,14 @@ public class DataExportManager {
         for(IDataExportConfigurationChangeEventHandler handler: this.configChangeEventHandlers) {
             handler.removeDataExport(this, export);
         }
+    }
+    
+    public synchronized void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+    
+    public synchronized boolean getUpdated() {
+        return this.updated;
     }
     
     @Override

@@ -85,46 +85,36 @@ public class GateKeeperServiceConfiguration extends ImmutableConfiguration {
         return this.servicePort;
     }
     
-    @JsonProperty("synchronizationPeriod")
-    public void setSynchronizationPeriod(int sec) {
-        this.synchronizationPeriod = sec;
-    }
-    
-    @JsonProperty("synchronizationPeriod")
-    public int getSynchronizationPeriod() {
-        return this.synchronizationPeriod;
-    }
-    
-    @JsonProperty("dhtService")
+    @JsonProperty("dht_service")
     public void setDistributedCacheServiceConfiguration(DistributedServiceConfiguration conf) {
         super.verifyMutable();
         
         this.distributedCacheServiceConfig = conf;
     }
     
-    @JsonProperty("dhtService")
+    @JsonProperty("dht_service")
     public DistributedServiceConfiguration getDistributedCacheServiceConfiguration() {
         return this.distributedCacheServiceConfig;
     }
     
-    @JsonProperty("localCluster")
+    @JsonProperty("local_cluster")
     public Cluster getLocalCluster() {
         return this.localCluster;
     }
     
-    @JsonProperty("localCluster")
+    @JsonProperty("local_cluster")
     public void setLocalCluster(Cluster cluster) {
         super.verifyMutable();
         
         this.localCluster = cluster;
     }
     
-    @JsonProperty("remoteClusters")
+    @JsonProperty("remote_clusters")
     public Collection<Cluster> getRemoteClusters() {
         return this.remoteClusters;
     }
     
-    @JsonProperty("remoteClusters")
+    @JsonProperty("remote_clusters")
     public void addRemoteClusters(Collection<Cluster> clusters) {
         super.verifyMutable();
         

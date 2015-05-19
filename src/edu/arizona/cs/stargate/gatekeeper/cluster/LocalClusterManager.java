@@ -53,6 +53,8 @@ public class LocalClusterManager {
     private JsonReplicatedMap<String, ClusterNode> nodes;
     private ArrayList<ILocalClusterConfigurationChangeEventHandler> configChangeEventHandlers = new ArrayList<ILocalClusterConfigurationChangeEventHandler>();
     
+    private boolean updated;
+    
     public static LocalClusterManager getInstance(DistributedService distributedService) {
         synchronized (LocalClusterManager.class) {
             if(instance == null) {
@@ -86,6 +88,8 @@ public class LocalClusterManager {
         }
         
         this.name = name;
+        
+        this.updated = true;
     }
     
     public synchronized int getNodeCount() {
@@ -138,6 +142,8 @@ public class LocalClusterManager {
         }
         
         keys.clear();
+        
+        this.updated = true;
     }
     
     public synchronized void addNode(Collection<ClusterNode> nodes) throws NodeAlreadyAddedException {
@@ -156,12 +162,15 @@ public class LocalClusterManager {
         }
         
         ClusterNode nodeAdded = this.nodes.put(node.getName(), node);
+        
+        this.updated = true;
+        
         if(nodeAdded != null) {
             raiseEventForAddNode(nodeAdded);
         }
     }
     
-    public synchronized void addNode(ClusterNode node, boolean bLocal) throws NodeAlreadyAddedException {
+    public synchronized void addNode(ClusterNode node, boolean local) throws NodeAlreadyAddedException {
         if(node == null || node.isEmpty()) {
             throw new IllegalArgumentException("node is empty or null");
         }
@@ -170,11 +179,14 @@ public class LocalClusterManager {
             throw new NodeAlreadyAddedException("node " + node.getName() + " is already added");
         }
         
-        if(bLocal) {
+        if(local) {
             this.localNode = node;
         }
         
         ClusterNode nodeAdded = this.nodes.put(node.getName(), node);
+        
+        this.updated = true;
+        
         if(nodeAdded != null) {
             raiseEventForAddNode(nodeAdded);
         }
@@ -200,6 +212,9 @@ public class LocalClusterManager {
         }
         
         ClusterNode nodeRemoved = this.nodes.remove(name);
+        
+        this.updated = true;
+        
         if(nodeRemoved != null) {
             raiseEventForRemoveNode(nodeRemoved);
         }
@@ -226,6 +241,8 @@ public class LocalClusterManager {
         
         ClusterNode node = this.nodes.remove(name);
         this.nodes.put(node.getName(), node);
+        
+        this.updated = true;
     }
     
     public synchronized void updateNode(ClusterNode node) {
@@ -241,13 +258,10 @@ public class LocalClusterManager {
         
         this.nodes.remove(node.getName());
         this.nodes.put(node.getName(), node);
+        
+        this.updated = true;
     }
     
-    @Override
-    public String toString() {
-        return "LocalClusterManager : " + this.name;
-    }
-
     public boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
             return true;
@@ -307,5 +321,18 @@ public class LocalClusterManager {
     
     public synchronized ClusterNode getLocalNode() {
         return this.localNode;
+    }
+    
+    public synchronized void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+    
+    public synchronized boolean getUpdated() {
+        return this.updated;
+    }
+    
+    @Override
+    public String toString() {
+        return "LocalClusterManager : " + this.name;
     }
 }

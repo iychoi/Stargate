@@ -30,23 +30,24 @@ import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.LocalClusterManager;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExport;
-import edu.arizona.cs.stargate.gatekeeper.dataexport.DataExportManager;
-import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
-import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipe;
-import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunk;
-import edu.arizona.cs.stargate.gatekeeper.recipe.LocalRecipeManager;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.FileSystemManager;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.RestfulResponse;
 import edu.arizona.cs.stargate.gatekeeper.restful.api.AFileSystemRestfulAPI;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Collections;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -89,76 +90,120 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
     }
     
     @GET
-    @Path(AFileSystemRestfulAPI.VIRTUAL_FILE_STATUS_PATH)
+    @Path(AFileSystemRestfulAPI.LIST_FILE_STATUS_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetVirtualFileStatusText() {
+    public String responseListStatusText(
+            @DefaultValue("null") @QueryParam("mpath") String mpath
+    ) {
         try {
-            return DataFormatUtils.toJSONFormat(responseGetVirtualFileStatusJSON());
+            return DataFormatUtils.toJSONFormat(responseListStatusJSON(mpath));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(AFileSystemRestfulAPI.VIRTUAL_FILE_STATUS_PATH)
+    @Path(AFileSystemRestfulAPI.LIST_FILE_STATUS_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<VirtualFileStatus>> responseGetVirtualFileStatusJSON() {
+    public RestfulResponse<Collection<VirtualFileStatus>> responseListStatusJSON(
+            @DefaultValue("null") @QueryParam("mpath") String mpath
+    ) {
         try {
-            return new RestfulResponse<Collection<VirtualFileStatus>>(getAllVirtualFileStatus());
+            if(mpath != null) {
+                Collection<VirtualFileStatus> status = listStatus(mpath);
+                return new RestfulResponse<Collection<VirtualFileStatus>>(Collections.unmodifiableCollection(status));
+            } else {
+                return new RestfulResponse<Collection<VirtualFileStatus>>(new Exception("invalid parameter"));
+            }
         } catch(Exception ex) {
             return new RestfulResponse<Collection<VirtualFileStatus>>(ex);
         }
     }
     
     @Override
-    public Collection<VirtualFileStatus> getAllVirtualFileStatus() throws Exception {
-        LocalClusterManager lcm = getLocalClusterManager();
-        DataExportManager dem = getDataExportManager();
-        LocalRecipeManager lrm = getLocalRecipeManager();
-        
-        ArrayList<VirtualFileStatus> status = new ArrayList<VirtualFileStatus>();
-        
-        Collection<DataExport> local_exports = dem.getAllDataExports();
-        for(DataExport export : local_exports) {
-            LocalRecipe recipe = lrm.getRecipe(export.getResourcePath());
-            if(recipe != null) {
-                VirtualFileStatus t_status = new VirtualFileStatus(lcm.getName(), export.getVirtualPath(), false, recipe.getSize(), recipe.getChunkSize(), recipe.getModificationTime());
-            }
-        }
-        return status;
+    public Collection<VirtualFileStatus> listStatus(String mappedPath) throws Exception {
+        FileSystemManager fsm = getFileSystemManager();
+        return fsm.listStatus(mappedPath);
     }
-
+    
     @GET
-    @Path(AFileSystemRestfulAPI.FS_BLOCK_SIZE_PATH)
+    @Path(AFileSystemRestfulAPI.FILE_STATUS_PATH)
     @Produces(MediaType.TEXT_PLAIN)
-    public String responseGetBlockSizeText() {
+    public String responseGetFileStatusText(
+            @DefaultValue("null") @QueryParam("mpath") String mpath
+    ) {
         try {
-            return DataFormatUtils.toJSONFormat(responseGetBlockSizeJSON());
+            return DataFormatUtils.toJSONFormat(responseGetFileStatusJSON(mpath));
         } catch (IOException ex) {
             return "DataFormatter formatting error";
         }
     }
     
     @GET
-    @Path(AFileSystemRestfulAPI.FS_BLOCK_SIZE_PATH)
+    @Path(AFileSystemRestfulAPI.FILE_STATUS_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Long> responseGetBlockSizeJSON() {
+    public RestfulResponse<VirtualFileStatus> responseGetFileStatusJSON(
+            @DefaultValue("null") @QueryParam("mpath") String mpath
+    ) {
         try {
-            return new RestfulResponse<Long>(getBlockSize());
+            if(mpath != null) {
+                VirtualFileStatus status = getFileStatus(mpath);
+                return new RestfulResponse<VirtualFileStatus>(status);
+            } else {
+                return new RestfulResponse<VirtualFileStatus>(new Exception("invalid parameter"));
+            }
         } catch(Exception ex) {
-            return new RestfulResponse<Long>(ex);
+            return new RestfulResponse<VirtualFileStatus>(ex);
         }
-    }
-    
-    @Override
-    public long getBlockSize() throws Exception {
-        LocalRecipeManager lrm = getLocalRecipeManager();
-        return lrm.getConfiguration().getChunkSize();
     }
 
     @Override
-    public byte[] readChunkData(String clusterName, String virtualPath, long offset, long size) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public VirtualFileStatus getFileStatus(String mappedPath) throws Exception {
+        FileSystemManager fsm = getFileSystemManager();
+        return fsm.getFileStatus(mappedPath);
+    }
+    
+    @GET
+    @Path(AFileSystemRestfulAPI.DATA_CHUNK_PATH)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response responseGetDataChunk(
+            @DefaultValue("null") @QueryParam("mpath") String mpath,
+            @DefaultValue("0") @QueryParam("offset") long offset,
+            @DefaultValue("0") @QueryParam("len") int len
+    ) throws Exception {
+        final InputStream is = getDataChunk(mpath, offset, len);
+        if(is == null) {
+            LOG.error("data chunk not found : mpath - " + mpath);
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        StreamingOutput stream = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream out) throws IOException, WebApplicationException {
+                try {
+                    int buffersize = 100 * 1024;
+                    byte[] buffer = new byte[buffersize];
+
+                    int read = 0;
+                    while ((read = is.read(buffer)) > 0) {
+                        out.write(buffer, 0, read);
+                    }
+                    is.close();
+
+                } catch (Exception ex) {
+                    throw new WebApplicationException(ex);
+                }
+            }
+        };
+
+        return Response.ok(stream).header("content-disposition", "attachment; filename = " + mpath).build();
+    }
+
+    @Override
+    public InputStream getDataChunk(String mappedPath, long offset, int size) throws Exception {
+        FileSystemManager fsm = getFileSystemManager();
+        return fsm.getDataChunk(mappedPath, offset, size);
     }
     
     private LocalClusterManager getLocalClusterManager() {
@@ -171,20 +216,10 @@ public class FileSystemRestfulServlet extends AFileSystemRestfulAPI {
         }
     }
     
-    private LocalRecipeManager getLocalRecipeManager() {
+    private FileSystemManager getFileSystemManager() {
         try {
             GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getLocalRecipeManager();
-        } catch (ServiceNotStartedException ex) {
-            LOG.error(ex);
-            return null;
-        }
-    }
-
-    private DataExportManager getDataExportManager() {
-        try {
-            GateKeeperService gatekeeperService = GateKeeperService.getInstance();
-            return gatekeeperService.getDataExportManager();
+            return gatekeeperService.getFileSystemManager();
         } catch (ServiceNotStartedException ex) {
             LOG.error(ex);
             return null;

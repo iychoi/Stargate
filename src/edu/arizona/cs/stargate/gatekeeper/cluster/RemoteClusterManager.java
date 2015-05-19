@@ -53,6 +53,8 @@ public class RemoteClusterManager {
     private JsonReplicatedMap<String, Cluster> clusters;
     private JsonReplicatedMap<String, Cluster> pendingClusters;
     
+    private boolean updated;
+    
     public static RemoteClusterManager getInstance(DistributedService distributedService) {
         synchronized (RemoteClusterManager.class) {
             if(instance == null) {
@@ -109,6 +111,8 @@ public class RemoteClusterManager {
                 removeCluster(cluster);
             }
         }
+        
+        this.updated = true;
     }
     
     public synchronized void addCluster(Collection<Cluster> clusters) throws ClusterAlreadyAddedException {
@@ -127,6 +131,8 @@ public class RemoteClusterManager {
         }
         
         this.clusters.put(cluster.getName(), cluster);
+        
+        this.updated = true;
     }
     
     public synchronized void removeCluster(Cluster cluster) {
@@ -143,11 +149,15 @@ public class RemoteClusterManager {
         }
         
         this.clusters.remove(name);
+        
+        this.updated = true;
     }
     
     public synchronized void updateCluster(Cluster cluster) {
         this.clusters.remove(cluster.getName());
         this.clusters.put(cluster.getName(), cluster);
+        
+        this.updated = true;
     }
     
     public synchronized void addPendingCluster(Collection<Cluster> clusters) throws ClusterAlreadyAddedException {
@@ -180,6 +190,16 @@ public class RemoteClusterManager {
         }
         
         this.pendingClusters.remove(prev.getName());
+        
+        this.updated = true;
+    }
+    
+    public synchronized void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+    
+    public synchronized boolean getUpdated() {
+        return this.updated;
     }
 
     @Override

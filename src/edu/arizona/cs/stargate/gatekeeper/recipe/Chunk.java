@@ -174,7 +174,7 @@ public class Chunk {
         return hasHash(DataFormatUtils.hexToBytes(hash));
     }
     
-    @JsonProperty("ownerHosts")
+    @JsonProperty("owner_hosts")
     public String[] getOwnerHosts() {
         return this.ownerHosts;
     }
@@ -184,7 +184,7 @@ public class Chunk {
         this.ownerHosts = new String[] {ownerHost};
     }
     
-    @JsonProperty("ownerHosts")
+    @JsonProperty("owner_hosts")
     public void setOwnerHosts(String[] ownerHosts) {
         this.ownerHosts = ownerHosts;
     }

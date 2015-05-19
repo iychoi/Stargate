@@ -23,6 +23,7 @@
  */
 package edu.arizona.cs.stargate.gatekeeper.recipe;
 
+import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.ClusterNode;
@@ -40,11 +41,14 @@ import org.apache.commons.logging.LogFactory;
 public class RemoteRecipeSyncTask extends ALeaderScheduledTask {
     private static final Log LOG = LogFactory.getLog(RemoteRecipeSyncTask.class);
     
+    private static final int REMOTE_RECIPE_CHECK_PERIOD_SEC = 20;
     private static final int REMOTE_RECIPE_SYNC_PERIOD_SEC = 600;
     
     private RemoteClusterManager remoteClusterManager;
     private RemoteRecipeManager remoteRecipeManager;
     private RemoteGateKeeperClientManager gatekeeperClientManager;
+    
+    private long lastSyncTime;
     
     public RemoteRecipeSyncTask(RemoteClusterManager remoteClusterManager, RemoteRecipeManager remoteRecipeManager, RemoteGateKeeperClientManager gatekeeperClientManager) {
         this.remoteClusterManager = remoteClusterManager;
@@ -56,13 +60,25 @@ public class RemoteRecipeSyncTask extends ALeaderScheduledTask {
     public void process() {
         LOG.info("Start - RemoteRecipeSyncTask");
         
-        Collection<Cluster> remoteClusters = this.remoteClusterManager.getAllClusters();
-        for(Cluster cluster : remoteClusters) {
-            Collection<RemoteRecipe> recipes = retrieveRecipes(cluster);
-            if(recipes != null) {
-                for(RemoteRecipe recipe : recipes) {
-                    this.remoteRecipeManager.updateRecipe(recipe);
-                }
+        boolean bNeedSync = false;
+        long currentTime = DateTimeUtils.getCurrentTime();
+        
+        // check
+        if(this.remoteClusterManager.getUpdated()) {
+            bNeedSync = true;
+            this.remoteClusterManager.setUpdated(false);
+        } else if(DateTimeUtils.timeElapsedSecond(this.lastSyncTime, currentTime, REMOTE_RECIPE_SYNC_PERIOD_SEC)) {
+            bNeedSync = true;
+        }
+        
+        if(bNeedSync) {
+            // sync
+            this.lastSyncTime = currentTime;
+
+            Collection<Cluster> remoteClusters = this.remoteClusterManager.getAllClusters();
+            for(Cluster cluster : remoteClusters) {
+                Collection<RemoteRecipe> recipes = retrieveRecipes(cluster);
+                this.remoteRecipeManager.updateRecipe(cluster, recipes);
             }
         }
         
@@ -78,9 +94,7 @@ public class RemoteRecipeSyncTask extends ALeaderScheduledTask {
                     Collection<RemoteRecipe> recipes = client.getRestfulClient().getInterClusterDataTransferClient().getAllRecipes();
                     client.stop();
 
-                    if(recipes != null) {
-                        return recipes;
-                    }
+                    return recipes;
                 } catch (Exception ex) {
                     LOG.info("remote cluster service is unreachable - " + node.getServiceURL());
                     node.setUnrechable(true);
@@ -108,6 +122,6 @@ public class RemoteRecipeSyncTask extends ALeaderScheduledTask {
 
     @Override
     public long getPeriod() {
-        return REMOTE_RECIPE_SYNC_PERIOD_SEC;
+        return REMOTE_RECIPE_CHECK_PERIOD_SEC;
     }
 }

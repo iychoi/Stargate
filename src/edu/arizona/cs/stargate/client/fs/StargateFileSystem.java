@@ -24,9 +24,8 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.common.DateTimeUtils;
 import edu.arizona.cs.stargate.common.PathUtils;
-import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClient;
 import edu.arizona.cs.stargate.gatekeeper.GateKeeperClientConfiguration;
 import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
@@ -35,11 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -55,8 +50,6 @@ public class StargateFileSystem {
     private GateKeeperClient gatekeeperClient;
     private FileSystemRestfulClient filesystemClient;
     private Cluster localCluster;
-    private Map<String, VirtualFileStatus> mappedEntries = new HashMap<String, VirtualFileStatus>();
-    private long lastUpdatedTime;
     
     public StargateFileSystem(String gatekeeperHost) throws IOException {
         String gatekeeperServiceURL = gatekeeperHost;
@@ -85,83 +78,15 @@ public class StargateFileSystem {
         
         this.filesystemClient = this.gatekeeperClient.getRestfulClient().getFileSystemClient();
         
-        syncLocalCluster();
-        syncMappedEntries();
-    }
-
-    private synchronized void syncLocalCluster() throws IOException {
         try {
             this.localCluster = this.filesystemClient.getLocalCluster();
         } catch (Exception ex) {
-            LOG.error(ex);
-            throw new IOException(ex);
-        }
-    }
-    
-    private VirtualFileStatus makeRootDirectoryStatus() {
-        long blockSize;
-        try {
-            blockSize = this.filesystemClient.getBlockSize();
-        } catch (Exception ex) {
-            LOG.error(ex);
-            blockSize = FileSystemRestfulClient.DEFAULT_BLOCK_SIZE;
-        }
-        return new VirtualFileStatus("", "/", true, 4096, blockSize, this.lastUpdatedTime);
-    }
-    
-    private VirtualFileStatus makeParentDirectoryStatus(VirtualFileStatus status) {
-        if(status.getClusterName() == null || status.getClusterName().isEmpty()) {
-            return null;
-        }
-        
-        String parentPath = PathUtils.getParent(status.getVirtualPath());
-        if(parentPath != null) {
-            return new VirtualFileStatus(status.getClusterName(), parentPath, true, 4096, 4096, this.lastUpdatedTime);
-        }
-        return null;
-    }
-    
-    private synchronized void putMapping(VirtualFileStatus status) {
-        String path = PathUtils.getPath(status);
-        if(path == null || path.isEmpty()) {
-            return;
-        }
-        
-        if(!this.mappedEntries.containsKey(path)) {
-            VirtualFileStatus parentStatus = makeParentDirectoryStatus(status);
-            if(parentStatus != null) {
-                putMapping(parentStatus);
-            }
-            
-            this.mappedEntries.put(path, status);
-        }
-    }
-    
-    private synchronized void syncMappedEntries() throws IOException {
-        this.lastUpdatedTime = DateTimeUtils.getCurrentTime();
-        this.mappedEntries.clear();
-        
-        VirtualFileStatus rootFileStatus = makeRootDirectoryStatus();
-        putMapping(rootFileStatus);
-        
-        Collection<VirtualFileStatus> list_status;
-        try {
-            list_status = this.filesystemClient.getAllVirtualFileStatus();
-            for(VirtualFileStatus status : list_status) {
-                putMapping(status);
-            }
-        } catch (Exception ex) {
-            LOG.error(ex);
             throw new IOException(ex);
         }
     }
     
     private synchronized String getClusterName(URI resourceURI) {
-        String clusterName = PathUtils.extractClusterNameFromPath(resourceURI);
-        if(clusterName.equalsIgnoreCase("localhost") || clusterName.isEmpty()) {
-            return this.localCluster.getName();
-        }
-        return clusterName;
+        return PathUtils.extractClusterNameFromPath(resourceURI);
     }
     
     private synchronized String getVirtualPath(URI resourceURI) {
@@ -175,23 +100,21 @@ public class StargateFileSystem {
         return PathUtils.concatPath(clusterName, virtualPath);
     }
     
-    public synchronized VirtualFileStatus[] listStatus(URI resourceURI) {
-        String mappedPath = makeMappedPath(resourceURI);
-        
-        ArrayList<VirtualFileStatus> list_status = new ArrayList<VirtualFileStatus>();
-        Set<String> keySet = this.mappedEntries.keySet();
-        for(String path : keySet) {
-            String parent = PathUtils.getParent(path);
-            if(parent != null && parent.equals(mappedPath)) {
-                list_status.add(this.mappedEntries.get(path));
+    public synchronized VirtualFileStatus[] listStatus(URI resourceURI) throws IOException {
+        try {
+            String mappedPath = makeMappedPath(resourceURI);
+            Collection<VirtualFileStatus> status = this.filesystemClient.listStatus(mappedPath);
+            if(status != null) {
+                return status.toArray(new VirtualFileStatus[0]);
             }
+            return null;
+        } catch (Exception ex) {
+            throw new IOException(ex);
         }
-        return list_status.toArray(new VirtualFileStatus[0]);
     }
 
     public synchronized InputStream open(URI resourceURI, int bufferSize) throws IOException {
-        String mappedPath = makeMappedPath(resourceURI);
-        VirtualFileStatus status = this.mappedEntries.get(mappedPath);
+        VirtualFileStatus status = getFileStatus(resourceURI);
         if(status != null) {
             return new ChunkInputStream(this.filesystemClient, status);
         }
@@ -199,29 +122,35 @@ public class StargateFileSystem {
     }
     
     public synchronized FSDataInputStream open2(URI resourceURI, int bufferSize) throws IOException {
-        String mappedPath = makeMappedPath(resourceURI);
-        VirtualFileStatus status = this.mappedEntries.get(mappedPath);
+        VirtualFileStatus status = getFileStatus(resourceURI);
         if(status != null) {
             return new FSDataInputStream(new FSChunkInputStream(this.filesystemClient, status));
         }
         return null;
     }
 
-    public synchronized VirtualFileStatus getFileStatus(URI resourceURI) {
-        String mappedPath = makeMappedPath(resourceURI);
-        return this.mappedEntries.get(mappedPath);
+    public synchronized VirtualFileStatus getFileStatus(URI resourceURI) throws IOException {
+        try {
+            String mappedPath = makeMappedPath(resourceURI);
+            return this.filesystemClient.getFileStatus(mappedPath);
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
     }
 
     public synchronized long getBlockSize() {
-        return this.mappedEntries.get("/").getBlockSize();
+        try {
+            VirtualFileStatus status = this.filesystemClient.getFileStatus("/");
+            return status.getBlockSize();
+        } catch (Exception ex) {
+            return 1024*1024; // default
+        }
     }
 
-    public synchronized URI getLocalClusterResourcePath(URI resourceURI) {
-        String mappedPath = makeMappedPath(resourceURI);
-        VirtualFileStatus status = this.mappedEntries.get(mappedPath);
-        
+    public synchronized URI getLocalClusterResourcePath(URI resourceURI) throws IOException {
+        VirtualFileStatus status = getFileStatus(resourceURI);
         if(status != null) {
-            return status.getLocalHDFSResourcePath();
+            return status.getLocalResourcePath();
         }
         return null;
     }
@@ -229,7 +158,8 @@ public class StargateFileSystem {
     public synchronized boolean isLocalClusterPath(URI resourceURI) {
         String clusterName = getClusterName(resourceURI);
         
-        if(clusterName.equals(this.localCluster.getName())) {
+        if(this.localCluster.getName().equalsIgnoreCase(clusterName) ||
+            clusterName.equalsIgnoreCase("localhost")) {
             return true;
         }
         return false;

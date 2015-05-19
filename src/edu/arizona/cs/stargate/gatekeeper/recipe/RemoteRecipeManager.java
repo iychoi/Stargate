@@ -24,11 +24,15 @@
 
 package edu.arizona.cs.stargate.gatekeeper.recipe;
 
+import edu.arizona.cs.stargate.common.PathUtils;
 import edu.arizona.cs.stargate.gatekeeper.distributed.JsonIMap;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
+import edu.arizona.cs.stargate.gatekeeper.cluster.Cluster;
 import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterManager;
 import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,6 +51,8 @@ public class RemoteRecipeManager {
     private RemoteClusterManager remoteClusterManager;
     
     private JsonIMap<String, RemoteRecipe> recipes;
+    
+    private boolean updated;
     
     public static RemoteRecipeManager getInstance(DistributedService distributedService, RemoteClusterManager remoteClusterManager) {
         synchronized (RemoteRecipeManager.class) {
@@ -77,34 +83,75 @@ public class RemoteRecipeManager {
         return this.recipes.values();
     }
     
-    public synchronized RemoteRecipe getRecipe(String virtualPath) {
+    public synchronized RemoteRecipe getRecipe(String clusterName, String virtualPath) {
         RemoteRecipe recipe;
-        recipe = this.recipes.get(virtualPath);
+        recipe = this.recipes.get(PathUtils.concatPath(clusterName, virtualPath));
         return recipe;
     }
     
     public synchronized void removeRecipe(RemoteRecipe recipe) {
-        removeRecipe(recipe.getVirtualPath());
+        removeRecipe(recipe.getClusterName(), recipe.getVirtualPath());
     }
     
-    public synchronized void removeRecipe(String virtualPath) {
-        this.recipes.remove(virtualPath);
+    public synchronized void removeRecipe(String clusterName, String virtualPath) {
+        this.recipes.remove(PathUtils.concatPath(clusterName, virtualPath));
+        
+        this.updated = true;
     }
     
     public synchronized void removeAllRecipes() {
         this.recipes.clear();
+        
+        this.updated = true;
+    }
+    
+    public synchronized void updateRecipe(Cluster cluster, Collection<RemoteRecipe> recipes) {
+        Set<String> keySet = this.recipes.keySet();
+        Set<String> clusterResources = new HashSet<String>();
+        for(String key : keySet) {
+            if(key.startsWith(cluster.getName() + "/")) {
+                clusterResources.add(key);
+            }
+        }
+        
+        if(recipes != null) {
+            for(RemoteRecipe recipe : recipes) {
+                String newKey = PathUtils.concatPath(recipe.getClusterName(), recipe.getVirtualPath());
+                if(clusterResources.contains(newKey)) {
+                    clusterResources.remove(newKey);
+                }
+                updateRecipe(recipe);
+            }
+        }
+        
+        // remove left resources (removed from remote cluster)
+        for(String key : clusterResources) {
+            this.recipes.remove(key);
+        }
+        
+        this.updated = true;
     }
     
     public synchronized void updateRecipe(RemoteRecipe recipe) {
-        RemoteRecipe existingRecipe = this.recipes.get(recipe.getVirtualPath());
+        RemoteRecipe existingRecipe = this.recipes.get(PathUtils.concatPath(recipe.getClusterName(), recipe.getVirtualPath()));
         if(existingRecipe != null) {
             if(existingRecipe.getModificationTime() < recipe.getModificationTime()) {
-                this.recipes.remove(recipe.getVirtualPath());
-                this.recipes.put(recipe.getVirtualPath(), recipe);
+                this.recipes.remove(PathUtils.concatPath(recipe.getClusterName(), recipe.getVirtualPath()));
+                this.recipes.put(PathUtils.concatPath(recipe.getClusterName(), recipe.getVirtualPath()), recipe);
             }
         } else {
-            this.recipes.put(recipe.getVirtualPath(), recipe);
+            this.recipes.put(PathUtils.concatPath(recipe.getClusterName(), recipe.getVirtualPath()), recipe);
         }
+        
+        this.updated = true;
+    }
+    
+    public synchronized void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+    
+    public synchronized boolean getUpdated() {
+        return this.updated;
     }
     
     @Override

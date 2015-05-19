@@ -37,6 +37,8 @@ import edu.arizona.cs.stargate.gatekeeper.distributed.DistributedService;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import edu.arizona.cs.stargate.common.ServiceNotStartedException;
 import edu.arizona.cs.stargate.gatekeeper.cluster.RemoteClusterSyncTask;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.FileSystemManager;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.HierarchyBuildTask;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RemoteRecipeSyncTask;
 import edu.arizona.cs.stargate.gatekeeper.intercluster.RemoteGateKeeperClientManager;
 import edu.arizona.cs.stargate.gatekeeper.recipe.RecipeChunkHashTask;
@@ -77,6 +79,8 @@ public class GateKeeperService {
     private RemoteGateKeeperClientManager gatekeeperClientManager;
     
     private GateKeeperRuntimeInfo runtimeInfo;
+    
+    private FileSystemManager fileSystemManager;
     
     public static GateKeeperService getInstance(GateKeeperServiceConfiguration config) throws Exception {
         synchronized (GateKeeperService.class) {
@@ -132,6 +136,9 @@ public class GateKeeperService {
 
         // gatekeeper client
         this.gatekeeperClientManager = RemoteGateKeeperClientManager.getInstance(this.localClusterManager, this.remoteClusterManager);
+        
+        // filesystem
+        this.fileSystemManager = FileSystemManager.getInstance(this.distributedService, this.localClusterManager, this.remoteClusterManager, this.dataExportManager, this.localRecipeManager, this.remoteRecipeManager, this.gatekeeperClientManager);
 
         // add data
         registerLocalClusterNodes(this.config.getLocalCluster());
@@ -271,6 +278,10 @@ public class GateKeeperService {
         return this.gatekeeperClientManager;
     }
     
+    public synchronized FileSystemManager getFileSystemManager() {
+        return this.fileSystemManager;
+    }
+    
     @Override
     public synchronized String toString() {
         return "GateKeeperService";
@@ -281,5 +292,6 @@ public class GateKeeperService {
         this.scheduleManager.scheduleTask(new RemoteClusterSyncTask(this.remoteClusterManager, this.gatekeeperClientManager));
         this.scheduleManager.scheduleTask(new RecipeChunkHashTask(this.localClusterManager, this.localRecipeManager));
         this.scheduleManager.scheduleTask(new RemoteRecipeSyncTask(this.remoteClusterManager, this.remoteRecipeManager, this.gatekeeperClientManager));
+        this.scheduleManager.scheduleTask(new HierarchyBuildTask(this.fileSystemManager));
     }
 }

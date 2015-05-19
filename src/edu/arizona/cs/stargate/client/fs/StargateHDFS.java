@@ -24,7 +24,7 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.runtime.GateKeeperRuntimeInfo;
 import java.io.IOException;
 import java.net.URI;

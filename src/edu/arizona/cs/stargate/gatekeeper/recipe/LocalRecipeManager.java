@@ -60,6 +60,8 @@ public class LocalRecipeManager {
     private JsonIMap<URI, LocalRecipe> incompleteRecipes;
     private JsonIMap<String, URI[]> chunks;
     
+    private boolean updated;
+    
     public static LocalRecipeManager getInstance(LocalRecipeManagerConfiguration config, DistributedService distributedService, LocalClusterManager localClusterManager, DataExportManager dataExportManager) {
         synchronized (LocalRecipeManager.class) {
             if(instance == null) {
@@ -199,6 +201,8 @@ public class LocalRecipeManager {
             addChunk(chunk.getHashString(), recipe.getResourcePath());
         }
         this.incompleteRecipes.remove(recipe.getResourcePath());
+        
+        this.updated = true;
     }
     
     private synchronized void addChunk(String hash, URI resourceURI) {
@@ -215,6 +219,8 @@ public class LocalRecipeManager {
 
         // update
         this.chunks.put(hash, newResourceURIs.toArray(new URI[0]));
+        
+        this.updated = true;
     }
     
     private synchronized void removeChunk(String hash, URI resourceURI) {
@@ -233,6 +239,8 @@ public class LocalRecipeManager {
         if(!newResourceURIs.isEmpty()) {
             this.chunks.put(hash, newResourceURIs.toArray(new URI[0]));
         }
+        
+        this.updated = true;
     }
     
     public synchronized Chunk getChunk(String hash) {
@@ -254,6 +262,14 @@ public class LocalRecipeManager {
     public synchronized Chunk getChunk(byte[] hash) {
         String hashString = DataFormatUtils.toHexString(hash).toLowerCase();
         return getChunk(hashString);
+    }
+    
+    public synchronized void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+    
+    public synchronized boolean getUpdated() {
+        return this.updated;
     }
     
     @Override

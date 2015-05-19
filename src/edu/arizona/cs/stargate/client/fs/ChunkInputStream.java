@@ -24,10 +24,12 @@
 
 package edu.arizona.cs.stargate.client.fs;
 
-import edu.arizona.cs.stargate.gatekeeper.recipe.VirtualFileStatus;
+import edu.arizona.cs.stargate.common.PathUtils;
+import edu.arizona.cs.stargate.gatekeeper.filesystem.VirtualFileStatus;
 import edu.arizona.cs.stargate.gatekeeper.restful.client.FileSystemRestfulClient;
 import java.io.IOException;
 import java.io.InputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -127,9 +129,10 @@ public class ChunkInputStream extends InputStream {
         
         byte[] data = null;
         try {
-            data = this.filesystemRestfulClient.readChunkData(this.clusterName, this.virtualPath, offset, csize);
+            InputStream dataChunkIS = this.filesystemRestfulClient.getDataChunk(PathUtils.concatPath(this.clusterName, this.virtualPath), offsetStart, (int)csize);
+            data = IOUtils.toByteArray(dataChunkIS);
+            dataChunkIS.close();
         } catch (Exception ex) {
-            LOG.error(ex);
             throw new IOException(ex);
         }
         

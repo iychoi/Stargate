@@ -39,7 +39,7 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
 
     private static final Log LOG = LogFactory.getLog(RecipeChunkHashTask.class);
     
-    private static final int RECIPE_CHUNK_HASH_PERIOD_SEC = 5;
+    private static final int RECIPE_CHUNK_HASH_PERIOD_SEC = 20;
     
     private LocalClusterManager localClusterManager;
     private LocalRecipeManager localRecipeManager;
@@ -62,6 +62,7 @@ public class RecipeChunkHashTask extends ALeaderScheduledTask {
                     
                     recipeGenerator.hashRecipe(recipe);
                     this.localRecipeManager.completeRecipeHash(recipe);
+                    this.localRecipeManager.setUpdated(true);
                 } catch (IOException ex) {
                     LOG.error(ex);
                 } catch (NoSuchAlgorithmException ex) {

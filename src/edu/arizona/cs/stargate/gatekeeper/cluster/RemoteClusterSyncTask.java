@@ -39,7 +39,7 @@ public class RemoteClusterSyncTask extends ALeaderScheduledTask {
 
     private static final Log LOG = LogFactory.getLog(RemoteClusterSyncTask.class);
     
-    private static final int REMOTE_CLUSTER_NODE_SYNC_PERIOD_SEC = 60;
+    private static final int REMOTE_CLUSTER_NODE_SYNC_PERIOD_SEC = 20;
     
     private RemoteClusterManager remoteClusterManager;
     private RemoteGateKeeperClientManager gatekeeperClientManager;
