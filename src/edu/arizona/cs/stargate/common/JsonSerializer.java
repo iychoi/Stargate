@@ -24,10 +24,15 @@
 
 package edu.arizona.cs.stargate.common;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 
@@ -54,8 +59,24 @@ public class JsonSerializer {
         return writer.getBuffer().toString();
     }
     
+    public void toJsonConfiguration(Configuration conf, String key, Object obj) throws IOException {
+        String jsonString = toJson(obj);
+        
+        conf.set(key, jsonString);
+    }
+    
     public void toJsonFile(File f, Object obj) throws IOException {
         this.mapper.writeValue(f, obj);
+    }
+    
+    public void toJsonFile(FileSystem fs, Path file, Object obj) throws IOException {
+        if(!fs.exists(file.getParent())) {
+            fs.mkdirs(file.getParent());
+        }
+        
+        DataOutputStream ostream = fs.create(file, true, 64 * 1024);
+        this.mapper.writeValue(ostream, obj);
+        ostream.close();
     }
     
     public Object fromJson(String json, Class<?> cls) throws IOException {
@@ -66,7 +87,25 @@ public class JsonSerializer {
         return this.mapper.readValue(reader, cls);
     }
     
+    public Object fromJsonConfiguration(Configuration conf, String key, Class<?> cls) throws IOException {
+        String jsonString = conf.get(key);
+        
+        if(jsonString == null) {
+            return null;
+        }
+        
+        return fromJson(jsonString, cls);
+    }
+    
     public Object fromJsonFile(File f, Class<?> cls) throws IOException {
         return this.mapper.readValue(f, cls);
+    }
+    
+    public Object fromJsonFile(FileSystem fs, Path file, Class<?> cls) throws IOException {
+        DataInputStream istream = fs.open(file);
+        Object obj = this.mapper.readValue(istream, cls);
+        
+        istream.close();
+        return obj;
     }
 }

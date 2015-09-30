@@ -24,8 +24,39 @@
 
 package edu.arizona.cs.stargate.service;
 
-import edu.arizona.cs.stargate.common.ServiceNotStartedException;
-import edu.arizona.cs.stargate.gatekeeper.GateKeeperService;
+import edu.arizona.cs.stargate.cluster.ClusterManager;
+import edu.arizona.cs.stargate.cluster.LocalClusterManager;
+import edu.arizona.cs.stargate.cluster.Node;
+import edu.arizona.cs.stargate.cluster.NodeAlreadyAddedException;
+import edu.arizona.cs.stargate.cluster.NodeStatus;
+import edu.arizona.cs.stargate.cluster.RemoteClusterSyncTask;
+import edu.arizona.cs.stargate.common.utils.NodeUtils;
+import edu.arizona.cs.stargate.dataexport.DataExportManager;
+import edu.arizona.cs.stargate.datastore.ADataStoreDriver;
+import edu.arizona.cs.stargate.datastore.DataStoreManager;
+import edu.arizona.cs.stargate.drivers.ADriver;
+import edu.arizona.cs.stargate.drivers.DriverFactory;
+import edu.arizona.cs.stargate.policy.PolicyManager;
+import edu.arizona.cs.stargate.recipe.ARecipeGeneratorDriver;
+import edu.arizona.cs.stargate.recipe.RecipeGeneratorManager;
+import edu.arizona.cs.stargate.recipe.RecipeManager;
+import edu.arizona.cs.stargate.recipe.RecipeSyncTask;
+import edu.arizona.cs.stargate.schedule.AScheduleDriver;
+import edu.arizona.cs.stargate.schedule.ScheduleManager;
+import edu.arizona.cs.stargate.sourcefs.ASourceFileSystemDriver;
+import edu.arizona.cs.stargate.sourcefs.SourceFileSystemManager;
+import edu.arizona.cs.stargate.transport.ATransportDriver;
+import edu.arizona.cs.stargate.transport.TransportManager;
+import edu.arizona.cs.stargate.userinterface.AUserInterfaceDriver;
+import edu.arizona.cs.stargate.drivers.DriverSetting;
+import edu.arizona.cs.stargate.userinterface.UserInterfaceManager;
+import edu.arizona.cs.stargate.volume.VolumeManager;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,12 +65,27 @@ import org.apache.commons.logging.LogFactory;
  * @author iychoi
  */
 public class StargateService {
+    
     private static final Log LOG = LogFactory.getLog(StargateService.class);
     
     private static StargateService instance;
     
     private StargateServiceConfiguration config;
-    private GateKeeperService gatekeeperService;
+    private boolean serviceStarted;
+    
+    private List<ADriver> daemonDriver = new ArrayList<ADriver>();
+    
+    private DataStoreManager dataStoreManager;
+    private SourceFileSystemManager sourceFileSystemManager;
+    private RecipeGeneratorManager recipeGeneratorManager;
+    private ScheduleManager scheduleManager;
+    private PolicyManager policyManager;
+    private ClusterManager clusterManager;
+    private DataExportManager dataExportManager;
+    private RecipeManager recipeManager;
+    private TransportManager transportManager;
+    private VolumeManager volumeManager;
+    private UserInterfaceManager userInterfaceManager;
     
     public static StargateService getInstance(StargateServiceConfiguration config) throws Exception {
         synchronized (StargateService.class) {
@@ -61,29 +107,288 @@ public class StargateService {
     
     StargateService(StargateServiceConfiguration config) throws Exception {
         if(config == null) {
-            throw new Exception("StargateServiceConfiguration is null. Failed to start StargateService.");
+            throw new Exception("config is null. Failed to start StargateService.");
+        }
+        
+        this.config = config;
+        this.config.setImmutable();
+        this.serviceStarted = false;
+    }
+    
+    public synchronized void start() throws Exception {
+        verifyConfiguration();
+        
+        // init daemon drivers
+        Collection<DriverSetting> daemonDriverSettings = this.config.getDaemonDriverSetting();
+        for(DriverSetting driverSetting : daemonDriverSettings) {
+            ADriver driverInstance = DriverFactory.createDriver(driverSetting);
+            driverInstance.setService(this);
+            driverInstance.startDriver();
+            
+            this.daemonDriver.add(driverInstance);
+        }
+        
+        // init data store manager
+        // init data store driver
+        ADataStoreDriver dataStoreDriver = (ADataStoreDriver)DriverFactory.createDriver(this.config.getDataStoreConfiguration().getDriverSetting());
+        dataStoreDriver.setService(this);
+        this.dataStoreManager = DataStoreManager.getInstance(dataStoreDriver);
+        this.dataStoreManager.start();
+
+        // init source file system manager
+        // init source file system driver
+        ASourceFileSystemDriver sourceFileSystemDriver = (ASourceFileSystemDriver)DriverFactory.createDriver(this.config.getSourceFileSystemConfiguration().getDriverSetting());
+        sourceFileSystemDriver.setService(this);
+        this.sourceFileSystemManager = SourceFileSystemManager.getInstance(sourceFileSystemDriver);
+        this.sourceFileSystemManager.start();
+
+        // init recipe generator manager
+        // init recipe generator driver
+        ARecipeGeneratorDriver recipeGeneratorDriver = (ARecipeGeneratorDriver)DriverFactory.createDriver(this.config.getRecipeGeneratorConfiguration().getDriverSetting());
+        recipeGeneratorDriver.setService(this);
+        this.recipeGeneratorManager = RecipeGeneratorManager.getInstance(recipeGeneratorDriver);
+        this.recipeGeneratorManager.start();
+        
+        // init schedule manager
+        // init schedule driver
+        AScheduleDriver scheduleDriver = (AScheduleDriver)DriverFactory.createDriver(this.config.getScheduleConfiguration().getDriverSetting());
+        scheduleDriver.setService(this);
+        this.scheduleManager = ScheduleManager.getInstance(scheduleDriver);
+        this.scheduleManager.start();
+        
+        // init policy manager
+        this.policyManager = PolicyManager.getInstance(this.dataStoreManager);
+        
+        // init cluster manager
+        this.clusterManager = ClusterManager.getInstance(this.dataStoreManager);
+        
+        // init data export manager
+        this.dataExportManager = DataExportManager.getInstance(this.dataStoreManager);
+        
+        // init recipe manager
+        this.recipeManager = RecipeManager.getInstance(this.dataStoreManager, this.recipeGeneratorManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager);
+        
+        // init transport manager
+        // init transport driver
+        ATransportDriver transportDriver = (ATransportDriver)DriverFactory.createDriver(this.config.getTransportConfiguration().getDriverSetting());
+        transportDriver.setService(this);
+        this.transportManager = TransportManager.getInstance(transportDriver);
+        this.transportManager.start();
+        
+        // setup cluster
+        setupCluster(this.clusterManager);
+        
+        // init user-interface manager
+        // init user-interface driver
+        List<AUserInterfaceDriver> userInterfaceDrivers = new ArrayList<AUserInterfaceDriver>();
+        Collection<DriverSetting> uiDriverSettings = this.config.getUserInterfaceConfiguration().getDriverSetting();
+        for(DriverSetting driverSetting : uiDriverSettings) {
+            AUserInterfaceDriver userInterfaceDriver = (AUserInterfaceDriver)DriverFactory.createDriver(driverSetting);
+            userInterfaceDriver.setService(this);
+            userInterfaceDrivers.add(userInterfaceDriver);
+        }
+        this.userInterfaceManager = UserInterfaceManager.getInstance(userInterfaceDrivers);
+        this.userInterfaceManager.start();
+        
+        // init volume manager
+        this.volumeManager = VolumeManager.getInstance(this.policyManager, this.dataStoreManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.transportManager);
+        
+        this.policyManager.addPolicy(this.config.getPolicy());
+        this.clusterManager.addRemoteCluster(this.config.getRemoteCluster());
+        this.dataExportManager.addDataExport(this.config.getDataExport());
+
+        // register schedules
+        this.scheduleManager.setScheduledTask(new RemoteClusterSyncTask(this.policyManager, this.clusterManager, this.transportManager));
+        this.scheduleManager.setScheduledTask(new RecipeSyncTask(this.policyManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.recipeGeneratorManager));
+        
+        this.serviceStarted = true;
+        LOG.info("Stargate service started");
+    }
+    
+    public synchronized void stop() throws Exception {
+        this.userInterfaceManager.stop();
+        this.userInterfaceManager = null;
+        
+        this.transportManager.stop();
+        this.transportManager = null;
+        
+        this.scheduleManager.stop();
+        this.scheduleManager = null;
+        
+        this.recipeGeneratorManager.stop();
+        this.recipeGeneratorManager = null;
+        
+        this.sourceFileSystemManager.stop();
+        this.sourceFileSystemManager = null;
+        
+        this.dataStoreManager.stop();
+        this.dataStoreManager = null;
+        
+        this.policyManager = null;
+        this.clusterManager = null;
+        this.dataExportManager = null;
+        this.recipeManager = null;
+        this.volumeManager = null;
+        
+        for(ADriver driver : this.daemonDriver) {
+            driver.stopDriver();
+        }
+        
+        this.daemonDriver.clear();
+        
+        this.serviceStarted = false;
+    }
+    
+    private void verifyConfiguration() throws Exception {
+        if(this.config.getServiceName() == null || this.config.getServiceName().isEmpty()) {
+            throw new Exception("service name is not given");
+        }
+    }
+    
+    private void setupCluster(ClusterManager clusterManager) throws IOException {
+        LocalClusterManager localClusterManager = clusterManager.getLocalClusterManager();
+        
+        // name
+        localClusterManager.setName(this.config.getServiceName());
+        
+        // node
+        Collection<Node> node = this.config.getNode();
+        if(!node.isEmpty()) {
+            try {
+                boolean localNodeFound = false;
+                for(Node n : node) {
+                    if(NodeUtils.isLocalNode(n)) {
+                        localClusterManager.addNode(n);
+                        
+                        NodeStatus status = new NodeStatus(n);
+                        localClusterManager.addNodeStatus(status);
+
+                        localClusterManager.setLocalNode(n);
+                        localNodeFound = true;
+                        break;
+                    }
+                }
+                
+                if(!localNodeFound) {
+                    throw new IOException("local node is not found in configuration");
+                }
+            } catch (NodeAlreadyAddedException ex) {
+                throw new IOException(ex);
+            }
         } else {
-            this.config = config;
-            this.gatekeeperService = GateKeeperService.getInstance(config.getGatekeeperServiceConfiguration());
+            try {
+                // auto-generate
+                URI serviceUri = this.transportManager.getDriver().getServiceURI();
+                
+                Node n = NodeUtils.createNode(this.config.getTransportConfiguration().getDriverSetting().getDriverClass(), serviceUri);
+                localClusterManager.addNode(n);
+                
+                NodeStatus status = new NodeStatus(n);
+                localClusterManager.addNodeStatus(status);
+                
+                localClusterManager.setLocalNode(n);
+            } catch (NodeAlreadyAddedException ex) {
+                throw new IOException(ex);
+            } catch (URISyntaxException ex) {
+                throw new IOException(ex);
+            }
+        }
+    }
+    
+    public synchronized boolean isStarted() {
+        return this.serviceStarted;
+    }
+    
+    public synchronized PolicyManager getPolicyManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.policyManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized DataStoreManager getDataStoreManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.dataStoreManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized SourceFileSystemManager getSourceFileSystemManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.sourceFileSystemManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized RecipeGeneratorManager getRecipeGeneratorManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.recipeGeneratorManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized ScheduleManager getScheduleManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.scheduleManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized ClusterManager getClusterManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.clusterManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized DataExportManager getDataExportManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.dataExportManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized RecipeManager getRecipeManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.recipeManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized TransportManager getTransportManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.transportManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized VolumeManager getVolumeManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.volumeManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized UserInterfaceManager getUserInterfaceManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.userInterfaceManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
         }
     }
     
     public synchronized StargateServiceConfiguration getConfiguration() {
         return this.config;
-    }
-    
-    public synchronized GateKeeperService getGateKeeperService() {
-        return this.gatekeeperService;
-    }
-    
-    public synchronized void start() throws Exception {
-        this.gatekeeperService.start();
-        LOG.info("Stargate service started");
-    }
-    
-    public synchronized void stop() throws InterruptedException {
-        this.gatekeeperService.stop();
-        LOG.info("Stargate service stopped");
     }
     
     @Override
