@@ -38,7 +38,9 @@ import edu.arizona.cs.stargate.transport.TransportServiceInfo;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
@@ -178,14 +180,36 @@ public class HTTPTransportDriver extends ATransportDriver {
     public URI getServiceURI() throws IOException {
         try {
             Collection<String> hostAddress = IPUtils.getHostAddress();
+            List<String> acceptedHostAddr = new ArrayList<String>();
+            
             for(String addr : hostAddress) {
                 Pattern pattern = Pattern.compile(this.config.getServiceHostNamePattern());
                 Matcher matcher = pattern.matcher(addr);
                 if(matcher.matches()) {
-                    return new URI("http://" + addr + ":" + this.config.getServicePort());
+                    acceptedHostAddr.add(addr);
                 }
             }
-            return new URI("http://localhost:" + this.config.getServicePort());
+            
+            if(acceptedHostAddr.isEmpty()) {
+                return new URI("http://localhost:" + this.config.getServicePort());
+            } else {
+                for(String addr : acceptedHostAddr) {
+                    // preferred - domainname
+                    if(IPUtils.isDomainName(addr)) {
+                        return new URI("http://" + addr + ":" + this.config.getServicePort());
+                    }
+                }
+                
+                for(String addr : acceptedHostAddr) {
+                    // preferred - public address
+                    if(IPUtils.isPublicIPAddress(addr)) {
+                        return new URI("http://" + addr + ":" + this.config.getServicePort());
+                    }
+                }
+                
+                return new URI("http://" + acceptedHostAddr.get(0) + ":" + this.config.getServicePort());
+            }
+            
         } catch (URISyntaxException ex) {
             throw new IOException(ex);
         }

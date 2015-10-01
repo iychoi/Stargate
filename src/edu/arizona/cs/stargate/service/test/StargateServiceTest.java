@@ -190,7 +190,8 @@ public class StargateServiceTest {
             Collection<Node> allNode = localClusterManager.getNode();
             System.out.println("Cluster Name : " + localClusterManager.getName());
             for(Node node : allNode) {
-                System.out.println("Node : " + node.getName() + " - " + node.getTransportServiceInfo().toString());
+                System.out.println("Node : " + node.getName());
+                System.out.println("Obj : " + node.toJson());
             }
             
             System.out.println("Stargate service is running");

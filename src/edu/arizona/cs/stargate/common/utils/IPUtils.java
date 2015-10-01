@@ -32,7 +32,6 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,7 +60,10 @@ public class IPUtils {
 		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
 		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
     
+    private static final String DOMAINNAME_PATTERN = "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}$";
+    
     private static Pattern IP_pattern = Pattern.compile(IPADDRESS_PATTERN);
+    private static Pattern Domain_pattern = Pattern.compile(DOMAINNAME_PATTERN);
     
     private static boolean isProperHostAddress(String addr) {
         if(addr == null || addr.isEmpty()) {
@@ -184,23 +186,36 @@ public class IPUtils {
         Matcher matcher = IP_pattern.matcher(address);
         return matcher.matches();
     }
+    
+    public static boolean isDomainName(String address) {
+        Matcher matcher = Domain_pattern.matcher(address);
+        return matcher.matches();
+    }
 
-    public static boolean isSameSubnet(String ip1, String ip2, String mask) {
-        try {
-            byte[] a1 = InetAddress.getByName(ip1).getAddress();
-            byte[] a2 = InetAddress.getByName(ip2).getAddress();
-            byte[] m = InetAddress.getByName(mask).getAddress();
+    public static boolean isPublicIPAddress(String address) {
+        Matcher matcher = IP_pattern.matcher(address);
+        if(matcher.matches()) {
+            String first = matcher.group(1);
+            String second = matcher.group(2);
             
-            for (int i = 0; i < a1.length; i++) {
-                if ((a1[i] & m[i]) != (a2[i] & m[i])) {
-                    return false;
-                }
+            int f = Integer.parseInt(first);
+            int s = Integer.parseInt(second);
+            
+            if(f == 192 && s == 168) {
+                return false;
+            }
+            
+            if(f == 172 && s >= 16 && s <= 31) {
+                return false;
+            }
+            
+            if(f == 10) {
+                return false;
             }
             
             return true;
-        } catch (UnknownHostException ex) {
-            LOG.error(ex);
-            return false;
         }
+        
+        return false;
     }
 }
