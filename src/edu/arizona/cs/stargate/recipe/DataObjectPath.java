@@ -27,6 +27,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
@@ -40,12 +42,24 @@ public class DataObjectPath implements Comparable {
 
     private URI uri;
     
+    public DataObjectPath() {
+        
+    }
+    
     public DataObjectPath(String path) {
         if(path == null || path.isEmpty()) {
             throw new IllegalArgumentException("path is empty or null");
         }
         
-        initialize(path);
+        if(!path.startsWith(STARGATE_SCHEME + "://")) {
+            if(path.startsWith("/")) {
+                initialize(STARGATE_SCHEME + "://" + path.substring(1));
+            } else {
+                initialize(STARGATE_SCHEME + "://" + path);
+            }
+        } else {
+            initialize(path);
+        }
     }
     
     public DataObjectPath(String cluster, String parent, String child) {
@@ -130,6 +144,8 @@ public class DataObjectPath implements Comparable {
         // uri path
         if(start < path.length()) {
             uriPath = path.substring(start, path.length());
+        } else {
+            uriPath = "/";
         }
         
         this.uri = createPathUri(uriCluster, uriPath);
@@ -204,20 +220,43 @@ public class DataObjectPath implements Comparable {
         return path;
     }
     
+    @JsonProperty("uri")
     public URI toUri() {
         return this.uri;
     }
     
+    @JsonProperty("uri")
+    public void setUri(URI uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("uri is null");
+        }
+        
+        String scheme = uri.getScheme();
+        if(scheme != null && !scheme.equalsIgnoreCase(STARGATE_SCHEME)) {
+            throw new IllegalArgumentException("uri scheme is not stargate scheme (" + scheme + " was given)");
+        }
+        
+        String authority = uri.getAuthority();
+        if(authority == null || authority.isEmpty()) {
+            throw new IllegalArgumentException("authority of given uri is empty or null");
+        }
+        
+        this.uri = uri;
+    }
+    
+    @JsonIgnore
     public String getClusterName() {
         return this.uri.getAuthority();
     }
     
+    @JsonIgnore
     public String getName() {
         String path = this.uri.getPath();
         int slash = path.lastIndexOf('/');
         return path.substring(slash + 1, path.length());
     }
     
+    @JsonIgnore
     public DataObjectPath getParent() {
         String path = this.uri.getPath();
         int lastSlash = path.lastIndexOf('/');
@@ -242,6 +281,7 @@ public class DataObjectPath implements Comparable {
         }
     }
     
+    @JsonIgnore
     public boolean isRoot() {
         String cluster = this.uri.getAuthority();
         if(cluster == null || cluster.isEmpty()) {
@@ -250,6 +290,7 @@ public class DataObjectPath implements Comparable {
         return false;
     }
     
+    @JsonIgnore
     public boolean isClusterRoot() {
         if(isRoot()) {
             return false;
@@ -271,6 +312,7 @@ public class DataObjectPath implements Comparable {
     }
     
     @Override
+    @JsonIgnore
     public String toString() {
         StringBuilder sb = new StringBuilder();
         
@@ -294,11 +336,13 @@ public class DataObjectPath implements Comparable {
         return sb.toString();
     }
     
+    @JsonIgnore
     public String getPath() {
         return this.uri.getPath();
     }
     
     @Override
+    @JsonIgnore
     public boolean equals(Object o) {
         if (!(o instanceof DataObjectPath))
             return false;
@@ -308,11 +352,13 @@ public class DataObjectPath implements Comparable {
     }
     
     @Override
+    @JsonIgnore
     public int hashCode() {
         return this.uri.hashCode();
     }
     
     @Override
+    @JsonIgnore
     public int compareTo(Object o) {
         DataObjectPath other = (DataObjectPath) o;
         return this.uri.compareTo(other.uri);

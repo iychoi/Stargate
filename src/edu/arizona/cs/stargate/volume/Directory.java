@@ -212,6 +212,7 @@ public class Directory {
         this.entry.clear();
     }
     
+    @JsonIgnore
     public boolean isEmpty() {
         if(this.entry == null || this.entry.isEmpty()) {
             return true;

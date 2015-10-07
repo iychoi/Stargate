@@ -108,6 +108,9 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         
         if(this.useJson) {
             String json = (String) this.internalMap.get(key);
+            if(json == null) {
+                return null;
+            }
             return this.serializer.fromJson(json, this.valclass);
         } else {
             return this.internalMap.get(key);

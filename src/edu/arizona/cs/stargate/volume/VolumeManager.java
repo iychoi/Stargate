@@ -155,14 +155,25 @@ public class VolumeManager {
     private DataObjectMetadata makeClusterDataObjectMetadata(String clusterName) {
         long currentTime = DateTimeUtils.getCurrentTime();
         DataObjectPath clusterDataObjectPath = new DataObjectPath(clusterName, "/");
-        DataObjectMetadata localClusterMetdata = new DataObjectMetadata(clusterDataObjectPath, DIRECTORY_METADATA_SIZE, true, currentTime);
-        return localClusterMetdata;
+        DataObjectMetadata clusterMetdata = new DataObjectMetadata(clusterDataObjectPath, DIRECTORY_METADATA_SIZE, true, currentTime);
+        return clusterMetdata;
     }
     
     private DataObjectMetadata makeDirectoryDataObjectMetadata(DataObjectPath path) {
         long currentTime = DateTimeUtils.getCurrentTime();
         DataObjectMetadata directoryMetdata = new DataObjectMetadata(path, DIRECTORY_METADATA_SIZE, true, currentTime);
         return directoryMetdata;
+    }
+    
+    private DataObjectPath makeAbsolutePath(DataObjectPath path) {
+        if(path.isRoot()) {
+            return path;
+        }
+        
+        if(path.getClusterName().equalsIgnoreCase("localhost")) {
+            return new DataObjectPath(this.clusterManager.getLocalClusterManager().getName(), path.getPath());
+        }
+        return path;
     }
     
     private synchronized Directory getRootDirectory() throws IOException {
@@ -186,26 +197,40 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(path.isRoot()) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
             return getRootDirectory();
-        } else if(path.getClusterName().equals(this.clusterManager.getLocalClusterManager().getName())) {
+        } else if(isLocalDataObject(path)) {
             // local
-            Directory directory = (Directory)this.directoryHierarchy.get(path.toString());
-            if(path.isClusterRoot() && directory == null) {
-                directory = new Directory(path);
+            Directory directory = (Directory)this.directoryHierarchy.get(absPath.toString());
+            if(absPath.isClusterRoot() && directory == null) {
+                directory = new Directory(absPath);
             } else if(directory == null) {
-                throw new IOException("unable to find a directory for " + path.toString());
+                throw new IOException("unable to find a directory for " + absPath.toString());
             }
             return directory;
         } else {
             // remote
-            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(path.getClusterName());
+            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(absPath.getClusterName());
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(this.clusterManager, remoteCluster, this.policyManager);
-                return transportClient.getDirectory(path);
+                return transportClient.getDirectory(absPath);
             } else {
-                throw new IOException("unable to find a directory at a remote cluster for " + path.toString());
+                throw new IOException("unable to find a directory at a remote cluster for " + absPath.toString());
             }
+        }
+    }
+    
+    private boolean isLocalCluster(String clusterName) {
+        if(clusterName == null || clusterName.isEmpty()) {
+            throw new IllegalArgumentException("clusterName is null or empty");
+        }
+        
+        if(clusterName.equalsIgnoreCase("localhost")) {
+            return true;
+        } else {
+            return clusterName.equals(this.clusterManager.getLocalClusterManager().getName());
         }
     }
     
@@ -216,7 +241,7 @@ public class VolumeManager {
         
         if(path.isRoot()) {
             return true;
-        } else if(path.getClusterName().equals(this.clusterManager.getLocalClusterManager().getName())) {
+        } else if(isLocalCluster(path.getClusterName())) {
             return true;
         }
         return false;
@@ -258,12 +283,14 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(path.isRoot()) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
             throw new IllegalArgumentException("root entry is not allowed");
-        } else if(isLocalDataObject(path)) {
+        } else if(isLocalDataObject(absPath)) {
             // local
             // put entry to parent directory
-            DataObjectPath parentPath = path.getParent();
+            DataObjectPath parentPath = absPath.getParent();
             if(parentPath != null) {
                 Directory parentDir = (Directory)this.directoryHierarchy.get(parentPath.toString());
                 if(parentDir == null) {
@@ -271,12 +298,12 @@ public class VolumeManager {
 
                     addLocalDirectory(parentDir);
                 }
-                parentDir.addEntry(path);
+                parentDir.addEntry(absPath);
                 
                 this.directoryHierarchy.put(parentPath.toString(), parentDir);
                 this.lastUpdateTime = DateTimeUtils.getCurrentTime();
             } else {
-                throw new IOException("path " + path.toString() + " has no parent");
+                throw new IOException("path " + absPath.toString() + " has no parent");
             }
         } else {
             throw new IllegalArgumentException("remote cluster is not allowed");
@@ -288,20 +315,22 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(path.isRoot()) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
             throw new IllegalArgumentException("root entry is not allowed");
-        } else if(path.isClusterRoot()) {
+        } else if(absPath.isClusterRoot()) {
             throw new IllegalArgumentException("cluster root entry is not allowed");
-        } else if(isLocalDataObject(path)) {
+        } else if(isLocalDataObject(absPath)) {
             // local
-            DataObjectPath parentPath = path.getParent();
+            DataObjectPath parentPath = absPath.getParent();
             if(parentPath != null) {
                 Directory parentDir = (Directory)this.directoryHierarchy.get(parentPath.toString());
                 if(parentDir == null) {
                     throw new IOException("parent directory is not found");
                 }
                 
-                parentDir.removeEntry(path);
+                parentDir.removeEntry(absPath);
                 
                 if(parentDir.isEmpty() && !parentPath.isClusterRoot()) {
                     this.directoryHierarchy.remove(parentPath.toString());
@@ -324,12 +353,14 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
         List<DataObjectPath> entry = new ArrayList<DataObjectPath>();
         
-        Directory dir = getDirectory(path);
+        Directory dir = getDirectory(absPath);
         if(dir != null) {
             for(String entryName : dir.getEntry()) {
-                DataObjectPath entryPath = new DataObjectPath(path, entryName);
+                DataObjectPath entryPath = new DataObjectPath(absPath, entryName);
                 entry.add(entryPath);
             }
         }
@@ -342,32 +373,34 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(path.isRoot()) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
             return makeRootDataObjectMetadata();
-        } else if(path.isClusterRoot()) {
-            return makeClusterDataObjectMetadata(path.getClusterName());
-        } else if(isLocalDataObject(path)) {
+        } else if(absPath.isClusterRoot()) {
+            return makeClusterDataObjectMetadata(absPath.getClusterName());
+        } else if(isLocalDataObject(absPath)) {
             // local
-            Directory directory = (Directory)this.directoryHierarchy.get(path.toString());
+            Directory directory = (Directory)this.directoryHierarchy.get(absPath.toString());
             if(directory != null) {
                 // directory
-                return makeDirectoryDataObjectMetadata(path);
-            } else if(path.isClusterRoot()) {
+                return makeDirectoryDataObjectMetadata(absPath);
+            } else if(absPath.isClusterRoot()) {
                 // root directory
-                return makeDirectoryDataObjectMetadata(path);
+                return makeDirectoryDataObjectMetadata(absPath);
             } else {
                 // file
-                Recipe recipe = this.recipeManager.getRecipe(path);
+                Recipe recipe = this.recipeManager.getRecipe(absPath);
                 return recipe.getMetadata();
             }
         } else {
             // remote
-            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(path.getClusterName());
+            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(absPath.getClusterName());
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(this.clusterManager, remoteCluster, this.policyManager);
-                return transportClient.getDataObjectMetadata(path);
+                return transportClient.getDataObjectMetadata(absPath);
             } else {
-                throw new IOException("unable to find a metadata at a remote cluster for " + path.toString());
+                throw new IOException("unable to find a metadata at a remote cluster for " + absPath.toString());
             }
         }
     }
@@ -377,7 +410,9 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(path.isRoot()) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
             List<DataObjectMetadata> entry = new ArrayList<DataObjectMetadata>();
             Directory dir = getRootDirectory();
             if(dir != null) {
@@ -387,13 +422,13 @@ public class VolumeManager {
                 }
             }
             return Collections.unmodifiableCollection(entry);
-        } else if(path.getClusterName().equals(this.clusterManager.getLocalClusterManager().getName())) {
+        } else if(this.isLocalDataObject(absPath)) {
             // local
             List<DataObjectMetadata> entry = new ArrayList<DataObjectMetadata>();
-            Directory dir = getDirectory(path);
+            Directory dir = getDirectory(absPath);
             if(dir != null) {
                 for(String entryName : dir.getEntry()) {
-                    DataObjectPath entryPath = new DataObjectPath(path, entryName);
+                    DataObjectPath entryPath = new DataObjectPath(absPath, entryName);
                     DataObjectMetadata metadata = getDataObjectMetadata(entryPath);
                     entry.add(metadata);
                 }
@@ -401,12 +436,12 @@ public class VolumeManager {
             return Collections.unmodifiableCollection(entry);
         } else {
             // remote
-            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(path.getClusterName());
+            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(absPath.getClusterName());
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(this.clusterManager, remoteCluster, this.policyManager);
-                return transportClient.listDataObjectMetadata(path);
+                return transportClient.listDataObjectMetadata(absPath);
             } else {
-                throw new IOException("unable to find a directory at a remote cluster for " + path.toString());
+                throw new IOException("unable to find a directory at a remote cluster for " + absPath.toString());
             }
         }
     }
@@ -416,17 +451,19 @@ public class VolumeManager {
             throw new IllegalArgumentException("path is null");
         }
         
-        if(isLocalDataObject(path)) {
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(isLocalDataObject(absPath)) {
             // local
-            return this.recipeManager.getRecipe(path);
+            return this.recipeManager.getRecipe(absPath);
         } else {
             // remote
-            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(path.getClusterName());
+            RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(absPath.getClusterName());
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(this.clusterManager, remoteCluster, this.policyManager);
-                return transportClient.getRecipe(path);
+                return transportClient.getRecipe(absPath);
             } else {
-                throw new IOException("unable to find a recipe at a remote cluster for " + path.toString());
+                throw new IOException("unable to find a recipe at a remote cluster for " + absPath.toString());
             }
         }
     }
@@ -440,7 +477,9 @@ public class VolumeManager {
             throw new IllegalArgumentException("hash is null or empty");
         }
         
-        return getDataChunk(path.getClusterName(), hash);
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        return getDataChunk(absPath.getClusterName(), hash);
     }
     
     public synchronized InputStream getDataChunk(String clusterName, String hash) throws IOException {
@@ -452,7 +491,7 @@ public class VolumeManager {
             throw new IllegalArgumentException("hash is null or empty");
         }
         
-        if(clusterName.equals(this.clusterManager.getLocalClusterManager().getName())) {
+        if(isLocalCluster(clusterName)) {
             // local
             Recipe recipe = this.recipeManager.getRecipe(hash);
             if(recipe == null) {
