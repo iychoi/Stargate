@@ -76,6 +76,7 @@ public class VolumeManager {
     
     private ADistributedDataStore directoryHierarchy;
     
+    private DataExportChangedEventHandler dataExportChangedHandler;
     protected long lastUpdateTime;
     
     public static VolumeManager getInstance(PolicyManager policyManager, DataStoreManager dataStoreManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
@@ -138,6 +139,9 @@ public class VolumeManager {
         // make local cluster root
         Directory localClusterRootDir = makeLocalClusterRootDirectory();
         this.directoryHierarchy.put(localClusterRootDir.getPath().toString(), localClusterRootDir);
+        
+        this.dataExportChangedHandler = new DataExportChangedEventHandler(this.clusterManager, this);
+        this.dataExportManager.addEventHandler(this.dataExportChangedHandler);
     }
     
     private Directory makeLocalClusterRootDirectory() {

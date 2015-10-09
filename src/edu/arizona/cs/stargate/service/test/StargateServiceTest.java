@@ -28,6 +28,7 @@ import edu.arizona.cs.stargate.common.LocalResourceLocator;
 import edu.arizona.cs.stargate.cluster.Node;
 import edu.arizona.cs.stargate.cluster.LocalClusterManager;
 import edu.arizona.cs.stargate.common.JsonSerializer;
+import edu.arizona.cs.stargate.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.datastore.DataStoreConfiguration;
 import edu.arizona.cs.stargate.drivers.hazelcast.HazelcastCoreDriver;
 import edu.arizona.cs.stargate.drivers.hazelcast.HazelcastCoreDriverConfiguration;
@@ -158,6 +159,10 @@ public class StargateServiceTest {
         UserInterfaceConfiguration userInterfaceConf = new UserInterfaceConfiguration();
         userInterfaceConf.addDriverSetting(makeHTTPUserInterfaceDriverSetting());
         serviceConf.setUserInterfaceConfiguration(userInterfaceConf);
+        
+        // data export
+        DataExportEntry dee = new DataExportEntry("test/CP000828.ffn.gz", "/");
+        serviceConf.addDataExport(dee);
         
         JsonSerializer serializer = new JsonSerializer(true);
         serializer.toJsonFile(f, serviceConf);

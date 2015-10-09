@@ -252,6 +252,7 @@ public class Recipe {
         this.chunk.clear();
     }
     
+    @JsonIgnore
     public boolean isEmpty() {
         if(this.metadata == null || this.metadata.isEmpty()) {
             return true;

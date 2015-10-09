@@ -21,14 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package edu.arizona.cs.stargate.recipe;
+package edu.arizona.cs.stargate.tasks;
 
-import edu.arizona.cs.stargate.cluster.*;
+import edu.arizona.cs.stargate.cluster.ClusterManager;
 import edu.arizona.cs.stargate.dataexport.DataExportEntry;
 import edu.arizona.cs.stargate.dataexport.DataExportManager;
 import edu.arizona.cs.stargate.schedule.AScheduledLeaderTask;
 import edu.arizona.cs.stargate.policy.PolicyManager;
 import edu.arizona.cs.stargate.policy.VolumePolicy;
+import edu.arizona.cs.stargate.recipe.DataObjectMetadata;
+import edu.arizona.cs.stargate.recipe.DataObjectPath;
+import edu.arizona.cs.stargate.recipe.Recipe;
+import edu.arizona.cs.stargate.recipe.RecipeFactory;
+import edu.arizona.cs.stargate.recipe.RecipeGeneratorManager;
+import edu.arizona.cs.stargate.recipe.RecipeManager;
 import edu.arizona.cs.stargate.sourcefs.SourceFileSystemManager;
 import java.io.IOException;
 import java.util.Collection;

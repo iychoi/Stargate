@@ -21,8 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package edu.arizona.cs.stargate.cluster;
+package edu.arizona.cs.stargate.tasks;
 
+import edu.arizona.cs.stargate.cluster.ClusterManager;
+import edu.arizona.cs.stargate.cluster.RemoteCluster;
 import edu.arizona.cs.stargate.schedule.AScheduledLeaderTask;
 import edu.arizona.cs.stargate.policy.ClusterPolicy;
 import edu.arizona.cs.stargate.policy.PolicyManager;

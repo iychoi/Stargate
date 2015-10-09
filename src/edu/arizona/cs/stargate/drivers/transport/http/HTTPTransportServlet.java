@@ -237,32 +237,36 @@ public class HTTPTransportServlet extends ATransportServer {
     public Response getDataChunkRestful(
             @DefaultValue("null") @PathParam("clusterName") String clusterName,
             @DefaultValue("null") @PathParam("hash") String hash) throws Exception {
-        final InputStream is = getDataChunk(clusterName, hash);
-        if(is == null) {
+        
+        try {
+            final InputStream is = getDataChunk(clusterName, hash);
+            if(is == null) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+            
+            StreamingOutput stream = new StreamingOutput() {
+                @Override
+                public void write(OutputStream out) throws IOException, WebApplicationException {
+                    try {
+                        int buffersize = 100 * 1024;
+                        byte[] buffer = new byte[buffersize];
+
+                        int read = 0;
+                        while ((read = is.read(buffer)) > 0) {
+                            out.write(buffer, 0, read);
+                        }
+                        is.close();
+
+                    } catch (Exception ex) {
+                        throw new WebApplicationException(ex);
+                    }
+                }
+            };
+
+            return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
+        } catch (Exception ex) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-
-        StreamingOutput stream = new StreamingOutput() {
-
-            @Override
-            public void write(OutputStream out) throws IOException, WebApplicationException {
-                try {
-                    int buffersize = 100 * 1024;
-                    byte[] buffer = new byte[buffersize];
-
-                    int read = 0;
-                    while ((read = is.read(buffer)) > 0) {
-                        out.write(buffer, 0, read);
-                    }
-                    is.close();
-
-                } catch (Exception ex) {
-                    throw new WebApplicationException(ex);
-                }
-            }
-        };
-
-        return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
     }
 
     @Override
