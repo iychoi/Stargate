@@ -30,6 +30,7 @@ import edu.arizona.cs.stargate.recipe.Recipe;
 import edu.arizona.cs.stargate.volume.Directory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Collection;
 
 /**

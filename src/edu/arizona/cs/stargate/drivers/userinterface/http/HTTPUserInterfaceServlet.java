@@ -316,9 +316,8 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
         }
         
         try {
-            //TODO
             StargateService service = StargateService.getInstance();
-            return null;
+            return service.getVolumeManager().getLocalResourcePath(path);
         } catch (ServiceNotStartedException ex) {
             throw new IOException(ex);
         }

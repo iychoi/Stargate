@@ -372,6 +372,36 @@ public class VolumeManager {
         return Collections.unmodifiableCollection(entry);
     }
     
+    public synchronized URI getLocalResourcePath(DataObjectPath path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        DataObjectPath absPath = makeAbsolutePath(path);
+        
+        if(absPath.isRoot()) {
+            throw new IOException("root directory is virtual");
+        } else if(absPath.isClusterRoot()) {
+            throw new IOException("cluster root directory is virtual");
+        } else if(isLocalDataObject(absPath)) {
+            // local
+            Directory directory = (Directory)this.directoryHierarchy.get(absPath.toString());
+            if(directory == null) {
+                // file
+                DataExportEntry dataExport = this.dataExportManager.getDataExport(absPath.getPath());
+                if(dataExport == null) {
+                    throw new IOException("unable to find dataexport for " + absPath.getPath());
+                }
+
+                return dataExport.getResourcePath();
+            }
+            throw new IOException("given path is a directory - " + absPath.toString());
+        } else {
+            // remote
+            throw new IOException("given path is a remote resource - " + absPath.toString());
+        }
+    }
+    
     public synchronized DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
@@ -388,9 +418,6 @@ public class VolumeManager {
             Directory directory = (Directory)this.directoryHierarchy.get(absPath.toString());
             if(directory != null) {
                 // directory
-                return makeDirectoryDataObjectMetadata(absPath);
-            } else if(absPath.isClusterRoot()) {
-                // root directory
                 return makeDirectoryDataObjectMetadata(absPath);
             } else {
                 // file
