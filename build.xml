@@ -70,4 +70,36 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="allinone" depends="jar">
+        <!-- Change the value of this property to be the name of your JAR,
+            minus the .jar extension. It should not have spaces.
+            <property name="store.jar.name" value="MyJarName"/>
+        -->
+        <property name="store.jar.name" value="Stargate-all"/>
+        <!-- don't edit below this line -->
+        <property name="store.dir" value="dist"/>
+        <property name="store.jar" value="${store.dir}/${store.jar.name}.jar"/>
+
+        <echo message="Packaging ${application.title} into a single JAR at ${store.jar}"/>
+
+        <mkdir dir="${store.dir}"/>
+        <delete file="${store.jar}"/>
+        <delete file="${store.dir}/temp_final.jar"/>
+
+        <jar destfile="${store.dir}/temp_final.jar" filesetmanifest="skip">
+            <zipgroupfileset dir="dist" includes="*.jar" excludes="temp_final.jar, ${store.jar.name}.jar"/>
+            <zipgroupfileset dir="libs" includes="*.jar" excludes="hadoop-core-0.20.2-cdh3u5.jar,commons-logging-1.1.1.jar"/>
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+            <fileset dir="libs" includes="*.license"/>
+            <fileset dir="." includes="*.license, LICENSE, NOTICE.txt, README.md"/>
+        </jar>
+
+        <zip destfile="${store.jar}">
+            <zipfileset src="${store.dir}/temp_final.jar"
+                excludes="META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA"/>
+        </zip>
+        <delete file="${store.dir}/temp_final.jar"/>
+    </target>
 </project>

@@ -24,6 +24,7 @@
 package edu.arizona.cs.stargate.drivers.userinterface.http;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+import edu.arizona.cs.stargate.common.log.CommonsLoggingLog;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,6 +52,10 @@ public class HTTPUserInterfaceServer {
     }
     
     public synchronized void start() throws IOException {
+        CommonsLoggingLog commonsLoggingLog = new CommonsLoggingLog();
+        org.eclipse.jetty.util.log.Log.__logClass = CommonsLoggingLog.class.getCanonicalName();
+        org.eclipse.jetty.util.log.Log.setLog(commonsLoggingLog);
+        
         // configure servlets
         ServletHolder sh = new ServletHolder(ServletContainer.class);  
         
