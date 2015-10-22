@@ -131,7 +131,9 @@ public class HazelcastCoreDriver extends ADriver {
         config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true);
         if(!this.config.isLeaderHost()) {
-            config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(this.config.getKnownHostAddr() + ":" + this.config.getPort());
+            for(String knownHostAddr: this.config.getKnownHostAddr()) {
+                config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(knownHostAddr + ":" + this.config.getPort());
+            }
         }
         
         config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(this.config.getMyHostAddr()+ ":" + this.config.getPort());
