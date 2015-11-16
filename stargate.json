@@ -1,0 +1,90 @@
+{
+  "node" : [ ],
+  "policy" : {
+    "cluster" : {
+      "unreachable_node_report_min_interval" : 10,
+      "blacklist_node_max_unreachable_count" : 5,
+      "cluster_node_sync_interval" : 3600
+    },
+    "volume" : {
+      "local_cluster_recipe_sync_period" : 60,
+      "remote_cluster_data_object_metadata_sync_period" : 3600
+    }
+  },
+  "daemon_driver_setting" : [ {
+    "driver_class" : "edu.arizona.cs.stargate.drivers.hazelcast.HazelcastCoreDriver",
+    "driver_configuration" : {
+      "@class" : "edu.arizona.cs.stargate.drivers.hazelcast.HazelcastCoreDriverConfiguration",
+      "port" : 21010,
+      "known_host" : [ ],
+      "my_host" : "localhost"
+    }
+  } ],
+  "name" : "StargateTestService",
+  "source_filesystem" : {
+    "driver_setting" : {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriverConfiguration",
+        "root_path" : "/"
+      }
+    }
+  },
+  "recipe_generator" : {
+    "driver_setting" : {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.recipe.sha1fixed.SHA1FixedChunkRecipeGeneratorDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.recipe.sha1fixed.SHA1FixedChunkRecipeGeneratorDriverConfiguration",
+        "chunk_size" : 1048576
+      }
+    }
+  },
+  "schedule" : {
+    "driver_setting" : {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.hazelcast.schedule.HazelcastScheduleDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.hazelcast.schedule.HazelcastScheduleDriverConfiguration",
+        "task_threads" : 4
+      }
+    }
+  },
+  "transport" : {
+    "driver_setting" : {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.transport.http.HTTPTransportDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.transport.http.HTTPTransportDriverConfiguration",
+        "service_host_name_pattern" : ".*",
+        "service_port" : 31010,
+        "thread_pool_size" : 10
+      }
+    }
+  },
+  "user_interface" : {
+    "driver_setting" : [ {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.userinterface.http.HTTPUserInterfaceDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.userinterface.http.HTTPUserInterfaceDriverConfiguration",
+        "service_port" : 41010
+      }
+    } ]
+  },
+  "remote_cluster" : [ ],
+  "data_export" : [ {
+    "mapping_path" : "/",
+    "resource_path" : "test/CP000828.ffn.gz"
+  }, {
+    "mapping_path" : "/",
+    "resource_path" : "test/CP000839.ffn.gz"
+  }, {
+    "mapping_path" : "/",
+    "resource_path" : "test/CPSMALL.ffn"
+  } ],
+  "datastore" : {
+    "driver_setting" : {
+      "driver_class" : "edu.arizona.cs.stargate.drivers.hazelcast.datastore.HazelcastDataStoreDriver",
+      "driver_configuration" : {
+        "@class" : "edu.arizona.cs.stargate.drivers.hazelcast.datastore.HazelcastDataStoreDriverConfiguration"
+      }
+    }
+  }
+}
