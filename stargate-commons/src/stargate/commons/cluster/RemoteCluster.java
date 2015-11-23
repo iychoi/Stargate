@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import stargate.commons.common.JsonSerializer;
 import stargate.commons.policy.ClusterPolicy;
 import stargate.commons.utils.DateTimeUtils;
@@ -110,11 +111,13 @@ public class RemoteCluster extends ACluster {
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
     }
     
+    @JsonIgnore
     @Override
     public synchronized String toString() {
         return "RemoteCluster : " + this.name;
     }
 
+    @JsonIgnore
     @Override
     public synchronized int getNodeCount() {
         return this.node.size();
@@ -132,6 +135,7 @@ public class RemoteCluster extends ACluster {
         return Collections.unmodifiableCollection(nodes);
     }
     
+    @JsonIgnore
     @Override
     public synchronized Node getNode(String name) throws IOException {
         if(name == null || name.isEmpty()) {
@@ -169,6 +173,7 @@ public class RemoteCluster extends ACluster {
         }
     }
     
+    @JsonIgnore
     @Override
     public synchronized void addNode(Node node) throws NodeAlreadyAddedException, IOException {
         if(node == null || node.isEmpty()) {
@@ -197,6 +202,7 @@ public class RemoteCluster extends ACluster {
         return Collections.unmodifiableCollection(nodestatuslist);
     }
     
+    @JsonIgnore
     @Override
     public synchronized NodeStatus getNodeStatus(String name) throws IOException {
         if(name == null || name.isEmpty()) {
@@ -231,6 +237,7 @@ public class RemoteCluster extends ACluster {
         }
     }
 
+    @JsonIgnore
     @Override
     public synchronized void addNode(Node node, NodeStatus status) throws NodeAlreadyAddedException, IOException {
         if(node == null || node.isEmpty()) {
@@ -247,6 +254,7 @@ public class RemoteCluster extends ACluster {
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
     }
     
+    @JsonIgnore
     @Override
     public synchronized void clearNode() {
         this.node.clear();
@@ -255,6 +263,7 @@ public class RemoteCluster extends ACluster {
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
     }
     
+    @JsonIgnore
     @Override
     public synchronized void removeNode(Node node) throws IOException {
         if(node == null || node.isEmpty()) {
@@ -264,6 +273,7 @@ public class RemoteCluster extends ACluster {
         removeNode(node.getName());
     }
     
+    @JsonIgnore
     @Override
     public synchronized void removeNode(String name) throws IOException {
         if(name == null || name.isEmpty()) {
@@ -276,6 +286,7 @@ public class RemoteCluster extends ACluster {
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
     }
     
+    @JsonIgnore
     @Override
     public synchronized boolean hasNode(String name) {
         if(name == null || name.isEmpty()) {
@@ -285,6 +296,7 @@ public class RemoteCluster extends ACluster {
         return this.node.containsKey(name);
     }
     
+    @JsonIgnore
     @Override
     public synchronized boolean isEmpty() {
         if(this.name == null || this.name.isEmpty()) {
@@ -297,6 +309,7 @@ public class RemoteCluster extends ACluster {
         return false;
     }
     
+    @JsonIgnore
     @Override
     public synchronized void reportNodeReachable(String name) {
         if(name == null || name.isEmpty()) {
@@ -319,6 +332,7 @@ public class RemoteCluster extends ACluster {
         }
     }
     
+    @JsonIgnore
     @Override
     public synchronized void reportNodeUnreachable(ClusterPolicy cp, String name) {
         if(cp == null) {
@@ -356,6 +370,7 @@ public class RemoteCluster extends ACluster {
         }
     }
     
+    @JsonIgnore
     @Override
     public synchronized void addNodeToBlacklist(String name) {
         if(name == null || name.isEmpty()) {
@@ -378,6 +393,7 @@ public class RemoteCluster extends ACluster {
         }
     }
     
+    @JsonIgnore
     @Override
     public synchronized void removeNodeFromBlacklist(String name) {
         if(name == null || name.isEmpty()) {
@@ -400,6 +416,7 @@ public class RemoteCluster extends ACluster {
         }
     }
     
+    @JsonIgnore
     public synchronized boolean isReachable() {
         boolean reachable = false;
         Collection<NodeStatus> nodeStatus = this.nodestatus.values();

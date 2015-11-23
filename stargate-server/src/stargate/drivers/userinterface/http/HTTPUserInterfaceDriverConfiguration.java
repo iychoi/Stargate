@@ -41,8 +41,6 @@ public class HTTPUserInterfaceDriverConfiguration extends AUserInterfaceDriverCo
     
     private static final Log LOG = LogFactory.getLog(HTTPUserInterfaceDriverConfiguration.class);
     
-    private static final String HADOOP_CONFIG_KEY = HTTPUserInterfaceDriverConfiguration.class.getCanonicalName();
-    
     public static final int DEFAULT_SERVICE_PORT = 41010;
     
     private int servicePort = DEFAULT_SERVICE_PORT;

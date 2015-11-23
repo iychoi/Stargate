@@ -58,7 +58,7 @@ public class NodeUtils {
             throw new IOException(ex);
         }
         
-        TransportServiceInfo serviceInfo = new TransportServiceInfo(driverClass, connectionUri);
+        TransportServiceInfo serviceInfo = new TransportServiceInfo(driverClass.getCanonicalName(), connectionUri);
         
         return new Node(nodeName, serviceInfo, IPUtils.getHostAddress());
     }

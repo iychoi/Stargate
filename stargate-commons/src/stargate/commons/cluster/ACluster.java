@@ -132,6 +132,7 @@ public abstract class ACluster {
         this.lastUpdateTime = time;
     }
     
+    @JsonIgnore
     @Override
     public synchronized String toString() {
         return this.name;

@@ -75,7 +75,7 @@ public class ClusterManager {
         }
     }
     
-    ClusterManager(DataStoreManager datastoreManager) {
+    public ClusterManager(DataStoreManager datastoreManager) {
         if(datastoreManager == null) {
             throw new IllegalArgumentException("datastoreManager is null");
         }

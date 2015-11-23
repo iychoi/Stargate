@@ -83,6 +83,8 @@ public class StargateFileSystem {
         }
         
         this.localCluster = this.userInterfaceClient.getCluster();
+        
+        LOG.info("connected : " + stargateUIServiceURL.toASCIIString());
     }
     
     private String getClusterName(URI resourceURI) {

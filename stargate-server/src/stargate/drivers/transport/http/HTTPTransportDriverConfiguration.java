@@ -41,8 +41,6 @@ public class HTTPTransportDriverConfiguration extends ATransportDriverConfigurat
     
     private static final Log LOG = LogFactory.getLog(HTTPTransportDriverConfiguration.class);
     
-    private static final String HADOOP_CONFIG_KEY = HTTPTransportDriverConfiguration.class.getCanonicalName();
-    
     public static final String DEFAULT_SERVICE_HOSTNAME_PATTERN = ".*";
     public static final int DEFAULT_SERVICE_PORT = 31010;
     public static final int DEFAULT_THREAD_POOL_SIZE = 10;

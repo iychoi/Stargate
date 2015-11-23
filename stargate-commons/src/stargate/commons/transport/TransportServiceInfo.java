@@ -40,7 +40,7 @@ import stargate.commons.utils.ClassUtils;
 public class TransportServiceInfo {
     private static final Log LOG = LogFactory.getLog(TransportServiceInfo.class);
     
-    private Class driverClass;
+    private String driverClass;
     private URI connectionUri;
     
     public static TransportServiceInfo createInstance(File file) throws IOException {
@@ -69,9 +69,9 @@ public class TransportServiceInfo {
         this.connectionUri = that.connectionUri;
     }
     
-    public TransportServiceInfo(Class driverClass, URI connectionUri) {
-        if(driverClass == null) {
-            throw new IllegalArgumentException("driverClass is null");
+    public TransportServiceInfo(String driverClass, URI connectionUri) {
+        if(driverClass == null || driverClass.isEmpty()) {
+            throw new IllegalArgumentException("driverClass is null or empty");
         }
         
         if(connectionUri == null) {
@@ -81,7 +81,7 @@ public class TransportServiceInfo {
         initialize(driverClass, connectionUri);
     }
     
-    private void initialize(Class driverClass, URI connectionUri) {
+    private void initialize(String driverClass, URI connectionUri) {
         if(driverClass == null) {
             throw new IllegalArgumentException("driverClass is null");
         }
@@ -95,12 +95,12 @@ public class TransportServiceInfo {
     }
     
     @JsonProperty("driver_class")
-    public void setDriverClass(String clazz) throws ClassNotFoundException {
+    public void setDriverClass(String clazz) {
         if(clazz == null || clazz.isEmpty()) {
             throw new IllegalArgumentException("clazz is null or empty");
         }
         
-        this.driverClass = ClassUtils.findClass(clazz);
+        this.driverClass = clazz;
     }
     
     @JsonIgnore
@@ -109,17 +109,17 @@ public class TransportServiceInfo {
             throw new IllegalArgumentException("clazz is null");
         }
         
-        this.driverClass = clazz;
+        this.driverClass = clazz.getCanonicalName();
     }
     
     @JsonProperty("driver_class")
     public String getDriverClassString() {
-        return this.driverClass.getCanonicalName();
+        return this.driverClass;
     }
     
     @JsonIgnore
-    public Class getDriverClass() {
-        return this.driverClass;
+    public Class getDriverClass() throws ClassNotFoundException {
+        return ClassUtils.findClass(this.driverClass);
     }
     
     @JsonProperty("connection_uri")
@@ -135,7 +135,7 @@ public class TransportServiceInfo {
     @JsonIgnore
     @Override
     public synchronized String toString() {
-        return this.driverClass.getCanonicalName() + "\t" + this.connectionUri.toASCIIString();
+        return this.driverClass + "\t" + this.connectionUri.toASCIIString();
     }
 
     @JsonIgnore
