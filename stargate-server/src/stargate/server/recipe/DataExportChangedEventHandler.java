@@ -82,7 +82,7 @@ public class DataExportChangedEventHandler implements IDataExportEventHandler {
             Recipe recipe = RecipeFactory.createRecipe(this.sourceFileSystemManager, this.recipeGeneratorManager, this.clusterManager.getLocalClusterManager(), entry);
             this.recipeManager.addRecipe(recipe);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while adding a data export entry", ex);
         }
     }
 
@@ -92,7 +92,7 @@ public class DataExportChangedEventHandler implements IDataExportEventHandler {
             DataObjectPath path = RecipeFactory.createDataObjectPath(this.clusterManager.getLocalClusterManager(), entry);
             this.recipeManager.removeRecipe(path);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while removing a data export entry", ex);
         }
     }
 }

@@ -122,13 +122,13 @@ public class LocalClusterManager extends ACluster {
                     NodeStatus status = (NodeStatus) this.nodestatus.get(n.getName());
                     cluster.addNode(n, status);
                 } catch (NodeAlreadyAddedException ex) {
-                    LOG.error(ex);
+                    LOG.error("Exception occurred while adding a node", ex);
                 }
             }
             return cluster;
             
         } catch (Exception ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while converting to a remote cluster", ex);
             return null;
         }
     }
@@ -336,7 +336,7 @@ public class LocalClusterManager extends ACluster {
                     this.lastUpdateTime = currentTime;
                 }
             } catch (IOException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while reporting node reachable", ex);
             }
         }
     }
@@ -380,7 +380,7 @@ public class LocalClusterManager extends ACluster {
                     this.lastUpdateTime = currentTime;
                 }
             } catch (IOException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while reporting node unreachable", ex);
             }
         }
     }
@@ -406,7 +406,7 @@ public class LocalClusterManager extends ACluster {
                     this.lastUpdateTime = currentTime;
                 }
             } catch (IOException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while reporting blacklist", ex);
             }
         }
     }
@@ -432,7 +432,7 @@ public class LocalClusterManager extends ACluster {
                     this.lastUpdateTime = currentTime;
                 }
             } catch (IOException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while reporting blacklist", ex);
             }
         }
     }

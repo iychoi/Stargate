@@ -82,7 +82,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = getResourcePath(HTTPTransportRestfulConstants.RESTFUL_LIVE_PATH);
             response = (RestfulResponse<Boolean>) this.restfulClient.get(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             return false;
         }
         
@@ -100,7 +100,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = getResourcePath(HTTPTransportRestfulConstants.RESTFUL_CLUSTER_PATH);
             response = (RestfulResponse<RemoteCluster>) this.restfulClient.get(url, new GenericType<RestfulResponse<RemoteCluster>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -124,7 +124,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = builder.build();
             response = (RestfulResponse<Directory>) this.restfulClient.get(url, new GenericType<RestfulResponse<Directory>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -148,7 +148,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = builder.build();
             response = (RestfulResponse<DataObjectMetadata>) this.restfulClient.get(url, new GenericType<RestfulResponse<DataObjectMetadata>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -172,7 +172,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = builder.build();
             response = (RestfulResponse<Recipe>) this.restfulClient.get(url, new GenericType<RestfulResponse<Recipe>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -196,7 +196,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = builder.build();
             response = (RestfulResponse<Collection<DataObjectMetadata>>) this.restfulClient.get(url, new GenericType<RestfulResponse<Collection<DataObjectMetadata>>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -222,7 +222,7 @@ public class HTTPTransportClient extends ATransportClient {
             String url = getResourcePath(datachunkUrl);
             return this.restfulClient.download(url);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
     }

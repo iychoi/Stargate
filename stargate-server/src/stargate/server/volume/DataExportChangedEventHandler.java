@@ -69,7 +69,7 @@ public class DataExportChangedEventHandler implements IDataExportEventHandler {
             DataObjectPath dataObjectPath = RecipeFactory.createDataObjectPath(this.clusterManager.getLocalClusterManager(), entry);
             this.volumeManager.addLocalDirectoryEntry(dataObjectPath);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while adding a new data export entry to volume", ex);
         }
     }
 
@@ -79,7 +79,7 @@ public class DataExportChangedEventHandler implements IDataExportEventHandler {
             DataObjectPath dataObjectPath = RecipeFactory.createDataObjectPath(this.clusterManager.getLocalClusterManager(), entry);
             this.volumeManager.removeLocalDirectoryEntry(dataObjectPath);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while removing a data export entry to volume", ex);
         }
     }
 }

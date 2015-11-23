@@ -117,7 +117,7 @@ public class IPUtils {
                     }
                 }
             } catch (SocketException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while scanning local interfaces", ex);
             }
             
             return Collections.unmodifiableCollection(cached_host_addr);
@@ -142,7 +142,7 @@ public class IPUtils {
                     }
                 }
             } catch (SocketException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while scanning local interfaces", ex);
             }
 
             return Collections.unmodifiableCollection(cached_ip_addr);
@@ -165,18 +165,18 @@ public class IPUtils {
 
                     return ip;
                 } catch (IOException ex) {
-                    LOG.error(ex);
+                    LOG.error("Exception occurred while querying public ip address to amazonaws.com", ex);
                 } finally {
                     if (in != null) {
                         try {
                             in.close();
                         } catch (IOException e) {
-                            LOG.error(e);
+                            LOG.error("Exception occurred while querying public ip address to amazonaws.com", e);
                         }
                     }
                 }
             } catch (MalformedURLException ex) {
-                LOG.error(ex);
+                LOG.error("Exception occurred while querying public ip address to amazonaws.com", ex);
             }
         }
         return null;

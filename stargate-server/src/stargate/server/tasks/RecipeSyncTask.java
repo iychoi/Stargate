@@ -115,7 +115,7 @@ public class RecipeSyncTask extends AScheduledLeaderTask {
                         }
                     }
                 } catch (IOException ex) {
-                    LOG.error(ex);
+                    LOG.error("Exception occurred while synchronizing recipes", ex);
                     // remove
                     this.recipeManager.removeRecipe(recipe);
                 }
@@ -131,11 +131,11 @@ public class RecipeSyncTask extends AScheduledLeaderTask {
                         this.recipeManager.addRecipe(newRecipe);
                     }
                 } catch (IOException ex) {
-                    LOG.error(ex);
+                    LOG.error("Exception occurred while synchronizing recipes", ex);
                 }
             }
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while synchronizing recipes", ex);
         }
             
         LOG.info("Done - RecipeSyncTask");

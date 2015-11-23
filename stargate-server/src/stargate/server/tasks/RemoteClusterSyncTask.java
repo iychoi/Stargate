@@ -82,11 +82,11 @@ public class RemoteClusterSyncTask extends AScheduledLeaderTask {
                         this.clusterManager.updateRemoteCluster(remoteCluster);
                     }
                 } catch (IOException ex) {
-                    LOG.error(ex);
+                    LOG.error("Exception occurred while synchronizing remote clusters", ex);
                 }
             }
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while synchronizing remote clusters", ex);
         }
             
         LOG.info("Done - RemoteClusterSyncTask");

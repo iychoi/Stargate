@@ -93,7 +93,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<Boolean>) this.restfulClient.get(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             return false;
         }
         
@@ -112,7 +112,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<RemoteCluster>) this.restfulClient.get(url, new GenericType<RestfulResponse<RemoteCluster>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -137,7 +137,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<Directory>) this.restfulClient.get(url, new GenericType<RestfulResponse<Directory>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -164,7 +164,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<DataObjectMetadata>) this.restfulClient.get(url, new GenericType<RestfulResponse<DataObjectMetadata>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -189,7 +189,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<Recipe>) this.restfulClient.get(url, new GenericType<RestfulResponse<Recipe>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         
@@ -216,7 +216,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<Collection<DataObjectMetadata>>) this.restfulClient.get(url, new GenericType<RestfulResponse<Collection<DataObjectMetadata>>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
 
@@ -243,7 +243,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             return this.restfulClient.download(url);
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
     }
@@ -262,7 +262,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             LOG.debug(url);
             response = (RestfulResponse<URI>) this.restfulClient.get(url, new GenericType<RestfulResponse<URI>>(){});
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
         }
         

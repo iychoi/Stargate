@@ -82,7 +82,7 @@ public class HTTPUserInterfaceServer {
         try {
             this.jettyWebServer.join();
         } catch(Exception ex) {
-            LOG.error(ex);
+            LOG.error("Exception occurred while stopping web server", ex);
         }
     }
 }
