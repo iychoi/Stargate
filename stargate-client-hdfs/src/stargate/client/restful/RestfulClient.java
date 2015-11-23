@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 /**
  *
@@ -62,6 +63,7 @@ public class RestfulClient {
         this.serviceURL = serviceURL;
         
         this.httpClientConfig = new DefaultClientConfig();
+        this.httpClientConfig.getClasses().add(JacksonJsonProvider.class);
         this.httpClientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         this.httpClientConfig.getProperties().put(ClientConfig.PROPERTY_THREADPOOL_SIZE, threadPoolSize);
 
