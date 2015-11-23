@@ -186,8 +186,9 @@ public class StargateHDFS extends FileSystem {
             for(StargateFileStatus s : status) {
                 statusArr[i] = makeFileStatus(s);
             }
+            return statusArr;
         }
-        return null;
+        return new FileStatus[0];
     }
     
     private FileStatus makeFileStatus(StargateFileStatus status) {

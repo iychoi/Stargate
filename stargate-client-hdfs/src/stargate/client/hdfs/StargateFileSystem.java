@@ -32,6 +32,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -124,9 +126,22 @@ public class StargateFileSystem {
     
     private boolean isLocalClusterPath(DataObjectPath path) {
         String clusterName = path.getClusterName();
+        if(clusterName == null || clusterName.isEmpty()) {
+            // root
+            return false;
+        }
         
         if(this.localCluster.getName().equalsIgnoreCase(clusterName) ||
             clusterName.equals("localhost")) {
+            // if path is for a file
+            String p = path.getPath();
+            if(p == null || p.isEmpty()) {
+                return false;
+            }
+            
+            if(p.endsWith("/")) {
+                return false;
+            }
             return true;
         }
         return false;
@@ -136,11 +151,46 @@ public class StargateFileSystem {
         return new DataObjectPath(getClusterName(path), getPathPart(path));
     }
     
-    private StargateFileStatus makeStargateFileStatus(DataObjectMetadata metadata, URI resourceURI) throws IOException {
+    private URI urify(DataObjectPath path) throws URISyntaxException {
+        String clusterName = path.getClusterName();
+        String p = path.getPath();
+        
+        if(clusterName == null || clusterName.isEmpty()) {
+            return new URI("/");
+        }
+        
+        if(p == null || p.isEmpty() || p.equals("/")) {
+            return new URI("/" + clusterName);
+        }
+        
+        return new URI("/" + clusterName + p);
+    }
+    
+    private URI urify(URI resourceURI) throws URISyntaxException {
+        String p = resourceURI.getPath();
+        
+        if(p == null || p.isEmpty() || p.equals("/")) {
+            return new URI("/");
+        }
+        
+        return new URI(p);
+    }
+    
+    private StargateFileStatus makeStargateFileStatus(DataObjectMetadata metadata) throws IOException {
         if(isLocalClusterPath(metadata.getPath())) {
-            return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, resourceURI, this.userInterfaceClient.getLocalResourcePath(metadata.getPath()));
+            try {
+                URI metaURI = urify(metadata.getPath());
+                return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, metaURI, this.userInterfaceClient.getLocalResourcePath(metadata.getPath()));
+            } catch (URISyntaxException ex) {
+                throw new IOException(ex);
+            }
         } else {
-            return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, resourceURI);
+            try {
+                URI metaURI = urify(metadata.getPath());
+                return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, metaURI);
+            } catch (URISyntaxException ex) {
+                throw new IOException(ex);
+            }
         }
     }
     
@@ -155,7 +205,7 @@ public class StargateFileSystem {
             Collection<DataObjectMetadata> metadata = this.userInterfaceClient.listDataObjectMetadata(path);
             if(metadata != null) {
                 for(DataObjectMetadata m : metadata) {
-                    status.add(makeStargateFileStatus(m, resourceURI.resolve(m.getPath().getName())));
+                    status.add(makeStargateFileStatus(m));
                 }
             }
             return status;
@@ -185,7 +235,7 @@ public class StargateFileSystem {
         try {
             DataObjectPath path = makeDataObjectPath(resourceURI);
             DataObjectMetadata metadata = this.userInterfaceClient.getDataObjectMetadata(path);
-            return makeStargateFileStatus(metadata, resourceURI);
+            return makeStargateFileStatus(metadata);
         } catch (Exception ex) {
             throw new IOException(ex);
         }

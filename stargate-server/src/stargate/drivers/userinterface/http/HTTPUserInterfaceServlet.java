@@ -131,7 +131,7 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
     @Path(HTTPUserInterfaceRestfulConstants.RESTFUL_METADATA_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     public RestfulResponse<DataObjectMetadata> getDataObjectMetadataRestful(
-        @DefaultValue("null") @QueryParam("path") String path) {
+        @DefaultValue("") @QueryParam("path") String path) {
         try {
             return new RestfulResponse<DataObjectMetadata>(getDataObjectMetadata(path));
         } catch(Exception ex) {

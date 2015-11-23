@@ -232,11 +232,6 @@ public class DataObjectPath implements Comparable {
             throw new IllegalArgumentException("uri scheme is not stargate scheme (" + scheme + " was given)");
         }
         
-        String authority = uri.getAuthority();
-        if(authority == null || authority.isEmpty()) {
-            throw new IllegalArgumentException("authority of given uri is empty or null");
-        }
-        
         this.uri = uri;
     }
     
