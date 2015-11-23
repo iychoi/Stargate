@@ -38,6 +38,8 @@ import org.apache.commons.logging.LogFactory;
 import stargate.commons.drivers.ADriver;
 import stargate.commons.drivers.ADriverConfiguration;
 import stargate.commons.drivers.DriverNotInstantiatedException;
+import stargate.server.service.StargateService;
+import stargate.server.service.StargateServiceConfiguration;
 
 /**
  *
@@ -106,9 +108,22 @@ public class HazelcastCoreDriver extends ADriver {
         this.hazelcastInstance.shutdown();
     }
     
-    private Config makeDefaultHazelcastConfig() {
+    public StargateService getStargateService() throws Exception {
+        if(this.service instanceof StargateService) {
+            return (StargateService)this.service;
+        } else {
+            throw new Exception("service object is not instance of StargateService");
+        }
+    }
+    
+    private Config makeDefaultHazelcastConfig() throws Exception {
         Config config = new Config();
-        config.getGroupConfig().setName(HAZELCAST_GROUP_NAME_PREFIX + this.config.getServiceName());
+        if(this.config.getServiceName() == null || this.config.getServiceName().isEmpty()) {
+            StargateServiceConfiguration serviceConf = getStargateService().getConfiguration();
+            config.getGroupConfig().setName(HAZELCAST_GROUP_NAME_PREFIX + serviceConf.getServiceName());
+        } else {
+            config.getGroupConfig().setName(HAZELCAST_GROUP_NAME_PREFIX + this.config.getServiceName());
+        }
         
         NetworkConfig network = config.getNetworkConfig();
         network.setPort(this.config.getPort());
@@ -126,19 +141,23 @@ public class HazelcastCoreDriver extends ADriver {
         return config;
     }
     
-    private Config makeHazelcastTCPConfig() {
-        Config config = makeDefaultHazelcastConfig();
-        config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
-        config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true);
-        if(!this.config.isLeaderHost()) {
-            for(String knownHostAddr: this.config.getKnownHostAddr()) {
-                config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(knownHostAddr + ":" + this.config.getPort());
+    private Config makeHazelcastTCPConfig() throws IOException {
+        try {
+            Config config = makeDefaultHazelcastConfig();
+            config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
+            config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true);
+            if(!this.config.isLeaderHost()) {
+                for(String knownHostAddr: this.config.getKnownHostAddr()) {
+                    config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(knownHostAddr + ":" + this.config.getPort());
+                }
             }
+            
+            config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(this.config.getMyHostAddr()+ ":" + this.config.getPort());
+            
+            return config;
+        } catch (Exception ex) {
+            throw new IOException(ex);
         }
-        
-        config.getNetworkConfig().getJoin().getTcpIpConfig().addMember(this.config.getMyHostAddr()+ ":" + this.config.getPort());
-        
-        return config;
     }
     
     @Override
