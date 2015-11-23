@@ -151,6 +151,8 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             throw new IllegalArgumentException("path is null");
         }
         
+        LOG.info("getDataObjectMetadata : " + path.toString());
+        
         RestfulResponse<DataObjectMetadata> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_METADATA_PATH));
@@ -199,17 +201,20 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             throw new IllegalArgumentException("path is null");
         }
         
+        LOG.info("listDataObjectMetadata : " + path.toString());
+        
         RestfulResponse<Collection<DataObjectMetadata>> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_LIST_METADATA_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
+            LOG.info("listDataObjectMetadata : " + url);
             response = (RestfulResponse<Collection<DataObjectMetadata>>) this.restfulClient.get(url, new GenericType<RestfulResponse<Collection<DataObjectMetadata>>>(){});
         } catch (IOException ex) {
             LOG.error(ex);
             throw ex;
         }
-        
+
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {

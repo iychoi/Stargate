@@ -99,7 +99,10 @@ public class StargateHDFS extends FileSystem {
         this.uri = uri;
         
         this.workingDir = new Path("/").makeQualified(this);
-        this.localHDFS = this.workingDir.getFileSystem(conf);
+        
+        this.localHDFS = new Path("/").getFileSystem(conf);
+        
+        LOG.info("StargateFS initialized : " + uri.toString());
     }
     
     @Override
@@ -117,6 +120,8 @@ public class StargateHDFS extends FileSystem {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }
+        
+        LOG.info("setWorkingDirectory: " + path.toString());
         
         this.workingDir = makeAbsolute(path);
     }
@@ -138,6 +143,8 @@ public class StargateHDFS extends FileSystem {
             throw new IllegalArgumentException("path is null");
         }
         
+        LOG.info("open: " + path.toString());
+        
         URI absPath = makeAbsoluteURI(path);
         StargateFileStatus status = this.filesystem.getFileStatus(absPath);
         URI redirectionPath = status.getRedirectionPath();
@@ -156,6 +163,8 @@ public class StargateHDFS extends FileSystem {
             throw new IllegalArgumentException("path is null");
         }
         
+        LOG.info("getFileStatus: " + path.toString());
+        
         URI absPath = makeAbsoluteURI(path);
         StargateFileStatus status = this.filesystem.getFileStatus(absPath);
         return makeFileStatus(status);
@@ -166,6 +175,8 @@ public class StargateHDFS extends FileSystem {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }
+        
+        LOG.info("listStatus: " + path.toString());
         
         URI absPath = makeAbsoluteURI(path);
         Collection<StargateFileStatus> status = this.filesystem.listStatus(absPath);

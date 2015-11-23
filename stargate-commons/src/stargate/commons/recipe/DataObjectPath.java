@@ -75,10 +75,6 @@ public class DataObjectPath implements Comparable {
     }
     
     public DataObjectPath(String cluster, String path) {
-        if(path == null || path.isEmpty()) {
-            throw new IllegalArgumentException("path is empty or null");
-        }
-        
         initialize(cluster, path);
     }
     
@@ -170,10 +166,6 @@ public class DataObjectPath implements Comparable {
     }
     
     private void initialize(String cluster, String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException("path is empty or null");
-        }
-        
         this.uri = createPathUri(cluster, path);
     }
     
@@ -200,6 +192,10 @@ public class DataObjectPath implements Comparable {
     
     private URI createPathUri(String authority, String path) {
         try {
+            if(authority == null || authority.isEmpty()) {
+                return new URI(STARGATE_SCHEME + ":///");
+            }
+            
             URI uri = new URI(STARGATE_SCHEME, authority, normalizePath(path), null, null);
             return uri.normalize();
         } catch (URISyntaxException e) {
@@ -322,9 +318,10 @@ public class DataObjectPath implements Comparable {
             sb.append(":");
         }
         
+        sb.append("//");
+        
         String authority = this.uri.getAuthority();
         if (authority != null) {
-            sb.append("//");
             sb.append(authority);
         }
         

@@ -30,40 +30,28 @@ import org.codehaus.jackson.annotate.JsonProperty;
  *
  * @author iychoi
  */
-public class RestfulResponse<T> {
-    private T response;
-    private RestfulOperationException exception;
-    
-    
-    public RestfulResponse() {
-        
+public class RestfulOperationException extends Exception {
+
+    public RestfulOperationException() {
+        super();
+    }
+
+    public RestfulOperationException(String string) {
+        super(string);
+    }
+
+    public RestfulOperationException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
+    }
+
+    public RestfulOperationException(Throwable thrwbl) {
+        super(thrwbl);
     }
     
-    public RestfulResponse(T response) {
-        this.response = response;
-    }
-    
-    public RestfulResponse(RestfulOperationException ex) {
-        this.exception = ex;
-    }
-    
-    @JsonProperty("response")
-    public void setResponse(T response) {
-        this.response = response;
-    }
-    
-    @JsonProperty("response")
-    public T getResponse() {
-        return this.response;
-    }
-    
-    @JsonProperty("exception")
-    public void setException(RestfulOperationException ex) {
-        this.exception = ex;
-    }
-    
-    @JsonProperty("exception")
-    public Exception getException() {
-        return this.exception;
+    @JsonProperty("suppressed")
+    public final synchronized void addSuppressed(Throwable[] exception) {
+        for(Throwable ex : exception) {
+            addSuppressed(ex);
+        }
     }
 }
