@@ -290,6 +290,8 @@ public class VolumeManager {
         
         DataObjectPath absPath = makeAbsolutePath(path);
         
+        LOG.info("Adding a local directory entry - " + absPath.toString());
+        
         if(absPath.isRoot()) {
             throw new IllegalArgumentException("root entry is not allowed");
         } else if(isLocalDataObject(absPath)) {
