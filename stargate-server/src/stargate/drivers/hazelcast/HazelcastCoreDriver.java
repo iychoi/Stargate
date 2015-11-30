@@ -24,6 +24,7 @@
 package stargate.drivers.hazelcast;
 
 import com.hazelcast.config.Config;
+import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
@@ -146,6 +147,7 @@ public class HazelcastCoreDriver extends ADriver {
         mapHashMapConfig.getMaxSizeConfig().setSize(0);
         mapHashMapConfig.setTimeToLiveSeconds(0);
         mapHashMapConfig.setReadBackupData(true);
+        mapHashMapConfig.setInMemoryFormat(InMemoryFormat.OBJECT);
 
         config.addMapConfig(mapHashMapConfig);
         
@@ -155,6 +157,7 @@ public class HazelcastCoreDriver extends ADriver {
         hierarchyMapConfig.getMaxSizeConfig().setSize(0);
         hierarchyMapConfig.setTimeToLiveSeconds(0);
         hierarchyMapConfig.setReadBackupData(true);
+        hierarchyMapConfig.setInMemoryFormat(InMemoryFormat.OBJECT);
 
         config.addMapConfig(hierarchyMapConfig);
         
