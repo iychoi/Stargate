@@ -27,7 +27,6 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MapEvent;
-import com.hazelcast.map.listener.MapListener;
 import java.io.IOException;
 import java.util.Set;
 import org.apache.commons.logging.Log;
@@ -160,6 +159,24 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
             this.internalMap.set(key, (String) value);
         }
     }
+    
+    @Override
+    public synchronized void putIfAbsent(String key, Object value) throws IOException {
+        if(key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+        
+        if(value == null) {
+            throw new IllegalArgumentException("value is null");
+        }
+        
+        if(this.useJson) {
+            String json = this.serializer.toJson(value);
+            this.internalMap.putIfAbsent(key, json);
+        } else {
+            this.internalMap.putIfAbsent(key, (String) value);
+        }
+    }
 
     @Override
     public synchronized void remove(String key) throws IOException {
@@ -167,7 +184,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
             throw new IllegalArgumentException("key is null");
         }
         
-        this.internalMap.remove(key);
+        this.internalMap.delete(key);
     }
 
     @Override

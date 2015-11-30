@@ -39,6 +39,7 @@ public abstract class ADataStore {
     
     public abstract Object get(String key) throws IOException;
     public abstract void put(String key, Object value) throws IOException;
+    public abstract void putIfAbsent(String key, Object value) throws IOException;
     public abstract void remove(String key) throws IOException;
     public abstract Set<String> keySet() throws IOException;
     

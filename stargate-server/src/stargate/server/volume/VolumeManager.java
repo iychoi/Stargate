@@ -139,7 +139,7 @@ public class VolumeManager {
         
         // make local cluster root
         Directory localClusterRootDir = makeLocalClusterRootDirectory();
-        this.directoryHierarchy.put(localClusterRootDir.getPath().toString(), localClusterRootDir);
+        this.directoryHierarchy.putIfAbsent(localClusterRootDir.getPath().toString(), localClusterRootDir);
         
         this.dataExportChangedHandler = new DataExportChangedEventHandler(this.clusterManager, this);
         this.dataExportManager.addEventHandler(this.dataExportChangedHandler);

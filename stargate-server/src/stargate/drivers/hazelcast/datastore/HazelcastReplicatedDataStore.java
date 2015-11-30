@@ -123,6 +123,26 @@ public class HazelcastReplicatedDataStore extends AReplicatedDataStore {
             this.internalMap.put(key, (String) value);
         }
     }
+    
+    @Override
+    public synchronized void putIfAbsent(String key, Object value) throws IOException {
+        if(key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+        
+        if(value == null) {
+            throw new IllegalArgumentException("value is null");
+        }
+        
+        if(!this.internalMap.containsKey(key)) {
+            if(this.useJson) {
+                String json = this.serializer.toJson(value);
+                this.internalMap.put(key, json);
+            } else {
+                this.internalMap.put(key, (String) value);
+            }
+        }
+    }
 
     @Override
     public synchronized void remove(String key) throws IOException {
