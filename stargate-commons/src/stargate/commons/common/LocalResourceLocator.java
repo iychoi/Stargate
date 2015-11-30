@@ -48,6 +48,10 @@ public class LocalResourceLocator {
     }
     
     public File getResourceLocation(String f) {
-        return new File(this.resourceBase, f);
+        if(f.startsWith("/")) {
+            return new File(f);
+        } else {
+            return new File(this.resourceBase, f);
+        }
     }
 }
