@@ -259,6 +259,8 @@ public class VolumeManager {
             throw new IllegalArgumentException("directory is null");
         }
         
+        LOG.info("Adding a local directory - " + directory.getPath().toString());
+        
         if(directory.getPath().isRoot()) {
             throw new IllegalArgumentException("root directory is not allowed");
         } else if(isLocalDataObject(directory.getPath())) {
