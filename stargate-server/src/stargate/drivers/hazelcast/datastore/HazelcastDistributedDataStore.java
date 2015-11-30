@@ -98,6 +98,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         if(this.useJson) {
             String json = (String) this.internalMap.get(key);
             LOG.info("Get k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
+            LOG.info("Total " + this.internalMap.size() + " in the map");
             if(json == null) {
                 return null;
             }
@@ -121,6 +122,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
             String json = this.serializer.toJson(value);
             LOG.info("Put k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             this.internalMap.put(key, json);
+            LOG.info("Total " + this.internalMap.size() + " in the map");
         } else {
             this.internalMap.put(key, (String) value);
         }
