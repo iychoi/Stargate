@@ -56,6 +56,7 @@ public class RestfulResponse<T> {
     public void setExceptionClass(String clazz) throws ClassNotFoundException {
         if(clazz == null || clazz.isEmpty()) {
             this.exceptionClass = null;
+            return;
         }
         
         this.exceptionClass = ClassUtils.findClass(clazz);

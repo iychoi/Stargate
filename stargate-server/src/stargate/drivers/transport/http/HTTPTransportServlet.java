@@ -144,7 +144,7 @@ public class HTTPTransportServlet extends ATransportServer {
         }
     }
     
-    private DataObjectMetadata getDataObjectMetadata(String path) throws IOException {
+    private DataObjectMetadata getDataObjectMetadata(String path) throws IOException, FileNotFoundException {
         if(path == null || path.isEmpty()) {
             throw new IllegalArgumentException("path is null or empty");
         }
@@ -154,7 +154,7 @@ public class HTTPTransportServlet extends ATransportServer {
     }
     
     @Override
-    public DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException {
+    public DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException, FileNotFoundException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }

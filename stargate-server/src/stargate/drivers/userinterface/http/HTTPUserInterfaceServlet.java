@@ -145,7 +145,7 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
         }
     }
     
-    private DataObjectMetadata getDataObjectMetadata(String path) throws IOException {
+    private DataObjectMetadata getDataObjectMetadata(String path) throws IOException, FileNotFoundException {
         if(path == null || path.isEmpty()) {
             throw new IllegalArgumentException("path is null or empty");
         }
@@ -155,7 +155,7 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
     }
     
     @Override
-    public DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException {
+    public DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException, FileNotFoundException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }

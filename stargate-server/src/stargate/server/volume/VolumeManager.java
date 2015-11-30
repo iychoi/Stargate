@@ -415,7 +415,7 @@ public class VolumeManager {
         }
     }
     
-    public synchronized DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException {
+    public synchronized DataObjectMetadata getDataObjectMetadata(DataObjectPath path) throws IOException, FileNotFoundException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }
