@@ -27,6 +27,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
+import com.hazelcast.config.ReplicatedMapConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
@@ -134,32 +135,18 @@ public class HazelcastCoreDriver extends ADriver {
         network.setPortCount(100);
         
         MapConfig mapConfig = new MapConfig();
-        mapConfig.setName("dht");
+        mapConfig.setName("*");
         mapConfig.setBackupCount(2);
         mapConfig.getMaxSizeConfig().setSize(0);
         mapConfig.setTimeToLiveSeconds(0);
+        mapConfig.setReadBackupData(true);
         
         config.addMapConfig(mapConfig);
         
-        MapConfig mapHashMapConfig = new MapConfig();
-        mapHashMapConfig.setName(RecipeManager.RECIPEMANAGER_HASH_MAP_ID);
-        mapHashMapConfig.setBackupCount(2);
-        mapHashMapConfig.getMaxSizeConfig().setSize(0);
-        mapHashMapConfig.setTimeToLiveSeconds(0);
-        mapHashMapConfig.setReadBackupData(true);
-        mapHashMapConfig.setInMemoryFormat(InMemoryFormat.OBJECT);
-
-        config.addMapConfig(mapHashMapConfig);
+        ReplicatedMapConfig rmapConfig = new ReplicatedMapConfig();
+        rmapConfig.setName("*");
         
-        MapConfig hierarchyMapConfig = new MapConfig();
-        hierarchyMapConfig.setName(VolumeManager.VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID);
-        hierarchyMapConfig.setBackupCount(2);
-        hierarchyMapConfig.getMaxSizeConfig().setSize(0);
-        hierarchyMapConfig.setTimeToLiveSeconds(0);
-        hierarchyMapConfig.setReadBackupData(true);
-        hierarchyMapConfig.setInMemoryFormat(InMemoryFormat.OBJECT);
-
-        config.addMapConfig(hierarchyMapConfig);
+        config.addReplicatedMapConfig(rmapConfig);
         
         return config;
     }

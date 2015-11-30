@@ -97,7 +97,6 @@ public class HazelcastReplicatedDataStore extends AReplicatedDataStore {
         
         if(this.useJson) {
             String json = (String) this.internalMap.get(key);
-            LOG.info("Get k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             if(json == null) {
                 return null;
             }
@@ -119,7 +118,6 @@ public class HazelcastReplicatedDataStore extends AReplicatedDataStore {
         
         if(this.useJson) {
             String json = this.serializer.toJson(value);
-            LOG.info("Put k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             this.internalMap.put(key, json);
         } else {
             this.internalMap.put(key, (String) value);

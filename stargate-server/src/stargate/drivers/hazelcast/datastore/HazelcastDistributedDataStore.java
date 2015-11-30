@@ -23,7 +23,11 @@
  */
 package stargate.drivers.hazelcast.datastore;
 
+import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.MapEvent;
+import com.hazelcast.map.listener.MapListener;
 import java.io.IOException;
 import java.util.Set;
 import org.apache.commons.logging.Log;
@@ -63,6 +67,39 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         }
         
         this.serializer = new JsonSerializer();
+        
+        this.internalMap.addEntryListener(new EntryListener() {
+
+            @Override
+            public void entryAdded(EntryEvent ee) {
+                LOG.info(ee.toString());
+            }
+
+            @Override
+            public void entryUpdated(EntryEvent ee) {
+                LOG.info(ee.toString());
+            }
+
+            @Override
+            public void entryRemoved(EntryEvent ee) {
+                LOG.info(ee.toString());
+            }
+
+            @Override
+            public void entryEvicted(EntryEvent ee) {
+                LOG.info(ee.toString());
+            }
+
+            @Override
+            public void mapCleared(MapEvent me) {
+                LOG.info(me.toString());
+            }
+
+            @Override
+            public void mapEvicted(MapEvent me) {
+                LOG.info(me.toString());
+            }
+        }, true);
     }
     
     @Override
@@ -97,8 +134,6 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         
         if(this.useJson) {
             String json = (String) this.internalMap.get(key);
-            LOG.info("Get k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
-            LOG.info("Total " + this.internalMap.size() + " in the map");
             if(json == null) {
                 return null;
             }
@@ -120,9 +155,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         
         if(this.useJson) {
             String json = this.serializer.toJson(value);
-            LOG.info("Put k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             this.internalMap.set(key, json);
-            LOG.info("Total " + this.internalMap.size() + " in the map");
         } else {
             this.internalMap.set(key, (String) value);
         }
