@@ -30,6 +30,7 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -123,11 +124,13 @@ public class RestfulClient {
         // wait for completion
         try {
             ClientResponse response = future.get();
-            if(response.getStatus() != 200) {
-                throw new IOException("HTTP error code : " + response.getStatus());
+            if(response.getStatus() == 200) {
+                return response.getEntity(generic);
+            } else if(response.getStatus() == 404) {
+                throw new FileNotFoundException(response.toString());
+            } else {
+                throw new IOException("HTTP error code : " + response.getStatus() + "\n" + response.toString());
             }
-
-            return response.getEntity(generic);
         } catch (InterruptedException ex) {
             throw new IOException(ex);
         } catch (ExecutionException ex) {

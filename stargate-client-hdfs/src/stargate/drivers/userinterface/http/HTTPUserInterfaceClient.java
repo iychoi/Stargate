@@ -24,6 +24,7 @@
 package stargate.drivers.userinterface.http;
 
 import com.sun.jersey.api.client.GenericType;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -163,6 +164,8 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             String url = builder.build();
             LOG.debug(url);
             response = (RestfulResponse<DataObjectMetadata>) this.restfulClient.get(url, new GenericType<RestfulResponse<DataObjectMetadata>>(){});
+        } catch (FileNotFoundException ex) {
+            throw ex;
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;

@@ -24,6 +24,7 @@
 
 package stargate.client.hdfs;
 
+import java.io.FileNotFoundException;
 import stargate.drivers.userinterface.http.HTTPChunkInputStream;
 import stargate.drivers.userinterface.http.HTTPUserInterfaceClient;
 import java.io.IOException;
@@ -226,6 +227,8 @@ public class StargateFileSystem {
             DataObjectPath path = makeDataObjectPath(resourceURI);
             DataObjectMetadata metadata = this.userInterfaceClient.getDataObjectMetadata(path);
             return makeStargateFileStatus(metadata, resourceURI);
+        } catch (FileNotFoundException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new IOException(ex);
         }
