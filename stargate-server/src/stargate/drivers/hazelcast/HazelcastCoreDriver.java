@@ -145,6 +145,7 @@ public class HazelcastCoreDriver extends ADriver {
         mapHashMapConfig.setBackupCount(2);
         mapHashMapConfig.getMaxSizeConfig().setSize(0);
         mapHashMapConfig.setTimeToLiveSeconds(0);
+        mapHashMapConfig.setReadBackupData(true);
 
         config.addMapConfig(mapHashMapConfig);
         
@@ -153,6 +154,7 @@ public class HazelcastCoreDriver extends ADriver {
         hierarchyMapConfig.setBackupCount(2);
         hierarchyMapConfig.getMaxSizeConfig().setSize(0);
         hierarchyMapConfig.setTimeToLiveSeconds(0);
+        hierarchyMapConfig.setReadBackupData(true);
 
         config.addMapConfig(hierarchyMapConfig);
         
