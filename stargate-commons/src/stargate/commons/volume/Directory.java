@@ -140,6 +140,8 @@ public class Directory {
             throw new IllegalArgumentException("entry is null or empty");
         }
         
+        LOG.info("Adding an entry " + entry + " to " + this.path.toString());
+        
         this.entry.add(entry);
     }
     

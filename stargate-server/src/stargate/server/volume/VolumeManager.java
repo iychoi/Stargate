@@ -279,6 +279,7 @@ public class VolumeManager {
                     addLocalDirectory(parentDir);
                 }
                 
+                LOG.info("Adding a directory - " + directory.getPath().toString() + " to " + parentDir.getPath().toString());
                 parentDir.addEntry(directory.getPath());
                 this.directoryHierarchy.put(parentPath.toString(), parentDir);
             }
