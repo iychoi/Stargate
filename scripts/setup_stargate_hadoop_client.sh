@@ -1,3 +1,9 @@
+echo "Setting up Stargate Hadoop Client"
+
+curdir=$PWD
+
+cd ..
+
 cd stargate-commons
 ant
 cp dist/stargate-commons.jar ~/hadoop/lib
@@ -13,5 +19,5 @@ wget -O jersey-client-1.8.jar http://central.maven.org/maven2/com/sun/jersey/jer
 wget -O jackson-jaxrs-1.5.2.jar http://central.maven.org/maven2/org/codehaus/jackson/jackson-jaxrs/1.5.2/jackson-jaxrs-1.5.2.jar
 wget -O jackson-xc-1.5.2.jar http://central.maven.org/maven2/org/codehaus/jackson/jackson-xc/1.5.2/jackson-xc-1.5.2.jar
 
-cd ~
+cd $curdir
 
