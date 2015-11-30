@@ -61,7 +61,7 @@ public class VolumeManager {
     
     private static final Log LOG = LogFactory.getLog(VolumeManager.class);
     
-    private static final String VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID = "VolumeManager_Directory_Hierarchy";
+    public static final String VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID = "VolumeManager_Directory_Hierarchy";
     
     private static final long DIRECTORY_METADATA_SIZE = 4*1024;
     

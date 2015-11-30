@@ -51,8 +51,8 @@ public class RecipeManager {
 
     private static final Log LOG = LogFactory.getLog(RecipeManager.class);
     
-    private static final String RECIPEMANAGER_RECIPE_MAP_ID = "RecipeManager_Recipe";
-    private static final String RECIPEMANAGER_HASH_MAP_ID = "RecipeManager_Hash";
+    public static final String RECIPEMANAGER_RECIPE_MAP_ID = "RecipeManager_Recipe";
+    public static final String RECIPEMANAGER_HASH_MAP_ID = "RecipeManager_Hash";
     
     private static RecipeManager instance;
     

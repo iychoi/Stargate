@@ -38,8 +38,10 @@ import org.apache.commons.logging.LogFactory;
 import stargate.commons.drivers.ADriver;
 import stargate.commons.drivers.ADriverConfiguration;
 import stargate.commons.drivers.DriverNotInstantiatedException;
+import stargate.server.recipe.RecipeManager;
 import stargate.server.service.StargateService;
 import stargate.server.service.StargateServiceConfiguration;
+import stargate.server.volume.VolumeManager;
 
 /**
  *
@@ -135,8 +137,24 @@ public class HazelcastCoreDriver extends ADriver {
         mapConfig.setBackupCount(2);
         mapConfig.getMaxSizeConfig().setSize(0);
         mapConfig.setTimeToLiveSeconds(0);
-
+        
         config.addMapConfig(mapConfig);
+        
+        MapConfig mapHashMapConfig = new MapConfig();
+        mapHashMapConfig.setName(RecipeManager.RECIPEMANAGER_HASH_MAP_ID);
+        mapHashMapConfig.setBackupCount(2);
+        mapHashMapConfig.getMaxSizeConfig().setSize(0);
+        mapHashMapConfig.setTimeToLiveSeconds(0);
+
+        config.addMapConfig(mapHashMapConfig);
+        
+        MapConfig hierarchyMapConfig = new MapConfig();
+        hierarchyMapConfig.setName(VolumeManager.VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID);
+        hierarchyMapConfig.setBackupCount(2);
+        hierarchyMapConfig.getMaxSizeConfig().setSize(0);
+        hierarchyMapConfig.setTimeToLiveSeconds(0);
+
+        config.addMapConfig(hierarchyMapConfig);
         
         return config;
     }
