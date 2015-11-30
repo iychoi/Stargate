@@ -24,7 +24,9 @@
 
 package stargate.client.restful;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+import stargate.commons.utils.ClassUtils;
 
 /**
  *
@@ -32,19 +34,12 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class RestfulResponse<T> {
     private T response;
+    private Class exceptionClass;
     private RestfulOperationException exception;
     
     
     public RestfulResponse() {
         
-    }
-    
-    public RestfulResponse(T response) {
-        this.response = response;
-    }
-    
-    public RestfulResponse(RestfulOperationException ex) {
-        this.exception = ex;
     }
     
     @JsonProperty("response")
@@ -55,6 +50,34 @@ public class RestfulResponse<T> {
     @JsonProperty("response")
     public T getResponse() {
         return this.response;
+    }
+    
+    @JsonProperty("exception_class")
+    public void setExceptionClass(String clazz) throws ClassNotFoundException {
+        if(clazz == null || clazz.isEmpty()) {
+            throw new IllegalArgumentException("clazz is null or empty");
+        }
+        
+        this.exceptionClass = ClassUtils.findClass(clazz);
+    }
+    
+    @JsonIgnore
+    public void setExceptionClass(Class clazz) {
+        if(clazz == null) {
+            throw new IllegalArgumentException("clazz is null");
+        }
+        
+        this.exceptionClass = clazz;
+    }
+    
+    @JsonProperty("exception_class")
+    public String getExceptionClassString() {
+        return this.exceptionClass.getCanonicalName();
+    }
+    
+    @JsonIgnore
+    public Class getExceptionClass() {
+        return this.exceptionClass;
     }
     
     @JsonProperty("exception")

@@ -24,6 +24,7 @@
 
 package stargate.server.volume;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -438,7 +439,7 @@ public class VolumeManager {
                 Recipe recipe = this.recipeManager.getRecipe(absPath);
                 if(recipe == null) {
                     // not exist
-                    return null;
+                    throw new FileNotFoundException("file not found - " + absPath.toString());
                 }
                 return recipe.getMetadata();
             }
