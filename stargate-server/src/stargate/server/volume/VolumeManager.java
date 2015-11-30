@@ -436,6 +436,10 @@ public class VolumeManager {
             } else {
                 // file
                 Recipe recipe = this.recipeManager.getRecipe(absPath);
+                if(recipe == null) {
+                    // not exist
+                    return null;
+                }
                 return recipe.getMetadata();
             }
         } else {

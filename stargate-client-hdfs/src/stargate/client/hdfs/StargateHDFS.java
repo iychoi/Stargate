@@ -167,6 +167,9 @@ public class StargateHDFS extends FileSystem {
         
         URI absPath = makeAbsoluteURI(path);
         StargateFileStatus status = this.filesystem.getFileStatus(absPath);
+        if(status == null) {
+            return null;
+        }
         return makeFileStatus(status);
     }
     

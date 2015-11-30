@@ -225,6 +225,9 @@ public class StargateFileSystem {
         try {
             DataObjectPath path = makeDataObjectPath(resourceURI);
             DataObjectMetadata metadata = this.userInterfaceClient.getDataObjectMetadata(path);
+            if(metadata == null) {
+                return null;
+            }
             return makeStargateFileStatus(metadata, resourceURI);
         } catch (Exception ex) {
             throw new IOException(ex);
