@@ -84,6 +84,7 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
         this.hadoopConfig = new Configuration();
         Path rootPath = this.config.getRootPath();
         String hdfsRoot = this.hadoopConfig.get("fs.default.name");
+        LOG.info("hdfs root - " + hdfsRoot);
         this.rootPath = new Path(hdfsRoot, rootPath);
         LOG.info("creating a filesystem for " + this.rootPath);
         this.filesystem = this.rootPath.getFileSystem(this.hadoopConfig);
