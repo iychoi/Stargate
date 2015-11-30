@@ -82,7 +82,9 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
     @Override
     public synchronized void startDriver() throws IOException {
         this.hadoopConfig = new Configuration();
-        this.rootPath = this.config.getRootPath();
+        Path rootPath = this.config.getRootPath();
+        String hdfsRoot = this.hadoopConfig.get("fs.default.name");
+        this.rootPath = new Path(hdfsRoot, rootPath);
         this.filesystem = this.rootPath.getFileSystem(this.hadoopConfig);
     }
 
