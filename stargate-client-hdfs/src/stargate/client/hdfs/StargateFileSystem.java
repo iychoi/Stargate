@@ -165,7 +165,7 @@ public class StargateFileSystem {
     }
     
     private StargateFileStatus makeStargateFileStatus(DataObjectMetadata metadata, URI resourceURI) throws IOException {
-        if(isLocalClusterPath(metadata.getPath())) {
+        if(!metadata.isDirectory() && isLocalClusterPath(metadata.getPath())) {
             try {
                 URI metaURI = urify(metadata.getPath());
                 LOG.info("metaURI:" + metaURI.toString());

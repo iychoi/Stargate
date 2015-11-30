@@ -204,6 +204,8 @@ public class VolumeManager {
         
         DataObjectPath absPath = makeAbsolutePath(path);
         
+        LOG.info("Get a directory - " + absPath.toString());
+        
         if(absPath.isRoot()) {
             return getRootDirectory();
         } else if(isLocalDataObject(path)) {
@@ -362,6 +364,8 @@ public class VolumeManager {
         
         DataObjectPath absPath = makeAbsolutePath(path);
         
+        LOG.info("List a local directory entry - " + absPath.toString());
+        
         List<DataObjectPath> entry = new ArrayList<DataObjectPath>();
         
         Directory dir = getDirectory(absPath);
@@ -381,6 +385,8 @@ public class VolumeManager {
         }
         
         DataObjectPath absPath = makeAbsolutePath(path);
+        
+        LOG.info("Get a local resource path - " + absPath.toString());
         
         if(absPath.isRoot()) {
             throw new IOException("root directory is virtual");
@@ -411,6 +417,8 @@ public class VolumeManager {
         }
         
         DataObjectPath absPath = makeAbsolutePath(path);
+        
+        LOG.info("Get a data object metadata - " + absPath.toString());
         
         if(absPath.isRoot()) {
             return makeRootDataObjectMetadata();
@@ -446,7 +454,7 @@ public class VolumeManager {
         
         DataObjectPath absPath = makeAbsolutePath(path);
         
-        LOG.info("absolute path = " + absPath.toString());
+        LOG.info("List data object metadata - " + absPath.toString());
         
         if(absPath.isRoot()) {
             List<DataObjectMetadata> entry = new ArrayList<DataObjectMetadata>();
@@ -488,6 +496,8 @@ public class VolumeManager {
         }
         
         DataObjectPath absPath = makeAbsolutePath(path);
+        
+        LOG.info("Get a recipe - " + absPath.toString());
         
         if(isLocalDataObject(absPath)) {
             // local

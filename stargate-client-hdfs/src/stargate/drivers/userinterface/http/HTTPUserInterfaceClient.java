@@ -132,7 +132,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         RestfulResponse<Directory> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_DIRECTORY_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             LOG.debug(url);
             response = (RestfulResponse<Directory>) this.restfulClient.get(url, new GenericType<RestfulResponse<Directory>>(){});
@@ -184,7 +184,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         RestfulResponse<Recipe> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_RECIPE_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             LOG.debug(url);
             response = (RestfulResponse<Recipe>) this.restfulClient.get(url, new GenericType<RestfulResponse<Recipe>>(){});
@@ -257,7 +257,7 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         RestfulResponse<URI> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_LOCAL_CLUSTER_RESOURCE_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             LOG.debug(url);
             response = (RestfulResponse<URI>) this.restfulClient.get(url, new GenericType<RestfulResponse<URI>>(){});
