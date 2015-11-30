@@ -168,9 +168,7 @@ public class StargateFileSystem {
         if(!metadata.isDirectory() && isLocalClusterPath(metadata.getPath())) {
             try {
                 URI metaURI = urify(metadata.getPath());
-                LOG.info("metaURI:" + metaURI.toString());
                 URI absURI = resourceURI.resolve(metaURI);
-                LOG.info("absURI:" + absURI.toString());
                 return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, absURI, this.userInterfaceClient.getLocalResourcePath(metadata.getPath()));
             } catch (URISyntaxException ex) {
                 throw new IOException(ex);
@@ -178,9 +176,7 @@ public class StargateFileSystem {
         } else {
             try {
                 URI metaURI = urify(metadata.getPath());
-                LOG.info("metaURI:" + metaURI.toString());
                 URI absURI = resourceURI.resolve(metaURI);
-                LOG.info("absURI:" + absURI.toString());
                 return new StargateFileStatus(metadata, DEFAULT_BLOCK_SIZE, absURI);
             } catch (URISyntaxException ex) {
                 throw new IOException(ex);

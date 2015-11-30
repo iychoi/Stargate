@@ -25,6 +25,8 @@ package stargate.commons.recipe;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -174,7 +176,11 @@ public class DataObjectPath implements Comparable {
             throw new IllegalArgumentException("parent is empty or null");
         }
         
-        this.uri = createPathUri(cluster, parent);
+        if(parent.endsWith("/")) {
+            this.uri = createPathUri(cluster, parent);
+        } else {
+            this.uri = createPathUri(cluster, parent + "/");
+        }
         this.uri.resolve(normalizePath(child)).normalize();
     }
     
@@ -187,7 +193,16 @@ public class DataObjectPath implements Comparable {
             throw new IllegalArgumentException("child is empty or null");
         }
         
-        this.uri = parent.uri.resolve(normalizePath(child)).normalize();
+        if(parent.uri.getPath().endsWith("/")) {
+            this.uri = parent.uri.resolve(normalizePath(child)).normalize();
+        } else {
+            try {
+                URI uri = new URI(parent.uri.toASCIIString() + "/");
+                this.uri = uri.resolve(normalizePath(child)).normalize();
+            } catch (URISyntaxException ex) {
+                throw new IllegalArgumentException(ex);
+            }
+        }
     }
     
     private URI createPathUri(String authority, String path) {

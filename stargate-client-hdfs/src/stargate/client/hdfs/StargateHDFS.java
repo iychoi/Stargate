@@ -185,6 +185,7 @@ public class StargateHDFS extends FileSystem {
             int i = 0;
             for(StargateFileStatus s : status) {
                 statusArr[i] = makeFileStatus(s);
+                i++;
             }
             return statusArr;
         }
