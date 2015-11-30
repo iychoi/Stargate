@@ -39,19 +39,14 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     
     private static final Log LOG = LogFactory.getLog(HazelcastDistributedDataStore.class);
     
-    private IMap<Object, Object> internalMap;
-    private Class keyclass;
+    private IMap<String, Object> internalMap;
     private Class valclass;
     private boolean useJson;
     private JsonSerializer serializer;
     
-    public HazelcastDistributedDataStore(IMap<Object, Object> map, Class keyclass, Class valclass) {
+    public HazelcastDistributedDataStore(IMap<String, Object> map, Class valclass) {
         if(map == null) {
             throw new IllegalArgumentException("map is null");
-        }
-        
-        if(keyclass == null) {
-            throw new IllegalArgumentException("keyclass is null");
         }
         
         if(valclass == null) {
@@ -59,7 +54,6 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         }
         
         this.internalMap = map;
-        this.keyclass = keyclass;
         this.valclass = valclass;
         
         if(valclass == String.class || valclass == Integer.class || valclass == Long.class) {
@@ -71,11 +65,6 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         this.serializer = new JsonSerializer();
     }
     
-    @Override
-    public Class getKeyClass() {
-        return this.keyclass;
-    }
-
     @Override
     public Class getValueClass() {
         return this.valclass;
@@ -92,7 +81,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     }
 
     @Override
-    public synchronized boolean containsKey(Object key) {
+    public synchronized boolean containsKey(String key) {
         if(key == null) {
             throw new IllegalArgumentException("key is null");
         }
@@ -101,14 +90,14 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     }
 
     @Override
-    public synchronized Object get(Object key) throws IOException {
+    public synchronized Object get(String key) throws IOException {
         if(key == null) {
             throw new IllegalArgumentException("key is null");
         }
         
         if(this.useJson) {
             String json = (String) this.internalMap.get(key);
-            LOG.info("Get k=" + key.toString() + " v=" + json);
+            LOG.info("Get k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             if(json == null) {
                 return null;
             }
@@ -119,7 +108,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     }
 
     @Override
-    public synchronized void put(Object key, Object value) throws IOException {
+    public synchronized void put(String key, Object value) throws IOException {
         if(key == null) {
             throw new IllegalArgumentException("key is null");
         }
@@ -130,7 +119,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         
         if(this.useJson) {
             String json = this.serializer.toJson(value);
-            LOG.info("Put k=" + key.toString() + " v=" + json);
+            LOG.info("Put k=" + key + " v=" + json + "\n from " + this.internalMap.getName());
             this.internalMap.put(key, json);
         } else {
             this.internalMap.put(key, (String) value);
@@ -138,7 +127,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     }
 
     @Override
-    public synchronized void remove(Object key) throws IOException {
+    public synchronized void remove(String key) throws IOException {
         if(key == null) {
             throw new IllegalArgumentException("key is null");
         }
@@ -147,7 +136,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
     }
 
     @Override
-    public synchronized Set<Object> keySet() throws IOException {
+    public synchronized Set<String> keySet() throws IOException {
         return this.internalMap.keySet();
     }
 

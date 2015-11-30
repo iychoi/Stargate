@@ -53,7 +53,7 @@ public class NodeUtils {
         
         String nodeName = null;
         try {
-            nodeName = NameUtils.generateMachineID();
+            nodeName = "Node_" + NameUtils.generateMachineID();
         } catch (Exception ex) {
             throw new IOException(ex);
         }

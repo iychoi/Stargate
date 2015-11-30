@@ -88,8 +88,8 @@ public class LocalClusterManager extends ACluster {
         
         this.datastoreManager = datastoreManager;
         
-        this.node = this.datastoreManager.getReplicatedDataStore(LOCALCLUSTERMANAGER_NODE_MAP_ID, String.class, Node.class);
-        this.nodestatus = this.datastoreManager.getReplicatedDataStore(LOCALCLUSTERMANAGER_NODE_STATUS_MAP_ID, String.class, NodeStatus.class);
+        this.node = this.datastoreManager.getReplicatedDataStore(LOCALCLUSTERMANAGER_NODE_MAP_ID, Node.class);
+        this.nodestatus = this.datastoreManager.getReplicatedDataStore(LOCALCLUSTERMANAGER_NODE_STATUS_MAP_ID, NodeStatus.class);
         
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
     }
@@ -141,8 +141,8 @@ public class LocalClusterManager extends ACluster {
     @Override
     public synchronized Collection<Node> getNode() throws IOException {
         List<Node> nodes = new ArrayList<Node>();
-        Set<Object> keySet = this.node.keySet();
-        for(Object key : keySet) {
+        Set<String> keySet = this.node.keySet();
+        for(String key : keySet) {
             Node node = (Node) this.node.get(key);
             nodes.add(node);
         }
@@ -206,8 +206,8 @@ public class LocalClusterManager extends ACluster {
     @Override
     public synchronized Collection<NodeStatus> getNodeStatus() throws IOException {
         List<NodeStatus> nodestatuslist = new ArrayList<NodeStatus>();
-        Set<Object> keySet = this.nodestatus.keySet();
-        for(Object key : keySet) {
+        Set<String> keySet = this.nodestatus.keySet();
+        for(String key : keySet) {
             NodeStatus status = (NodeStatus) this.nodestatus.get(key);
             nodestatuslist.add(status);
         }

@@ -83,7 +83,7 @@ public class ClusterManager {
         this.datastoreManager = datastoreManager;
         
         this.localClusterManager = LocalClusterManager.getInstance(this.datastoreManager);
-        this.remoteCluster = this.datastoreManager.getReplicatedDataStore(CLUSTERMANAGER_REMOTE_CLUSTER_MAP_ID, String.class, RemoteCluster.class);
+        this.remoteCluster = this.datastoreManager.getReplicatedDataStore(CLUSTERMANAGER_REMOTE_CLUSTER_MAP_ID, RemoteCluster.class);
     }
     
     public synchronized LocalClusterManager getLocalClusterManager() {
@@ -96,8 +96,8 @@ public class ClusterManager {
     
     public synchronized Collection<RemoteCluster> getRemoteCluster() throws IOException {
         List<RemoteCluster> clusters = new ArrayList<RemoteCluster>();
-        Set<Object> keySet = this.remoteCluster.keySet();
-        for(Object key : keySet) {
+        Set<String> keySet = this.remoteCluster.keySet();
+        for(String key : keySet) {
             RemoteCluster rc = (RemoteCluster) this.remoteCluster.get(key);
             clusters.add(rc);
         }
@@ -122,8 +122,8 @@ public class ClusterManager {
     }
     
     public synchronized void clearRemoteCluster() throws IOException {
-        Set<Object> keys = this.remoteCluster.keySet();
-        for(Object key : keys) {
+        Set<String> keys = this.remoteCluster.keySet();
+        for(String key : keys) {
             RemoteCluster cluster = (RemoteCluster) this.remoteCluster.get(key);
             if(cluster != null) {
                 removeRemoteCluster(cluster);

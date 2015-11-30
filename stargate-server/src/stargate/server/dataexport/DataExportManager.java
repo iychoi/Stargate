@@ -80,7 +80,7 @@ public class DataExportManager {
         
         this.datastoreManager = datastoreManager;
         
-        this.dataExport = this.datastoreManager.getReplicatedDataStore(DATAEXPORTMANAGER_MAP_ID, String.class, DataExportEntry.class);
+        this.dataExport = this.datastoreManager.getReplicatedDataStore(DATAEXPORTMANAGER_MAP_ID, DataExportEntry.class);
     }
     
     public synchronized int getDataExportCount() {
@@ -89,8 +89,8 @@ public class DataExportManager {
     
     public synchronized Collection<DataExportEntry> getDataExport() throws IOException {
         List<DataExportEntry> entries = new ArrayList<DataExportEntry>();
-        Set<Object> keySet = this.dataExport.keySet();
-        for(Object key : keySet) {
+        Set<String> keySet = this.dataExport.keySet();
+        for(String key : keySet) {
             DataExportEntry dee = (DataExportEntry) this.dataExport.get(key);
             entries.add(dee);
         }
@@ -150,8 +150,8 @@ public class DataExportManager {
     }
     
     public synchronized void clearDataExport() throws IOException {
-        Set<Object> keys = this.dataExport.keySet();
-        for(Object key : keys) {
+        Set<String> keys = this.dataExport.keySet();
+        for(String key : keys) {
             removeDataExport((String) key);
         }
     }

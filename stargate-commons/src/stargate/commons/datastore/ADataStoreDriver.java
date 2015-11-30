@@ -30,6 +30,6 @@ import stargate.commons.drivers.ADriver;
  * @author iychoi
  */
 public abstract class ADataStoreDriver extends ADriver {
-    public abstract ADistributedDataStore getDistributedDataStore(String name, Class keyclass, Class valclass);
-    public abstract AReplicatedDataStore getReplicatedDataStore(String name, Class keyclass, Class valclass);
+    public abstract ADistributedDataStore getDistributedDataStore(String name, Class valclass);
+    public abstract AReplicatedDataStore getReplicatedDataStore(String name, Class valclass);
 }

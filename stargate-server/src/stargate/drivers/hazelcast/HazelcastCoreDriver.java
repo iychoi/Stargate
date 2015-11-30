@@ -165,11 +165,11 @@ public class HazelcastCoreDriver extends ADriver {
         return "HazelcastDriverGroup";
     }
 
-    public synchronized IMap<Object, Object> getMap(String name) {
+    public synchronized IMap<String, Object> getMap(String name) {
         return this.hazelcastInstance.getMap(name);
     }
 
-    public synchronized ReplicatedMap<Object, Object> getReplicatedMap(String name) {
+    public synchronized ReplicatedMap<String, Object> getReplicatedMap(String name) {
         return this.hazelcastInstance.getReplicatedMap(name);
     }
 

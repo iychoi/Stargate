@@ -81,12 +81,12 @@ public class DataStoreManager {
         this.driver.stopDriver();
     }
     
-    public ADistributedDataStore getDistributedDataStore(String name, Class keyclass, Class valclass) {
-        return this.driver.getDistributedDataStore(name, keyclass, valclass);
+    public ADistributedDataStore getDistributedDataStore(String name, Class valclass) {
+        return this.driver.getDistributedDataStore(name, valclass);
     }
     
-    public AReplicatedDataStore getReplicatedDataStore(String name, Class keyclass, Class valclass) {
-        return this.driver.getReplicatedDataStore(name, keyclass, valclass);
+    public AReplicatedDataStore getReplicatedDataStore(String name, Class valclass) {
+        return this.driver.getReplicatedDataStore(name, valclass);
     }
     
     @Override

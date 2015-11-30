@@ -31,17 +31,16 @@ import java.util.Set;
  * @author iychoi
  */
 public abstract class ADataStore {
-    public abstract Class getKeyClass();
     public abstract Class getValueClass();
     
     public abstract int size();
     public abstract boolean isEmpty();
-    public abstract boolean containsKey(Object key);
+    public abstract boolean containsKey(String key);
     
-    public abstract Object get(Object key) throws IOException;
-    public abstract void put(Object key, Object value) throws IOException;
-    public abstract void remove(Object key) throws IOException;
-    public abstract Set<Object> keySet() throws IOException;
+    public abstract Object get(String key) throws IOException;
+    public abstract void put(String key, Object value) throws IOException;
+    public abstract void remove(String key) throws IOException;
+    public abstract Set<String> keySet() throws IOException;
     
     public abstract void clear();
 }

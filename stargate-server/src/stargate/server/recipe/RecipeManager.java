@@ -113,8 +113,8 @@ public class RecipeManager {
         this.clusterManager = clusterManager;
         this.dataExportManager = dataExportManager;
         
-        this.recipe = this.dataStoreManager.getReplicatedDataStore(RECIPEMANAGER_RECIPE_MAP_ID, String.class, Recipe.class);
-        this.hash = this.dataStoreManager.getDistributedDataStore(RECIPEMANAGER_HASH_MAP_ID, String.class, RecipeList.class);
+        this.recipe = this.dataStoreManager.getReplicatedDataStore(RECIPEMANAGER_RECIPE_MAP_ID, Recipe.class);
+        this.hash = this.dataStoreManager.getDistributedDataStore(RECIPEMANAGER_HASH_MAP_ID, RecipeList.class);
         
         this.dataExportChangedHandler = new DataExportChangedEventHandler(this.sourceFileSystemManager, this.recipeGeneratorManager, this.clusterManager, this);
         this.dataExportManager.addEventHandler(this.dataExportChangedHandler);
@@ -126,8 +126,8 @@ public class RecipeManager {
     
     public synchronized Collection<Recipe> getRecipe() throws IOException {
         List<Recipe> recipeList = new ArrayList<Recipe>();
-        Set<Object> recipeKeySet = this.recipe.keySet();
-        for(Object recipeKey : recipeKeySet) {
+        Set<String> recipeKeySet = this.recipe.keySet();
+        for(String recipeKey : recipeKeySet) {
             Recipe recipe = (Recipe)this.recipe.get((String) recipeKey);
             recipeList.add(recipe);
         }

@@ -78,7 +78,7 @@ public class PolicyManager {
         
         this.datastoreManager = datastoreManager;
         
-        this.policy = this.datastoreManager.getReplicatedDataStore(POLICYMANAGER_MAP_ID, String.class, String.class);
+        this.policy = this.datastoreManager.getReplicatedDataStore(POLICYMANAGER_MAP_ID, String.class);
     }
     
     public synchronized int getPolicyCount() {
