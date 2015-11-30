@@ -23,6 +23,7 @@
  */
 package stargate.drivers.transport.http;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -129,12 +130,17 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_METADATA_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<DataObjectMetadata> getDataObjectMetadataRestful(
-        @DefaultValue("null") @QueryParam("path") String path) {
+    public Response getDataObjectMetadataRestful(
+        @DefaultValue("") @QueryParam("path") String path) {
         try {
-            return new RestfulResponse<DataObjectMetadata>(getDataObjectMetadata(path));
+            
+            RestfulResponse<DataObjectMetadata> rres = new RestfulResponse<DataObjectMetadata>(getDataObjectMetadata(path));
+            return Response.status(Response.Status.OK).entity(rres).build();
+        } catch(FileNotFoundException ex) {
+            return Response.status(Response.Status.NOT_FOUND).entity(ex.toString()).build();
         } catch(Exception ex) {
-            return new RestfulResponse<DataObjectMetadata>(ex);
+            RestfulResponse<DataObjectMetadata> rres = new RestfulResponse<DataObjectMetadata>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
         }
     }
     

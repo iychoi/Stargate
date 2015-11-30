@@ -64,7 +64,7 @@ public class RestfulResponse<T> {
     @JsonProperty("exception_class")
     public void setExceptionClass(String clazz) throws ClassNotFoundException {
         if(clazz == null || clazz.isEmpty()) {
-            throw new IllegalArgumentException("clazz is null or empty");
+            this.exceptionClass = null;
         }
         
         this.exceptionClass = ClassUtils.findClass(clazz);
@@ -81,6 +81,9 @@ public class RestfulResponse<T> {
     
     @JsonProperty("exception_class")
     public String getExceptionClassString() {
+        if(this.exceptionClass == null) {
+            return null;
+        }
         return this.exceptionClass.getCanonicalName();
     }
     
