@@ -444,6 +444,8 @@ public class VolumeManager {
         
         DataObjectPath absPath = makeAbsolutePath(path);
         
+        LOG.info("absolute path = " + absPath.toString());
+        
         if(absPath.isRoot()) {
             List<DataObjectMetadata> entry = new ArrayList<DataObjectMetadata>();
             Directory dir = getRootDirectory();
