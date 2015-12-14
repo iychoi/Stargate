@@ -285,7 +285,7 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
 
             return Response.ok(stream).header("content-disposition", "attachment; filename = " + hash).build();
         } catch (Exception ex) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 

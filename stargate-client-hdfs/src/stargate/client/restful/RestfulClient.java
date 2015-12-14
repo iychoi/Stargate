@@ -30,12 +30,14 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
@@ -185,8 +187,14 @@ public class RestfulClient {
             if(response.getStatus() != 200) {
                 throw new IOException("HTTP error code : " + response.getStatus());
             }
+            
+            InputStream is = response.getEntityInputStream();
+            byte[] buffer = IOUtils.toByteArray(is);
+            System.out.println("buffer  - " + new String(buffer));
 
-            return response.getEntityInputStream();
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+            return bais;
+            //return response.getEntityInputStream();
         } catch (InterruptedException ex) {
             throw new IOException(ex);
         } catch (ExecutionException ex) {

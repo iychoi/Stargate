@@ -549,14 +549,12 @@ public class VolumeManager {
         LOG.info("Get a data chunk - " + hash);
         
         if(isLocalCluster(clusterName)) {
-            LOG.info("Get a recipe containing - " + hash + " from local");
             // local
             Recipe recipe = this.recipeManager.getRecipe(hash);
             if(recipe == null) {
                 throw new IOException("unable to find recipe for " + hash);
             }
             
-            LOG.info("Get a dataExport of - " + recipe.getMetadata().getPath().getPath() + " from local");
             DataExportEntry dataExport = this.dataExportManager.getDataExport(recipe.getMetadata().getPath().getPath());
             if(dataExport == null) {
                 throw new IOException("unable to find dataexport for " + recipe.getMetadata().getPath().getPath());
@@ -564,10 +562,8 @@ public class VolumeManager {
             
             ASourceFileSystem fileSystem = this.sourceFileSystemManager.getFileSystem();
             
-            LOG.info("Get a recipe chunk of - " + hash + " from local");
             for(RecipeChunk chunk : recipe.getChunk()) {
                 if(chunk.hasHash(hash)) {
-                    LOG.info("Found! " + dataExport.getResourcePath() + " / " + chunk.getOffset() + " / " + chunk.getLength() + " from local");
                     URI resourcePath = dataExport.getResourcePath();
                     return fileSystem.getInputStream(resourcePath, chunk.getOffset(), chunk.getLength());
                 }
