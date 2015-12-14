@@ -79,7 +79,7 @@ public class RemoteClusterSyncTask extends AScheduledLeaderTask {
                     ATransportClient tclient = this.transportManager.getTransportClient(cluster);
                     if(tclient != null) {
                         RemoteCluster remoteCluster = tclient.getCluster();
-                        this.clusterManager.updateRemoteCluster(remoteCluster);
+                        this.clusterManager.updateRemoteCluster(cluster.getName(), remoteCluster);
                     }
                 } catch (IOException ex) {
                     LOG.error("Exception occurred while synchronizing remote clusters", ex);

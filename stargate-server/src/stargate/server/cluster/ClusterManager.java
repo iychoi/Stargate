@@ -211,6 +211,22 @@ public class ClusterManager {
         raiseEventForRemoteClusterUpdated(cluster);
     }
     
+    public synchronized void updateRemoteCluster(String clusterName, RemoteCluster cluster) throws IOException {
+        if(clusterName == null || clusterName.isEmpty()) {
+            throw new IllegalArgumentException("clusterName is empty or null");
+        }
+        
+        if(cluster == null || cluster.isEmpty()) {
+            throw new IllegalArgumentException("cluster is empty or null");
+        }
+        
+        this.remoteCluster.put(clusterName, cluster);
+        
+        this.lastUpdateTime = DateTimeUtils.getCurrentTime();
+        
+        raiseEventForRemoteClusterUpdated(cluster);
+    }
+    
     public synchronized void addEventHandler(IRemoteClusterEventHandler eventHandler) {
         this.eventHandlers.add(eventHandler);
     }
