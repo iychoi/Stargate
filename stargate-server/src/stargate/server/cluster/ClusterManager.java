@@ -219,8 +219,13 @@ public class ClusterManager {
         if(cluster == null || cluster.isEmpty()) {
             throw new IllegalArgumentException("cluster is empty or null");
         }
-        
-        this.remoteCluster.put(clusterName, cluster);
+
+        if(clusterName.equals(cluster.getName())) {
+            this.remoteCluster.put(clusterName, cluster);
+        } else {
+            this.remoteCluster.remove(clusterName);
+            this.remoteCluster.put(cluster.getName(), cluster);
+        }
         
         this.lastUpdateTime = DateTimeUtils.getCurrentTime();
         
