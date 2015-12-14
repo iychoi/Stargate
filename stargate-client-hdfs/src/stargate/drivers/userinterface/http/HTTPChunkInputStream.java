@@ -208,7 +208,7 @@ public class HTTPChunkInputStream extends FSInputStream {
             loadChunkData(this.offset);
 
             int inoffset = (int) (this.offset - this.cachedChunkData.getOffset());
-            int inlength = (int) (this.cachedChunkData.getLength() - inoffset);
+            int inlength = (int) Math.min(this.cachedChunkData.getLength() - inoffset, remain);
             
             LOG.info("Copying - " + inoffset + " / " + doff + " / " + inlength);
             System.arraycopy(this.cachedChunkData.getData(), inoffset, bytes, doff, inlength);
