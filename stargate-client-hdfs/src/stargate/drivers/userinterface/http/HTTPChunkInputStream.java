@@ -161,7 +161,6 @@ public class HTTPChunkInputStream extends FSInputStream {
 
         ChunkData chunkdata = new ChunkData(chunk.getOffset(), chunk.getLength(), data);
         this.cachedChunkData = chunkdata;
-        LOG.info("chunkdata loaded - " + offset);
     }
     
     private synchronized boolean isEOF() {
@@ -188,10 +187,7 @@ public class HTTPChunkInputStream extends FSInputStream {
     
     @Override
     public synchronized int read(byte[] bytes, int off, int len) throws IOException {
-        LOG.info("read - " + off + " / " + len);
-        
         if(isEOF()) {
-            LOG.info("read - EOF");
             return -1;
         }
             
@@ -210,7 +206,6 @@ public class HTTPChunkInputStream extends FSInputStream {
             int inoffset = (int) (this.offset - this.cachedChunkData.getOffset());
             int inlength = (int) Math.min(this.cachedChunkData.getLength() - inoffset, remain);
             
-            LOG.info("Copying - " + inoffset + " / " + doff + " / " + inlength);
             System.arraycopy(this.cachedChunkData.getData(), inoffset, bytes, doff, inlength);
             this.offset += inlength;
             doff += inlength;
