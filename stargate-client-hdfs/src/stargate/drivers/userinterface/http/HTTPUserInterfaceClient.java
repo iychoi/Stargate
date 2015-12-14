@@ -181,6 +181,8 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             throw new IllegalArgumentException("path is null");
         }
         
+        LOG.info("getRecipe : " + path.toString());
+        
         RestfulResponse<Recipe> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_RECIPE_PATH));
@@ -234,6 +236,8 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         if(hash == null || hash.isEmpty()) {
             throw new IllegalArgumentException("hash is null or empty");
         }
+        
+        LOG.info("getDataChunk : " + hash);
         
         try {
             String datachunkUrl = PathUtils.concatPath(HTTPUserInterfaceRestfulConstants.RESTFUL_DATACHUNK_PATH, clusterName + "/" + hash);
