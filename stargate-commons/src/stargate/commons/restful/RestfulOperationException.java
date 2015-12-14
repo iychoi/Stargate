@@ -22,46 +22,36 @@
  * THE SOFTWARE.
  */
 
-package stargate.server.common.restful;
+package stargate.commons.restful;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  *
  * @author iychoi
  */
-public class WebParamBuilder {
-    private String resourceURL;
-    private Map<String, String> params = new HashMap<String, String>();
-    
-    public WebParamBuilder(String contentURL) {
-        this.resourceURL = contentURL;
+public class RestfulOperationException extends Exception {
+
+    public RestfulOperationException() {
+        super();
+    }
+
+    public RestfulOperationException(String string) {
+        super(string);
+    }
+
+    public RestfulOperationException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
+    }
+
+    public RestfulOperationException(Throwable thrwbl) {
+        super(thrwbl);
     }
     
-    public void addParam(String key, String value) {
-        this.params.put(key, value);
-    }
-    
-    public void removeParam(String key) {
-        this.params.remove(key);
-    }
-    
-    public String build() {
-        StringBuilder sb = new StringBuilder();
-        Set<Map.Entry<String, String>> entrySet = this.params.entrySet();
-        for(Map.Entry<String, String> entry : entrySet) {
-            if(sb.length() != 0) {
-                sb.append("&");
-            }
-            
-            if(entry.getValue() == null) {
-                sb.append(entry.getKey());
-            } else {
-                sb.append(entry.getKey()).append("=").append(entry.getValue());
-            }
+    @JsonProperty("suppressed")
+    public final synchronized void addSuppressed(Throwable[] exception) {
+        for(Throwable ex : exception) {
+            addSuppressed(ex);
         }
-        return this.resourceURL + "?" + sb.toString();
     }
 }

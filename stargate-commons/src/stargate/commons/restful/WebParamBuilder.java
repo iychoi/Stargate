@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package stargate.client.restful;
+package stargate.commons.restful;
 
 import java.util.HashMap;
 import java.util.Map;

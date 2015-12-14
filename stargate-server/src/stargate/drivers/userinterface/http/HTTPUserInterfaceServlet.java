@@ -45,7 +45,7 @@ import stargate.commons.cluster.RemoteCluster;
 import stargate.commons.recipe.DataObjectMetadata;
 import stargate.commons.recipe.DataObjectPath;
 import stargate.commons.recipe.Recipe;
-import stargate.server.common.restful.RestfulResponse;
+import stargate.commons.restful.RestfulResponse;
 import stargate.commons.service.ServiceNotStartedException;
 import stargate.commons.userinterface.AUserInterfaceServer;
 import stargate.commons.volume.Directory;

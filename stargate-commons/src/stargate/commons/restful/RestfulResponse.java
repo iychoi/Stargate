@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package stargate.server.common.restful;
+package stargate.commons.restful;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -35,8 +35,7 @@ import stargate.commons.utils.ClassUtils;
 public class RestfulResponse<T> {
     private T response;
     private Class exceptionClass;
-    private Exception exception;
-    
+    private RestfulOperationException exception;
     
     public RestfulResponse() {
         
@@ -47,8 +46,12 @@ public class RestfulResponse<T> {
     }
     
     public RestfulResponse(Exception ex) {
+        if(ex == null) {
+            throw new IllegalArgumentException("ex is null");
+        }
+        
         this.exceptionClass = ex.getClass();
-        this.exception = ex;
+        this.exception = new RestfulOperationException(ex);
     }
     
     @JsonProperty("response")
@@ -93,9 +96,8 @@ public class RestfulResponse<T> {
         return this.exceptionClass;
     }
     
-    
     @JsonProperty("exception")
-    public void setException(Exception ex) {
+    public void setException(RestfulOperationException ex) {
         this.exception = ex;
     }
     
