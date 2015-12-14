@@ -546,6 +546,8 @@ public class VolumeManager {
             throw new IllegalArgumentException("hash is null or empty");
         }
         
+        LOG.info("Get a data chunk - " + hash);
+        
         if(isLocalCluster(clusterName)) {
             // local
             Recipe recipe = this.recipeManager.getRecipe(hash);
