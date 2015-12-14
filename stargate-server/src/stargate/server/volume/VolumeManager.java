@@ -488,6 +488,7 @@ public class VolumeManager {
             return Collections.unmodifiableCollection(entry);
         } else {
             // remote
+            LOG.info("Finding a remote cluster - " + absPath.getClusterName());
             RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(absPath.getClusterName());
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(remoteCluster);
