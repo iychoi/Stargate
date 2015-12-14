@@ -214,8 +214,9 @@ public class StargateFileSystem {
         Recipe recipe = this.userInterfaceClient.getRecipe(path);
         if(recipe != null) {
             return new FSDataInputStream(new HTTPChunkInputStream(this.userInterfaceClient, recipe));
+        } else {
+            throw new IOException("unable to retrieve a recipe of " + path.getPath());
         }
-        return null;
     }
 
     public synchronized StargateFileStatus getFileStatus(URI resourceURI) throws IOException {
