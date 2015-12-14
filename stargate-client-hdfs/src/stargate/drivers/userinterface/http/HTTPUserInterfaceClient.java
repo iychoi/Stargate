@@ -91,7 +91,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         RestfulResponse<Boolean> response;
         try {
             String url = getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_LIVE_PATH);
-            LOG.debug(url);
             response = (RestfulResponse<Boolean>) this.restfulClient.get(url, new GenericType<RestfulResponse<Boolean>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -110,7 +109,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         RestfulResponse<RemoteCluster> response;
         try {
             String url = getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_CLUSTER_PATH);
-            LOG.debug(url);
             response = (RestfulResponse<RemoteCluster>) this.restfulClient.get(url, new GenericType<RestfulResponse<RemoteCluster>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -135,7 +133,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_DIRECTORY_PATH));
             builder.addParam("path", path.toString());
             String url = builder.build();
-            LOG.debug(url);
             response = (RestfulResponse<Directory>) this.restfulClient.get(url, new GenericType<RestfulResponse<Directory>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -189,7 +186,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_RECIPE_PATH));
             builder.addParam("path", path.toString());
             String url = builder.build();
-            LOG.debug(url);
             response = (RestfulResponse<Recipe>) this.restfulClient.get(url, new GenericType<RestfulResponse<Recipe>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -216,7 +212,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_LIST_METADATA_PATH));
             builder.addParam("path", path.toString());
             String url = builder.build();
-            LOG.debug(url);
             response = (RestfulResponse<Collection<DataObjectMetadata>>) this.restfulClient.get(url, new GenericType<RestfulResponse<Collection<DataObjectMetadata>>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -243,7 +238,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
         try {
             String datachunkUrl = PathUtils.concatPath(HTTPUserInterfaceRestfulConstants.RESTFUL_DATACHUNK_PATH, clusterName + "/" + hash);
             String url = getResourcePath(datachunkUrl);
-            LOG.debug(url);
             return this.restfulClient.download(url);
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
@@ -262,7 +256,6 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_LOCAL_CLUSTER_RESOURCE_PATH));
             builder.addParam("path", path.toString());
             String url = builder.build();
-            LOG.debug(url);
             response = (RestfulResponse<URI>) this.restfulClient.get(url, new GenericType<RestfulResponse<URI>>(){});
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);

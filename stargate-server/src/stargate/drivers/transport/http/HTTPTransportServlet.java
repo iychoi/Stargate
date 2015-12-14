@@ -62,8 +62,14 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_LIVE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Boolean> isLiveRestful() {
-        return new RestfulResponse<Boolean>(isLive());
+    public Response isLiveRestful() {
+        try {
+            RestfulResponse<Boolean> rres = new RestfulResponse<Boolean>(isLive());
+            return Response.status(Response.Status.OK).entity(rres).build();
+        } catch(Exception ex) {
+            RestfulResponse<Boolean> rres = new RestfulResponse<Boolean>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
+        }
     }
     
     @Override
@@ -74,11 +80,13 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_CLUSTER_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<RemoteCluster> getClusterRestful() {
+    public Response getClusterRestful() {
         try {
-            return new RestfulResponse<RemoteCluster>(getCluster());
+            RestfulResponse<RemoteCluster> rres = new RestfulResponse<RemoteCluster>(getCluster());
+            return Response.status(Response.Status.OK).entity(rres).build();
         } catch(Exception ex) {
-            return new RestfulResponse<RemoteCluster>(ex);
+            RestfulResponse<RemoteCluster> rres = new RestfulResponse<RemoteCluster>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
         }
     }
     
@@ -95,12 +103,14 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_DIRECTORY_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Directory> getDirectoryRestful(
-        @DefaultValue("null") @QueryParam("path") String path) {
+    public Response getDirectoryRestful(
+        @DefaultValue("") @QueryParam("path") String path) {
         try {
-            return new RestfulResponse<Directory>(getDirectory(path));
+            RestfulResponse<Directory> rres = new RestfulResponse<Directory>(getDirectory(path));
+            return Response.status(Response.Status.OK).entity(rres).build();
         } catch(Exception ex) {
-            return new RestfulResponse<Directory>(ex);
+            RestfulResponse<Directory> rres = new RestfulResponse<Directory>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
         }
     }
     
@@ -133,7 +143,6 @@ public class HTTPTransportServlet extends ATransportServer {
     public Response getDataObjectMetadataRestful(
         @DefaultValue("") @QueryParam("path") String path) {
         try {
-            
             RestfulResponse<DataObjectMetadata> rres = new RestfulResponse<DataObjectMetadata>(getDataObjectMetadata(path));
             return Response.status(Response.Status.OK).entity(rres).build();
         } catch(FileNotFoundException ex) {
@@ -170,12 +179,14 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_RECIPE_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Recipe> getRecipeRestful(
-        @DefaultValue("null") @QueryParam("path") String path) {
+    public Response getRecipeRestful(
+        @DefaultValue("") @QueryParam("path") String path) {
         try {
-            return new RestfulResponse<Recipe>(getRecipe(path));
+            RestfulResponse<Recipe> rres = new RestfulResponse<Recipe>(getRecipe(path));
+            return Response.status(Response.Status.OK).entity(rres).build();
         } catch(Exception ex) {
-            return new RestfulResponse<Recipe>(ex);
+            RestfulResponse<Recipe> rres = new RestfulResponse<Recipe>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
         }
     }
     
@@ -205,12 +216,14 @@ public class HTTPTransportServlet extends ATransportServer {
     @GET
     @Path(HTTPTransportRestfulConstants.RESTFUL_LIST_METADATA_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    public RestfulResponse<Collection<DataObjectMetadata>> listDataObjectMetadataRestful(
-            @DefaultValue("null") @QueryParam("path") String path) {
+    public Response listDataObjectMetadataRestful(
+            @DefaultValue("") @QueryParam("path") String path) {
         try {
-            return new RestfulResponse<Collection<DataObjectMetadata>>(listDataObjectMetadata(path));
+            RestfulResponse<Collection<DataObjectMetadata>> rres = new RestfulResponse<Collection<DataObjectMetadata>>(listDataObjectMetadata(path));
+            return Response.status(Response.Status.OK).entity(rres).build();
         } catch(Exception ex) {
-            return new RestfulResponse<Collection<DataObjectMetadata>>(ex);
+            RestfulResponse<Collection<DataObjectMetadata>> rres = new RestfulResponse<Collection<DataObjectMetadata>>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
         }
     }
     
@@ -241,8 +254,8 @@ public class HTTPTransportServlet extends ATransportServer {
     @Path(HTTPTransportRestfulConstants.RESTFUL_DATACHUNK_PATH + "/{clusterName:.*}/{hash:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getDataChunkRestful(
-            @DefaultValue("null") @PathParam("clusterName") String clusterName,
-            @DefaultValue("null") @PathParam("hash") String hash) throws Exception {
+            @DefaultValue("") @PathParam("clusterName") String clusterName,
+            @DefaultValue("") @PathParam("hash") String hash) throws Exception {
         
         try {
             final InputStream is = getDataChunk(clusterName, hash);

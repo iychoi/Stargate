@@ -107,7 +107,7 @@ public class RestfulClient {
         }
     }
     
-    public Object get(String path, GenericType<?> generic) throws IOException {
+    public Object get(String path, GenericType<?> generic) throws IOException, FileNotFoundException {
         if(path == null || path.isEmpty()) {
             throw new IllegalArgumentException("path is null or empty");
         }

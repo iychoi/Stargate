@@ -24,6 +24,7 @@
 package stargate.drivers.transport.http;
 
 import com.sun.jersey.api.client.GenericType;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -120,7 +121,7 @@ public class HTTPTransportClient extends ATransportClient {
         RestfulResponse<Directory> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPTransportRestfulConstants.RESTFUL_DIRECTORY_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             response = (RestfulResponse<Directory>) this.restfulClient.get(url, new GenericType<RestfulResponse<Directory>>(){});
         } catch (IOException ex) {
@@ -144,9 +145,11 @@ public class HTTPTransportClient extends ATransportClient {
         RestfulResponse<DataObjectMetadata> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPTransportRestfulConstants.RESTFUL_METADATA_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             response = (RestfulResponse<DataObjectMetadata>) this.restfulClient.get(url, new GenericType<RestfulResponse<DataObjectMetadata>>(){});
+        } catch (FileNotFoundException ex) {
+            throw ex;
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;
@@ -168,7 +171,7 @@ public class HTTPTransportClient extends ATransportClient {
         RestfulResponse<Recipe> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPTransportRestfulConstants.RESTFUL_RECIPE_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             response = (RestfulResponse<Recipe>) this.restfulClient.get(url, new GenericType<RestfulResponse<Recipe>>(){});
         } catch (IOException ex) {
@@ -192,7 +195,7 @@ public class HTTPTransportClient extends ATransportClient {
         RestfulResponse<Collection<DataObjectMetadata>> response;
         try {
             WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPTransportRestfulConstants.RESTFUL_LIST_METADATA_PATH));
-            builder.addParam("name", path.toString());
+            builder.addParam("path", path.toString());
             String url = builder.build();
             response = (RestfulResponse<Collection<DataObjectMetadata>>) this.restfulClient.get(url, new GenericType<RestfulResponse<Collection<DataObjectMetadata>>>(){});
         } catch (IOException ex) {
