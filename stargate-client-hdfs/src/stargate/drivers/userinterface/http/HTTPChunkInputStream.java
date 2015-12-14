@@ -29,6 +29,7 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FSInputStream;
 import stargate.commons.recipe.ChunkData;
 import stargate.commons.recipe.Recipe;
 import stargate.commons.recipe.RecipeChunk;
@@ -37,7 +38,7 @@ import stargate.commons.recipe.RecipeChunk;
  *
  * @author iychoi
  */
-public class HTTPChunkInputStream extends InputStream {
+public class HTTPChunkInputStream extends FSInputStream {
 
     private static final Log LOG = LogFactory.getLog(HTTPChunkInputStream.class);
     
@@ -75,11 +76,30 @@ public class HTTPChunkInputStream extends InputStream {
         this.size = recipe.getMetadata().getObjectSize();
     }
     
-    public long getPos() throws IOException {
+    @Override
+    public synchronized long getPos() throws IOException {
         return this.offset;
     }
     
-    public void seek(long l) throws IOException {
+    @Override
+    public synchronized int available() throws IOException {
+        if(this.cachedChunkData != null) {
+            if(this.cachedChunkData.getOffset() <= this.offset &&
+                    this.cachedChunkData.getOffset() + this.cachedChunkData.getLength() > this.offset) {
+                return (int) (this.cachedChunkData.getOffset() + this.cachedChunkData.getLength() - this.offset);
+            }
+        }
+        
+        if(this.recipe.getChunkSize() == 0) {
+            RecipeChunk chunk = this.recipe.getChunk(this.offset);
+            return (int) Math.min(chunk.getOffset() + chunk.getLength() - this.offset, this.size - this.offset);
+        } else {
+            return (int) Math.min(this.recipe.getChunkSize(), this.size - this.offset);
+        }
+    }
+    
+    @Override
+    public synchronized void seek(long l) throws IOException {
         if(l < 0) {
             throw new IOException("cannot seek to negative offset : " + l);
         }
@@ -92,7 +112,7 @@ public class HTTPChunkInputStream extends InputStream {
     }
     
     @Override
-    public long skip(long l) throws IOException {
+    public synchronized long skip(long l) throws IOException {
         if(l <= 0) {
             return 0;
         }
@@ -112,20 +132,8 @@ public class HTTPChunkInputStream extends InputStream {
     }
     
     @Override
-    public synchronized int available() throws IOException {
-        if(this.cachedChunkData != null) {
-            if(this.cachedChunkData.getOffset() <= this.offset &&
-                    this.cachedChunkData.getOffset() + this.cachedChunkData.getLength() > this.offset) {
-                return (int) (this.cachedChunkData.getOffset() + this.cachedChunkData.getLength() - this.offset);
-            }
-        }
-        
-        if(this.recipe.getChunkSize() == 0) {
-            RecipeChunk chunk = this.recipe.getChunk(this.offset);
-            return (int) Math.min(chunk.getOffset() + chunk.getLength() - this.offset, this.size - this.offset);
-        } else {
-            return (int) Math.min(this.recipe.getChunkSize(), this.size - this.offset);
-        }
+    public synchronized boolean seekToNewSource(long targetPos) throws IOException {
+        return false;
     }
     
     private synchronized void loadChunkData(long offset) throws IOException {
@@ -178,7 +186,7 @@ public class HTTPChunkInputStream extends InputStream {
     }
     
     @Override
-    public int read(byte[] bytes, int off, int len) throws IOException {
+    public synchronized int read(byte[] bytes, int off, int len) throws IOException {
         if(isEOF()) {
             return -1;
         }
@@ -207,22 +215,22 @@ public class HTTPChunkInputStream extends InputStream {
     }
     
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         this.offset = 0;
     }
     
     @Override
-    public boolean markSupported() {
+    public synchronized boolean markSupported() {
         return false;
     }
 
     @Override
-    public void mark(int readLimit) {
+    public synchronized void mark(int readLimit) {
         // Do nothing
     }
 
     @Override
-    public void reset() throws IOException {
+    public synchronized void reset() throws IOException {
         throw new IOException("Mark not supported");
     }
 }
