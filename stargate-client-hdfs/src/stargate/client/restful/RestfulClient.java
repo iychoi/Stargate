@@ -188,13 +188,7 @@ public class RestfulClient {
                 throw new IOException("HTTP error code : " + response.getStatus());
             }
             
-            InputStream is = response.getEntityInputStream();
-            byte[] buffer = IOUtils.toByteArray(is);
-            System.out.println("buffer  - " + new String(buffer));
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
-            return bais;
-            //return response.getEntityInputStream();
+            return response.getEntityInputStream();
         } catch (InterruptedException ex) {
             throw new IOException(ex);
         } catch (ExecutionException ex) {
