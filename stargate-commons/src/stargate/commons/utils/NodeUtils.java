@@ -160,7 +160,7 @@ public class NodeUtils {
         int targetNodeStartInt = (int)targetNodeStart;
         int targetNodeEndInt = (int)Math.ceil(targetNodeEnd);
         
-        for(int i=0;i<=liveNode.size();i++) {
+        for(int i=0;i<liveNode.size();i++) {
             if(i >= targetNodeStartInt && i <= targetNodeEndInt) {
                 contactOrder.add(remoteNode.get(i));
             } else {

@@ -52,7 +52,15 @@ public class WebParamBuilder {
         StringBuilder sb = new StringBuilder();
         Set<Map.Entry<String, String>> entrySet = this.params.entrySet();
         for(Map.Entry<String, String> entry : entrySet) {
-            sb.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+            if(sb.length() != 0) {
+                sb.append("&");
+            }
+            
+            if(entry.getValue() == null) {
+                sb.append(entry.getKey());
+            } else {
+                sb.append(entry.getKey()).append("=").append(entry.getValue());
+            }
         }
         return this.resourceURL + "?" + sb.toString();
     }
