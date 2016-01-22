@@ -31,7 +31,7 @@ import java.net.URI;
 import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import stargate.client.restful.RestfulClient;
+import stargate.commons.restful.RestfulClient;
 import stargate.commons.restful.RestfulResponse;
 import stargate.commons.restful.WebParamBuilder;
 import stargate.commons.cluster.RemoteCluster;

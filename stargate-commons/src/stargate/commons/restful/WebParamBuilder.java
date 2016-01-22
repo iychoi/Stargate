@@ -44,6 +44,14 @@ public class WebParamBuilder {
         this.params.put(key, value);
     }
     
+    public void addParam(String key, int value) {
+        this.params.put(key, Integer.toString(value));
+    }
+    
+    public void addParam(String key, long value) {
+        this.params.put(key, Long.toString(value));
+    }
+    
     public void removeParam(String key) {
         this.params.remove(key);
     }

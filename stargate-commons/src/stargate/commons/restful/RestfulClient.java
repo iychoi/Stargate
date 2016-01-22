@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.server.common.restful;
+package stargate.commons.restful;
 
 import com.sun.jersey.api.client.AsyncWebResource;
 import com.sun.jersey.api.client.Client;
@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 /**
  *
@@ -63,6 +64,7 @@ public class RestfulClient {
         this.serviceURL = serviceURL;
         
         this.httpClientConfig = new DefaultClientConfig();
+        this.httpClientConfig.getClasses().add(JacksonJsonProvider.class);
         this.httpClientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         this.httpClientConfig.getProperties().put(ClientConfig.PROPERTY_THREADPOOL_SIZE, threadPoolSize);
 
@@ -95,7 +97,7 @@ public class RestfulClient {
         // wait for completion
         try {
             ClientResponse response = future.get();
-            if(response.getStatus() != 200) {
+            if(response.getStatus() < 200 && response.getStatus() > 299) {
                 throw new IOException("HTTP error code : " + response.getStatus());
             }
 
@@ -124,7 +126,7 @@ public class RestfulClient {
         // wait for completion
         try {
             ClientResponse response = future.get();
-            if(response.getStatus() == 200) {
+            if(response.getStatus() >= 200 && response.getStatus() <= 299) {
                 return response.getEntity(generic);
             } else if(response.getStatus() == 404) {
                 throw new FileNotFoundException(response.toString());
@@ -155,7 +157,7 @@ public class RestfulClient {
         // wait for completion
         try {
             ClientResponse response = future.get();
-            if(response.getStatus() != 200) {
+            if(response.getStatus() < 200 && response.getStatus() > 299) {
                 throw new IOException("HTTP error code : " + response.getStatus());
             }
 
@@ -180,10 +182,10 @@ public class RestfulClient {
         // wait for completition
         try {
             ClientResponse response = future.get();
-            if(response.getStatus() != 200) {
+            if(response.getStatus() < 200 && response.getStatus() > 299) {
                 throw new IOException("HTTP error code : " + response.getStatus());
             }
-
+            
             return response.getEntityInputStream();
         } catch (InterruptedException ex) {
             throw new IOException(ex);
