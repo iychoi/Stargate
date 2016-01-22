@@ -81,7 +81,7 @@ public class LocalClusterManager extends ACluster {
         }
     }
     
-    public LocalClusterManager(DataStoreManager datastoreManager) {
+    LocalClusterManager(DataStoreManager datastoreManager) {
         if(datastoreManager == null) {
             throw new IllegalArgumentException("datastoreManager is empty or null");
         }

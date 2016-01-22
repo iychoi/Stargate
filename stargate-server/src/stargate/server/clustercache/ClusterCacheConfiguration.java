@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.server.recipe;
+package stargate.server.clustercache;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,31 +37,33 @@ import stargate.commons.drivers.DriverSetting;
  *
  * @author iychoi
  */
-public class RecipeGeneratorConfiguration extends AImmutableConfiguration {
+public class ClusterCacheConfiguration extends AImmutableConfiguration {
     
-    private static final Log LOG = LogFactory.getLog(RecipeGeneratorConfiguration.class);
+    private static final Log LOG = LogFactory.getLog(ClusterCacheConfiguration.class);
+    
+    private static final String HADOOP_CONFIG_KEY = ClusterCacheConfiguration.class.getCanonicalName();
     
     private DriverSetting driverSetting;
     
-    public static RecipeGeneratorConfiguration createInstance(File file) throws IOException {
+    public static ClusterCacheConfiguration createInstance(File file) throws IOException {
         if(file == null) {
             throw new IllegalArgumentException("file is null");
         }
 
         JsonSerializer serializer = new JsonSerializer();
-        return (RecipeGeneratorConfiguration) serializer.fromJsonFile(file, RecipeGeneratorConfiguration.class);
+        return (ClusterCacheConfiguration) serializer.fromJsonFile(file, ClusterCacheConfiguration.class);
     }
     
-    public static RecipeGeneratorConfiguration createInstance(String json) throws IOException {
+    public static ClusterCacheConfiguration createInstance(String json) throws IOException {
         if(json == null || json.isEmpty()) {
             throw new IllegalArgumentException("json is empty or null");
         }
         
         JsonSerializer serializer = new JsonSerializer();
-        return (RecipeGeneratorConfiguration) serializer.fromJson(json, RecipeGeneratorConfiguration.class);
+        return (ClusterCacheConfiguration) serializer.fromJson(json, ClusterCacheConfiguration.class);
     }
     
-    public RecipeGeneratorConfiguration() {
+    public ClusterCacheConfiguration() {
     }
     
     @JsonProperty("driver_setting")

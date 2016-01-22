@@ -42,7 +42,6 @@ import stargate.commons.recipe.DataObjectPath;
 import stargate.commons.recipe.Recipe;
 import stargate.commons.recipe.RecipeChunk;
 import stargate.commons.service.ServiceNotStartedException;
-import stargate.commons.sourcefs.ASourceFileSystem;
 import stargate.commons.transport.ATransportClient;
 import stargate.commons.utils.DateTimeUtils;
 import stargate.commons.volume.Directory;
@@ -99,7 +98,7 @@ public class VolumeManager {
         }
     }
     
-    public VolumeManager(PolicyManager policyManager, DataStoreManager dataStoreManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
+    VolumeManager(PolicyManager policyManager, DataStoreManager dataStoreManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
         if(policyManager == null) {
             throw new IllegalArgumentException("policyManager is null");
         }
@@ -560,12 +559,10 @@ public class VolumeManager {
                 throw new IOException("unable to find dataexport for " + recipe.getMetadata().getPath().getPath());
             }
             
-            ASourceFileSystem fileSystem = this.sourceFileSystemManager.getFileSystem();
-            
             for(RecipeChunk chunk : recipe.getChunk()) {
                 if(chunk.hasHash(hash)) {
                     URI resourcePath = dataExport.getResourcePath();
-                    return fileSystem.getInputStream(resourcePath, chunk.getOffset(), chunk.getLength());
+                    return this.sourceFileSystemManager.getInputStream(resourcePath, chunk.getOffset(), chunk.getLength());
                 }
             }
             

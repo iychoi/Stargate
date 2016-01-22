@@ -21,17 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.recipe;
+package stargate.commons.clustercache;
 
-import java.io.IOException;
-import java.io.InputStream;
+import stargate.commons.drivers.ADriverConfiguration;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ARecipeGenerator {
-    public abstract int getChunkSize();
-    public abstract String getHashAlgorithm();
-    public abstract Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException;
+public abstract class AClusterCacheDriverConfiguration extends ADriverConfiguration {
+    
 }

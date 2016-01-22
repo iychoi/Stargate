@@ -24,10 +24,12 @@
 package stargate.server.recipe;
 
 import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import stargate.commons.recipe.ARecipeGenerator;
 import stargate.commons.recipe.ARecipeGeneratorDriver;
+import stargate.commons.recipe.DataObjectMetadata;
+import stargate.commons.recipe.Recipe;
 import stargate.commons.service.ServiceNotStartedException;
 
 /**
@@ -60,7 +62,7 @@ public class RecipeGeneratorManager {
         }
     }
 
-    public RecipeGeneratorManager(ARecipeGeneratorDriver driver) {
+    RecipeGeneratorManager(ARecipeGeneratorDriver driver) {
         if(driver == null) {
             throw new IllegalArgumentException("driver is null");
         }
@@ -68,7 +70,7 @@ public class RecipeGeneratorManager {
         this.driver = driver;
     }
     
-    public ARecipeGeneratorDriver getDriver() {
+    public synchronized ARecipeGeneratorDriver getDriver() {
         return this.driver;
     }
     
@@ -80,8 +82,16 @@ public class RecipeGeneratorManager {
         this.driver.stopDriver();
     }
     
-    public ARecipeGenerator getRecipeGenerator() {
-        return this.driver.getRecipeGenerator();
+    public synchronized int getChunkSize() {
+        return this.driver.getChunkSize();
+    }
+    
+    public synchronized String getHashAlgorithm() {
+        return this.driver.getHashAlgorithm();
+    }
+    
+    public synchronized Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException {
+        return this.driver.getRecipe(metadata, is);
     }
     
     @Override

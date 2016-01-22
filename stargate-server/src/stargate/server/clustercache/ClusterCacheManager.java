@@ -21,48 +21,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.server.sourcefs;
+package stargate.server.clustercache;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import stargate.commons.clustercache.AClusterCacheDriver;
 import stargate.commons.service.ServiceNotStartedException;
-import stargate.commons.sourcefs.ASourceFileSystemDriver;
-import stargate.commons.sourcefs.SourceFileMetadata;
 
 /**
  *
  * @author iychoi
  */
-public class SourceFileSystemManager {
+public class ClusterCacheManager {
     
-    private static final Log LOG = LogFactory.getLog(SourceFileSystemManager.class);
+    private static final Log LOG = LogFactory.getLog(ClusterCacheManager.class);
     
-    private static SourceFileSystemManager instance;
+    private static ClusterCacheManager instance;
 
-    private ASourceFileSystemDriver driver;
+    private AClusterCacheDriver driver;
     
-    public static SourceFileSystemManager getInstance(ASourceFileSystemDriver driver) {
-        synchronized (SourceFileSystemManager.class) {
+    public static ClusterCacheManager getInstance(AClusterCacheDriver driver) {
+        synchronized (ClusterCacheManager.class) {
             if(instance == null) {
-                instance = new SourceFileSystemManager(driver);
+                instance = new ClusterCacheManager(driver);
             }
             return instance;
         }
     }
     
-    public static SourceFileSystemManager getInstance() throws ServiceNotStartedException {
-        synchronized (SourceFileSystemManager.class) {
+    public static ClusterCacheManager getInstance() throws ServiceNotStartedException {
+        synchronized (ClusterCacheManager.class) {
             if(instance == null) {
-                throw new ServiceNotStartedException("SourceFileSystemManager is not started");
+                throw new ServiceNotStartedException("ClusterCacheManager is not started");
             }
             return instance;
         }
     }
     
-    public SourceFileSystemManager(ASourceFileSystemDriver driver) {
+    ClusterCacheManager(AClusterCacheDriver driver) {
         if(driver == null) {
             throw new IllegalArgumentException("driver is null");
         }
@@ -70,7 +68,7 @@ public class SourceFileSystemManager {
         this.driver = driver;
     }
     
-    public synchronized ASourceFileSystemDriver getDriver() {
+    public AClusterCacheDriver getDriver() {
         return this.driver;
     }
     
@@ -82,20 +80,28 @@ public class SourceFileSystemManager {
         this.driver.stopDriver();
     }
     
-    public synchronized SourceFileMetadata getMetadata(URI path) throws IOException {
-        return this.driver.getMetadata(path);
+    public boolean hasDataChunkCache(String hash) {
+        return this.driver.hasDataChunkCache(hash);
     }
     
-    public synchronized InputStream getInputStream(URI path) throws IOException {
-        return this.driver.getInputStream(path);
+    public InputStream readDataChunkCache(String hash) throws IOException {
+        return this.driver.readDataChunkCache(hash);
     }
     
-    public synchronized InputStream getInputStream(URI path, long offset, int size) throws IOException {
-        return this.getInputStream(path, offset, size);
+    public void writeDataChunkCache(String hash, byte[] data) throws IOException {
+        this.driver.writeDataChunkCache(hash, data);
+    }
+    
+    public void expellDataChunkCache(String hash) throws IOException {
+        this.driver.expellDataChunkCache(hash);
+    }
+    
+    public void expellDataChunkCache() throws IOException {
+        this.driver.expellDataChunkCache();
     }
     
     @Override
     public synchronized String toString() {
-        return "SourceFileSystemManager";
+        return "ClusterCacheManager";
     }
 }

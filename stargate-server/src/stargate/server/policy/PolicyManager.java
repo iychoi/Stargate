@@ -71,7 +71,7 @@ public class PolicyManager {
         }
     }
     
-    public PolicyManager(DataStoreManager datastoreManager) {
+    PolicyManager(DataStoreManager datastoreManager) {
         if(datastoreManager == null) {
             throw new IllegalArgumentException("datastoreManager is null");
         }

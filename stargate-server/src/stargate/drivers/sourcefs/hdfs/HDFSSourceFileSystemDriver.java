@@ -24,15 +24,18 @@
 package stargate.drivers.sourcefs.hdfs;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import stargate.commons.drivers.ADriverConfiguration;
-import stargate.commons.sourcefs.ASourceFileSystem;
 import stargate.commons.sourcefs.ASourceFileSystemDriver;
 import stargate.commons.sourcefs.ASourceFileSystemDriverConfiguration;
+import stargate.commons.sourcefs.SourceFileMetadata;
 
 /**
  *
@@ -100,7 +103,60 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
     }
 
     @Override
-    public synchronized ASourceFileSystem getFileSystem() {
-        return new HDFSSourceFileSystem(this.filesystem);
+    public SourceFileMetadata getMetadata(URI path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        FileStatus status = this.filesystem.getFileStatus(hdfsPath);
+        if(!this.filesystem.exists(hdfsPath)) {
+            throw new IOException("file (" + hdfsPath.toString() + ") not exist");
+        }
+        return new SourceFileMetadata(path, status.getLen(), status.getModificationTime());
+    }
+
+    @Override
+    public InputStream getInputStream(URI path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        FileStatus status = this.filesystem.getFileStatus(hdfsPath);
+        if(!this.filesystem.exists(hdfsPath)) {
+            throw new IOException("file (" + hdfsPath.toString() + ") not exist");
+        }
+        if(status.isDir()) {
+            throw new IOException("cannot open a directory (" + hdfsPath.toString() + ")");
+        }
+        
+        return this.filesystem.open(hdfsPath);
+    }
+
+    @Override
+    public InputStream getInputStream(URI path, long offset, int size) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        if(offset < 0) {
+            throw new IllegalArgumentException("offset is invalid");
+        }
+        
+        if(size < 0) {
+            throw new IllegalArgumentException("size is invalid");
+        }
+        
+        Path hdfsPath = new Path(path);
+        FileStatus status = this.filesystem.getFileStatus(hdfsPath);
+        if(!this.filesystem.exists(hdfsPath)) {
+            throw new IOException("file (" + hdfsPath.toString() + ") not exist");
+        }
+        if(status.isDir()) {
+            throw new IOException("cannot open a directory (" + hdfsPath.toString() + ")");
+        }
+        
+        return new HDFSChunkReader(this.filesystem, hdfsPath, offset, size);
     }
 }

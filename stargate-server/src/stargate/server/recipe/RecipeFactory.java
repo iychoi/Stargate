@@ -25,11 +25,11 @@ package stargate.server.recipe;
 
 import java.io.IOException;
 import stargate.commons.dataexport.DataExportEntry;
-import stargate.commons.recipe.ARecipeGenerator;
+import stargate.commons.recipe.ARecipeGeneratorDriver;
 import stargate.commons.recipe.DataObjectMetadata;
 import stargate.commons.recipe.DataObjectPath;
 import stargate.commons.recipe.Recipe;
-import stargate.commons.sourcefs.ASourceFileSystem;
+import stargate.commons.sourcefs.ASourceFileSystemDriver;
 import stargate.commons.sourcefs.SourceFileMetadata;
 import stargate.server.cluster.LocalClusterManager;
 import stargate.server.sourcefs.SourceFileSystemManager;
@@ -66,8 +66,7 @@ public class RecipeFactory {
         }
         
         DataObjectPath dataObjectPath = createDataObjectPath(localClusterManager, dataExportEntry);
-        ASourceFileSystem sourceFileSystem = sourceFileSystemManager.getFileSystem();
-        SourceFileMetadata metadata = sourceFileSystem.getMetadata(dataExportEntry.getResourcePath());
+        SourceFileMetadata metadata = sourceFileSystemManager.getMetadata(dataExportEntry.getResourcePath());
         return new DataObjectMetadata(dataObjectPath, metadata.getFileSize(), false, metadata.getLastModificationTime());
     }
     
@@ -89,11 +88,9 @@ public class RecipeFactory {
         }
         
         DataObjectPath dataObjectPath = createDataObjectPath(localClusterManager, dataExportEntry);
-        ASourceFileSystem sourceFileSystem = sourceFileSystemManager.getFileSystem();
-        SourceFileMetadata metadata = sourceFileSystem.getMetadata(dataExportEntry.getResourcePath());
+        SourceFileMetadata metadata = sourceFileSystemManager.getMetadata(dataExportEntry.getResourcePath());
         DataObjectMetadata dataObjectMetadata = new DataObjectMetadata(dataObjectPath, metadata.getFileSize(), false, metadata.getLastModificationTime());
         
-        ARecipeGenerator recipeGenerator = recipeGeneratorManager.getRecipeGenerator();
-        return recipeGenerator.getRecipe(dataObjectMetadata, sourceFileSystem.getInputStream(dataExportEntry.getResourcePath()));
+        return recipeGeneratorManager.getRecipe(dataObjectMetadata, sourceFileSystemManager.getInputStream(dataExportEntry.getResourcePath()));
     }
 }

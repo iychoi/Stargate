@@ -42,6 +42,7 @@ import stargate.commons.common.AImmutableConfiguration;
 import stargate.commons.common.JsonSerializer;
 import stargate.commons.dataexport.DataExportEntry;
 import stargate.commons.drivers.DriverSetting;
+import stargate.server.clustercache.ClusterCacheConfiguration;
 import stargate.server.datastore.DataStoreConfiguration;
 import stargate.server.recipe.RecipeGeneratorConfiguration;
 import stargate.server.schedule.ScheduleConfiguration;
@@ -66,6 +67,7 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     private RecipeGeneratorConfiguration recipeGeneratorConfiguration;
     private ScheduleConfiguration scheduleConfiguration;
     private TransportConfiguration transportConfiguration;
+    private ClusterCacheConfiguration clusterCacheConfiguration;
     private UserInterfaceConfiguration userInterfaceConfiguration;
     private List<RemoteCluster> remoteCluster = new ArrayList<RemoteCluster>();
     private List<DataExportEntry> dataExport = new ArrayList<DataExportEntry>();
@@ -242,6 +244,22 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
         return this.transportConfiguration;
     }
     
+    @JsonProperty("cluster_cache")
+    public void setClusterCacheConfiguration(ClusterCacheConfiguration clusterCacheConfiguration) {
+        if(clusterCacheConfiguration == null) {
+            throw new IllegalArgumentException("clusterCacheConfiguration is null");
+        }
+        
+        super.verifyMutable();
+        
+        this.clusterCacheConfiguration = clusterCacheConfiguration;
+    }
+    
+    @JsonProperty("cluster_cache")
+    public ClusterCacheConfiguration getClusterCacheConfiguration() {
+        return this.clusterCacheConfiguration;
+    }
+    
     @JsonProperty("user_interface")
     public void setUserInterfaceConfiguration(UserInterfaceConfiguration userInterfaceConfiguration) {
         if(userInterfaceConfiguration == null) {
@@ -336,6 +354,7 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
         this.recipeGeneratorConfiguration.setImmutable();
         this.scheduleConfiguration.setImmutable();
         this.transportConfiguration.setImmutable();
+        this.clusterCacheConfiguration.setImmutable();
         this.userInterfaceConfiguration.setImmutable();
     }
     

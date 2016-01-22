@@ -63,7 +63,7 @@ public class UserInterfaceManager {
         }
     }
     
-    public UserInterfaceManager(Collection<AUserInterfaceDriver> driver) {
+    UserInterfaceManager(Collection<AUserInterfaceDriver> driver) {
         if(driver == null || driver.isEmpty()) {
             throw new IllegalArgumentException("driver is null or empty");
         }

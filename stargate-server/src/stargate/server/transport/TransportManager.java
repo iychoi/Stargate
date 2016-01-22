@@ -61,7 +61,7 @@ public class TransportManager {
         }
     }
     
-    public TransportManager(ATransportDriver driver) {
+    TransportManager(ATransportDriver driver) {
         if(driver == null) {
             throw new IllegalArgumentException("driver is null");
         }

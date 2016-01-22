@@ -23,6 +23,9 @@
  */
 package stargate.commons.sourcefs;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import stargate.commons.drivers.ADriver;
 
 /**
@@ -30,5 +33,7 @@ import stargate.commons.drivers.ADriver;
  * @author iychoi
  */
 public abstract class ASourceFileSystemDriver extends ADriver {
-    public abstract ASourceFileSystem getFileSystem();
+    public abstract SourceFileMetadata getMetadata(URI path) throws IOException;
+    public abstract InputStream getInputStream(URI path) throws IOException;
+    public abstract InputStream getInputStream(URI path, long offset, int size) throws IOException;
 }

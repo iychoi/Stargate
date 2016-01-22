@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import stargate.commons.cluster.Node;
 import stargate.commons.cluster.NodeAlreadyAddedException;
 import stargate.commons.cluster.NodeStatus;
+import stargate.commons.clustercache.AClusterCacheDriver;
 import stargate.commons.datastore.ADataStoreDriver;
 import stargate.commons.drivers.ADriver;
 import stargate.commons.drivers.DriverFactory;
@@ -49,6 +50,7 @@ import stargate.commons.userinterface.AUserInterfaceDriver;
 import stargate.commons.utils.NodeUtils;
 import stargate.server.cluster.ClusterManager;
 import stargate.server.cluster.LocalClusterManager;
+import stargate.server.clustercache.ClusterCacheManager;
 import stargate.server.dataexport.DataExportManager;
 import stargate.server.datastore.DataStoreManager;
 import stargate.server.policy.PolicyManager;
@@ -87,6 +89,7 @@ public class StargateService extends AService {
     private RecipeManager recipeManager;
     private TransportManager transportManager;
     private VolumeManager volumeManager;
+    private ClusterCacheManager clusterCacheManager;
     private UserInterfaceManager userInterfaceManager;
     
     public static StargateService getInstance(StargateServiceConfiguration config) throws Exception {
@@ -180,6 +183,13 @@ public class StargateService extends AService {
         // setup cluster
         setupCluster(this.clusterManager);
         
+        // init cluster-cache manager
+        // init cluster-cache driver
+        AClusterCacheDriver clusterCacheDriver = (AClusterCacheDriver)DriverFactory.createDriver(this.config.getClusterCacheConfiguration().getDriverSetting());
+        clusterCacheDriver.setService(this);
+        this.clusterCacheManager = ClusterCacheManager.getInstance(clusterCacheDriver);
+        this.clusterCacheManager.start();
+        
         // init user-interface manager
         // init user-interface driver
         List<AUserInterfaceDriver> userInterfaceDrivers = new ArrayList<AUserInterfaceDriver>();
@@ -210,6 +220,9 @@ public class StargateService extends AService {
     public synchronized void stop() throws Exception {
         this.userInterfaceManager.stop();
         this.userInterfaceManager = null;
+        
+        this.clusterCacheManager.stop();
+        this.clusterCacheManager = null;
         
         this.transportManager.stop();
         this.transportManager = null;
@@ -376,6 +389,14 @@ public class StargateService extends AService {
     public synchronized VolumeManager getVolumeManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.volumeManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized ClusterCacheManager getClusterCacheManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.clusterCacheManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }

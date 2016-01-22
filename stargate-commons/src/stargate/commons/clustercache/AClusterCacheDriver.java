@@ -21,18 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.sourcefs;
+package stargate.commons.clustercache;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import stargate.commons.drivers.ADriver;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ASourceFileSystem {
-    public abstract SourceFileMetadata getMetadata(URI path) throws IOException;
-    public abstract InputStream getInputStream(URI path) throws IOException;
-    public abstract InputStream getInputStream(URI path, long offset, int size) throws IOException;
+public abstract class AClusterCacheDriver extends ADriver {
+    public abstract boolean hasDataChunkCache(String hash);
+    public abstract InputStream readDataChunkCache(String hash) throws IOException;
+    public abstract void writeDataChunkCache(String hash, byte[] data) throws IOException;
+    public abstract void expellDataChunkCache(String hash) throws IOException;
+    public abstract void expellDataChunkCache() throws IOException;
 }

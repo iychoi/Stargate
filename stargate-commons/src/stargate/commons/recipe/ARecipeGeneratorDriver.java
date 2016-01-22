@@ -23,6 +23,8 @@
  */
 package stargate.commons.recipe;
 
+import java.io.IOException;
+import java.io.InputStream;
 import stargate.commons.drivers.ADriver;
 
 /**
@@ -30,5 +32,7 @@ import stargate.commons.drivers.ADriver;
  * @author iychoi
  */
 public abstract class ARecipeGeneratorDriver extends ADriver {
-    public abstract ARecipeGenerator getRecipeGenerator();
+    public abstract int getChunkSize();
+    public abstract String getHashAlgorithm();
+    public abstract Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException;
 }

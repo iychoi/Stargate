@@ -70,7 +70,7 @@ public class ScheduleManager {
         this.driver = driver;
     }
 
-    public AScheduleDriver getDriver() {
+    public synchronized AScheduleDriver getDriver() {
         return this.driver;
     }
     
@@ -82,11 +82,11 @@ public class ScheduleManager {
         this.driver.stopDriver();
     }
     
-    public void setScheduledTask(AScheduledLeaderTask task) {
+    public synchronized void setScheduledTask(AScheduledLeaderTask task) {
         this.driver.setScheduledLeaderTask(task);
     }
 
-    public void setScheduledTask(AScheduledTask task) {
+    public synchronized void setScheduledTask(AScheduledTask task) {
         this.driver.setScheduledTask(task);
     }
     
