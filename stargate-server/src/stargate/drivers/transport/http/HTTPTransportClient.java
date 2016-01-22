@@ -39,6 +39,7 @@ import stargate.commons.restful.RestfulClient;
 import stargate.commons.restful.RestfulResponse;
 import stargate.commons.restful.WebParamBuilder;
 import stargate.commons.transport.ATransportClient;
+import stargate.commons.utils.DateTimeUtils;
 import stargate.commons.utils.PathUtils;
 import stargate.commons.volume.Directory;
 
@@ -51,6 +52,8 @@ public class HTTPTransportClient extends ATransportClient {
     private static final Log LOG = LogFactory.getLog(HTTPTransportClient.class);
     
     private RestfulClient restfulClient;
+    private long connectionEstablishedTime;
+    private long lastActiveTime;
     
     public HTTPTransportClient(URI serviceURL, int threadPoolSize) {
         if(serviceURL == null) {
@@ -62,6 +65,9 @@ public class HTTPTransportClient extends ATransportClient {
         }
         
         this.restfulClient = new RestfulClient(serviceURL, threadPoolSize);
+        
+        this.connectionEstablishedTime = DateTimeUtils.getCurrentTime();
+        this.lastActiveTime = this.connectionEstablishedTime;
     }
     
     public void close() {
@@ -74,6 +80,18 @@ public class HTTPTransportClient extends ATransportClient {
         }
         
         return PathUtils.concatPath(HTTPTransportRestfulConstants.BASE_PATH, path);
+    }
+    
+    public long getConnectionEstablishedTime() {
+        return this.connectionEstablishedTime;
+    }
+    
+    public long getLastActiveTime() {
+        return this.lastActiveTime;
+    }
+    
+    private void updateLastActivetime() {
+        this.lastActiveTime = DateTimeUtils.getCurrentTime();
     }
     
     @Override
@@ -90,6 +108,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             return false;
         } else {
+            updateLastActivetime();
             return response.getResponse().booleanValue();
         }
     }
@@ -108,6 +127,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {
+            updateLastActivetime();
             return response.getResponse();
         }
     }
@@ -132,6 +152,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {
+            updateLastActivetime();
             return response.getResponse();
         }
     }
@@ -158,6 +179,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {
+            updateLastActivetime();
             return response.getResponse();
         }
     }
@@ -182,6 +204,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {
+            updateLastActivetime();
             return response.getResponse();
         }
     }
@@ -206,6 +229,7 @@ public class HTTPTransportClient extends ATransportClient {
         if(response.getException() != null) {
             throw new IOException(response.getException());
         } else {
+            updateLastActivetime();
             return response.getResponse();
         }
     }
@@ -223,7 +247,10 @@ public class HTTPTransportClient extends ATransportClient {
         try {
             String datachunkUrl = PathUtils.concatPath(HTTPTransportRestfulConstants.RESTFUL_DATACHUNK_PATH, clusterName + "/" + hash);
             String url = getResourcePath(datachunkUrl);
-            return this.restfulClient.download(url);
+            InputStream is = this.restfulClient.download(url);
+            
+            updateLastActivetime();
+            return is;
         } catch (IOException ex) {
             LOG.error("Exception occurred while calling Restful operation", ex);
             throw ex;

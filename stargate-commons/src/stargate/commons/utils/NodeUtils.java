@@ -30,8 +30,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import stargate.commons.cluster.Node;
 import stargate.commons.cluster.NodeStatus;
 import stargate.commons.cluster.RemoteCluster;
@@ -103,24 +103,6 @@ public class NodeUtils {
         return Collections.unmodifiableCollection(liveNodeList);
     }
     
-    public static Collection<Node> getRandomContactNodeList(RemoteCluster remoteCluster) throws IOException {
-        if(remoteCluster == null || remoteCluster.isEmpty()) {
-            throw new IllegalArgumentException("remoteCluster is null or empty");
-        }
-        
-        Collection<Node> liveNode = getLiveNode(remoteCluster);
-        if(liveNode == null || liveNode.isEmpty()) {
-            throw new IOException("no live node found at remote cluster " + remoteCluster.getName());
-        }
-        
-        List<Node> contactOrder = new ArrayList<Node>();
-        contactOrder.addAll(liveNode);
-        
-        Random r = new Random();
-        Collections.rotate(contactOrder, r.nextInt(contactOrder.size()));
-        return Collections.unmodifiableCollection(contactOrder);
-    }
-    
     public static Collection<Node> getLocalClusterAwareContactNodeList(Collection<Node> localClusterNode, Node localNode, RemoteCluster remoteCluster) throws IOException {
         if(localClusterNode == null || localClusterNode.isEmpty()) {
             throw new IllegalArgumentException("localClusterNode is null or empty");
@@ -134,8 +116,8 @@ public class NodeUtils {
             throw new IllegalArgumentException("remoteCluster is null or empty");
         }
         
-        Collection<Node> liveNode = getLiveNode(remoteCluster);
-        if(liveNode == null || liveNode.isEmpty()) {
+        Collection<Node> liveRemoteNode = getLiveNode(remoteCluster);
+        if(liveRemoteNode == null || liveRemoteNode.isEmpty()) {
             throw new IOException("no live node found at remote cluster " + remoteCluster.getName());
         }
         
@@ -147,31 +129,26 @@ public class NodeUtils {
             localNodePosition++;
         }
         
-        double targetNodeLen = (double)liveNode.size() / (double)localClusterNode.size();
+        double targetNodeLen = (double)liveRemoteNode.size() / (double)localClusterNode.size();
         double targetNodeStart = targetNodeLen * localNodePosition;
         double targetNodeEnd = targetNodeStart + targetNodeLen;
         
-        List<Node> remoteNode = new ArrayList<Node>();
-        remoteNode.addAll(liveNode);
-        
         List<Node> contactOrder = new ArrayList<Node>();
-        List<Node> backups = new ArrayList<Node>();
         
         int targetNodeStartInt = (int)targetNodeStart;
         int targetNodeEndInt = (int)Math.ceil(targetNodeEnd);
         
-        for(int i=0;i<liveNode.size();i++) {
+        Iterator<Node> iterator = liveRemoteNode.iterator();
+        int i = 0;
+        while(iterator.hasNext()) {
             if(i >= targetNodeStartInt && i <= targetNodeEndInt) {
-                contactOrder.add(remoteNode.get(i));
-            } else {
-                backups.add(remoteNode.get(i));
+                Node node = iterator.next();
+                contactOrder.add(node);
             }
+            
+            i++;
         }
         
-        Collections.shuffle(contactOrder);
-        Collections.shuffle(backups);
-        
-        contactOrder.addAll(backups);
         return Collections.unmodifiableCollection(contactOrder);
     }
 }

@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import stargate.commons.cluster.Node;
@@ -42,6 +43,7 @@ import stargate.commons.transport.ATransportDriver;
 import stargate.commons.transport.ATransportDriverConfiguration;
 import stargate.commons.transport.ATransportServer;
 import stargate.commons.transport.TransportServiceInfo;
+import stargate.commons.utils.DateTimeUtils;
 import stargate.commons.utils.IPUtils;
 import stargate.commons.utils.NodeUtils;
 import stargate.server.cluster.LocalClusterManager;
@@ -55,8 +57,11 @@ public class HTTPTransportDriver extends ATransportDriver {
 
     private static final Log LOG = LogFactory.getLog(HTTPTransportDriver.class);
     
+    private static final int DEFAULT_LIVECHECK_SECONDS = 60;
+    
     private HTTPTransportDriverConfiguration config;
     private HTTPTransportServer server;
+    private LRUMap<String, HTTPTransportClient> clients = new LRUMap<String, HTTPTransportClient>();
     
     public HTTPTransportDriver(ADriverConfiguration config) {
         if(config == null) {
@@ -101,6 +106,8 @@ public class HTTPTransportDriver extends ATransportDriver {
     public synchronized void stopDriver() throws IOException {
         // stop server
         this.server.stop();
+        
+        this.clients.clear();
     }
     
     @Override
@@ -130,40 +137,34 @@ public class HTTPTransportDriver extends ATransportDriver {
             throw new IllegalArgumentException("remoteCluster is null or empty");
         }
         
-        // RANDOM based contact
-        /*
-        Collection<Node> contactOrder = NodeUtils.getRandomContactNodeList(remoteCluster);
-        for(Node n : contactOrder) {
-            TransportServiceInfo transportServiceInfo = n.getTransportServiceInfo();
-            if(transportServiceInfo.getDriverClass().equals(HTTPTransportDriver.class)) {
-                try {
-                    HTTPTransportClient client = new HTTPTransportClient(transportServiceInfo.getConnectionURI(), this.config.getThreadPoolSize());
-                    if(client.isLive()) {
-                        return client;
-                    } else {
-                        remoteCluster.reportNodeUnreachable(cp, n.getName());
-                    }
-                } catch (Exception ex) {
-                    remoteCluster.reportNodeUnreachable(cp, n.getName());
-                }
+        HTTPTransportClient existingClient = this.clients.get(remoteCluster.getName());
+        if(existingClient != null) {
+            boolean isLive = true;
+            if(DateTimeUtils.timeElapsedSecond(existingClient.getLastActiveTime(), DateTimeUtils.getCurrentTime(), DEFAULT_LIVECHECK_SECONDS)) {
+                isLive = existingClient.isLive();
+            } else {
+                isLive = true;
+            }
+            
+            if(isLive) {
+                return existingClient;
             }
         }
-        */
         
-        // heuristic - 1:1 mapping
         try {
             ClusterPolicy cp = getClusterPolicy();
             LocalClusterManager localClusterManager = getLocalClusterManager();
             Node localNode = localClusterManager.getLocalNode();
             Collection<Node> node = localClusterManager.getNode();
 
-            Collection<Node> contactOrder = NodeUtils.getLocalClusterAwareContactNodeList(node, localNode, remoteCluster);
-            for(Node n : contactOrder) {
+            Collection<Node> targetNode = NodeUtils.getLocalClusterAwareContactNodeList(node, localNode, remoteCluster);
+            for(Node n : targetNode) {
                 TransportServiceInfo transportServiceInfo = n.getTransportServiceInfo();
                 if(transportServiceInfo.getDriverClass().equals(HTTPTransportDriver.class)) {
                     try {
                         HTTPTransportClient client = new HTTPTransportClient(transportServiceInfo.getConnectionURI(), this.config.getThreadPoolSize());
                         if(client.isLive()) {
+                            this.clients.put(remoteCluster.getName(), client);
                             return client;
                         } else {
                             remoteCluster.reportNodeUnreachable(cp, n.getName());
