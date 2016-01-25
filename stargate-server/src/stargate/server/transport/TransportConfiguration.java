@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import stargate.commons.common.AImmutableConfiguration;
 import stargate.commons.common.JsonSerializer;
@@ -85,21 +84,5 @@ public class TransportConfiguration extends AImmutableConfiguration {
         super.setImmutable();
         
         this.driverSetting.setImmutable();
-    }
-    
-    @JsonIgnore
-    public synchronized String toJson() throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(this);
-    }
-    
-    @JsonIgnore
-    public synchronized void saveTo(File file) throws IOException {
-        if(file == null) {
-            throw new IllegalArgumentException("file is null");
-        }
-        
-        JsonSerializer serializer = new JsonSerializer();
-        serializer.toJsonFile(file, this);
     }
 }

@@ -21,87 +21,79 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.server.clustercache;
+
+package stargate.drivers.temporalstorage.hdfs;
 
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.Path;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
-import stargate.commons.common.AImmutableConfiguration;
+import stargate.commons.temporalstorage.APersistentTemporalStorageDriverConfiguration;
 import stargate.commons.common.JsonSerializer;
-import stargate.commons.drivers.DriverSetting;
 
 /**
  *
  * @author iychoi
  */
-public class ClusterCacheConfiguration extends AImmutableConfiguration {
+public class HDFSTemporalStorageDriverConfiguration extends APersistentTemporalStorageDriverConfiguration {
     
-    private static final Log LOG = LogFactory.getLog(ClusterCacheConfiguration.class);
+    private static final Log LOG = LogFactory.getLog(HDFSTemporalStorageDriverConfiguration.class);
     
-    private static final String HADOOP_CONFIG_KEY = ClusterCacheConfiguration.class.getCanonicalName();
+    private Path rootPath = new Path("/");
     
-    private DriverSetting driverSetting;
-    
-    public static ClusterCacheConfiguration createInstance(File file) throws IOException {
+    public static HDFSTemporalStorageDriverConfiguration createInstance(File file) throws IOException {
         if(file == null) {
             throw new IllegalArgumentException("file is null");
         }
 
         JsonSerializer serializer = new JsonSerializer();
-        return (ClusterCacheConfiguration) serializer.fromJsonFile(file, ClusterCacheConfiguration.class);
+        return (HDFSTemporalStorageDriverConfiguration) serializer.fromJsonFile(file, HDFSTemporalStorageDriverConfiguration.class);
     }
     
-    public static ClusterCacheConfiguration createInstance(String json) throws IOException {
+    public static HDFSTemporalStorageDriverConfiguration createInstance(String json) throws IOException {
         if(json == null || json.isEmpty()) {
             throw new IllegalArgumentException("json is empty or null");
         }
         
         JsonSerializer serializer = new JsonSerializer();
-        return (ClusterCacheConfiguration) serializer.fromJson(json, ClusterCacheConfiguration.class);
+        return (HDFSTemporalStorageDriverConfiguration) serializer.fromJson(json, HDFSTemporalStorageDriverConfiguration.class);
     }
     
-    public ClusterCacheConfiguration() {
+    public HDFSTemporalStorageDriverConfiguration() {
     }
     
-    @JsonProperty("driver_setting")
-    public void setDriverSetting(DriverSetting setting) {
-        if(setting == null) {
-            throw new IllegalArgumentException("setting is null");
+    @JsonProperty("root_path")
+    public void setRootPath(String rootPath) {
+        if(rootPath == null || rootPath.isEmpty()) {
+            throw new IllegalArgumentException("rootPath is null or empty");
         }
         
         super.verifyMutable();
         
-        this.driverSetting = setting;
-    }
-    
-    @JsonProperty("driver_setting")
-    public DriverSetting getDriverSetting() {
-        return this.driverSetting;
-    }
-    
-    @Override
-    public void setImmutable() {
-        super.setImmutable();
-        
-        this.driverSetting.setImmutable();
+        this.rootPath = new Path(rootPath);
     }
     
     @JsonIgnore
-    public synchronized String toJson() throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(this);
-    }
-    
-    @JsonIgnore
-    public synchronized void saveTo(File file) throws IOException {
-        if(file == null) {
-            throw new IllegalArgumentException("file is null");
+    public void setRootPath(Path rootPath) {
+        if(rootPath == null) {
+            throw new IllegalArgumentException("rootPath is null or empty");
         }
         
-        JsonSerializer serializer = new JsonSerializer();
-        serializer.toJsonFile(file, this);
+        super.verifyMutable();
+        
+        this.rootPath = rootPath;
+    }
+    
+    @JsonProperty("root_path")
+    public String getRootPathString() {
+        return this.rootPath.toString();
+    }
+    
+    @JsonIgnore
+    public Path getRootPath() {
+        return this.rootPath;
     }
 }

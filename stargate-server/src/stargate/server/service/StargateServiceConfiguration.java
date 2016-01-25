@@ -42,7 +42,7 @@ import stargate.commons.common.AImmutableConfiguration;
 import stargate.commons.common.JsonSerializer;
 import stargate.commons.dataexport.DataExportEntry;
 import stargate.commons.drivers.DriverSetting;
-import stargate.server.clustercache.ClusterCacheConfiguration;
+import stargate.server.temporalstorage.TemporalStorageConfiguration;
 import stargate.server.datastore.DataStoreConfiguration;
 import stargate.server.recipe.RecipeGeneratorConfiguration;
 import stargate.server.schedule.ScheduleConfiguration;
@@ -67,7 +67,7 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     private RecipeGeneratorConfiguration recipeGeneratorConfiguration;
     private ScheduleConfiguration scheduleConfiguration;
     private TransportConfiguration transportConfiguration;
-    private ClusterCacheConfiguration clusterCacheConfiguration;
+    private TemporalStorageConfiguration temporalStorageConfiguration;
     private UserInterfaceConfiguration userInterfaceConfiguration;
     private List<RemoteCluster> remoteCluster = new ArrayList<RemoteCluster>();
     private List<DataExportEntry> dataExport = new ArrayList<DataExportEntry>();
@@ -244,20 +244,20 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
         return this.transportConfiguration;
     }
     
-    @JsonProperty("cluster_cache")
-    public void setClusterCacheConfiguration(ClusterCacheConfiguration clusterCacheConfiguration) {
-        if(clusterCacheConfiguration == null) {
-            throw new IllegalArgumentException("clusterCacheConfiguration is null");
+    @JsonProperty("temporal_storage")
+    public void setTemporalStorageConfiguration(TemporalStorageConfiguration temporalStorageConfiguration) {
+        if(temporalStorageConfiguration == null) {
+            throw new IllegalArgumentException("temporalStorageConfiguration is null");
         }
         
         super.verifyMutable();
         
-        this.clusterCacheConfiguration = clusterCacheConfiguration;
+        this.temporalStorageConfiguration = temporalStorageConfiguration;
     }
     
-    @JsonProperty("cluster_cache")
-    public ClusterCacheConfiguration getClusterCacheConfiguration() {
-        return this.clusterCacheConfiguration;
+    @JsonProperty("temporal_storage")
+    public TemporalStorageConfiguration getTemporalStorageConfiguration() {
+        return this.temporalStorageConfiguration;
     }
     
     @JsonProperty("user_interface")
@@ -354,23 +354,7 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
         this.recipeGeneratorConfiguration.setImmutable();
         this.scheduleConfiguration.setImmutable();
         this.transportConfiguration.setImmutable();
-        this.clusterCacheConfiguration.setImmutable();
+        this.temporalStorageConfiguration.setImmutable();
         this.userInterfaceConfiguration.setImmutable();
-    }
-    
-    @JsonIgnore
-    public synchronized String toJson() throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(this);
-    }
-    
-    @JsonIgnore
-    public synchronized void saveTo(File file) throws IOException {
-        if(file == null) {
-            throw new IllegalArgumentException("file is null");
-        }
-        
-        JsonSerializer serializer = new JsonSerializer();
-        serializer.toJsonFile(file, this);
     }
 }

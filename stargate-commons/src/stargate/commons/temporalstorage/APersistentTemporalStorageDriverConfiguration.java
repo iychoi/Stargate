@@ -21,20 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.clustercache;
+package stargate.commons.temporalstorage;
 
-import java.io.IOException;
-import java.io.InputStream;
-import stargate.commons.drivers.ADriver;
+import org.codehaus.jackson.annotate.JsonProperty;
+import stargate.commons.drivers.ADriverConfiguration;
 
 /**
  *
  * @author iychoi
  */
-public abstract class AClusterCacheDriver extends ADriver {
-    public abstract boolean hasDataChunkCache(String hash);
-    public abstract InputStream readDataChunkCache(String hash) throws IOException;
-    public abstract void writeDataChunkCache(String hash, byte[] data) throws IOException;
-    public abstract void expellDataChunkCache(String hash) throws IOException;
-    public abstract void expellDataChunkCache() throws IOException;
+public abstract class APersistentTemporalStorageDriverConfiguration extends ADriverConfiguration {
+    protected long sizeLimit = 0;
+    
+    @JsonProperty("size_limit")
+    public void setSizeLimit(long sizeLimit) {
+        this.sizeLimit = sizeLimit;
+    }
+    
+    @JsonProperty("size_limit")
+    public long getSizeLimit() {
+        return this.sizeLimit;
+    }
 }

@@ -21,11 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.sourcefs;
+package stargate.commons.temporalstorage;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collection;
 import stargate.commons.drivers.ADriver;
@@ -34,15 +35,19 @@ import stargate.commons.drivers.ADriver;
  *
  * @author iychoi
  */
-public abstract class ASourceFileSystemDriver extends ADriver {
-    public abstract SourceFileMetadata getMetadata(URI path) throws IOException, FileNotFoundException;
+public abstract class APersistentTemporalStorageDriver extends ADriver {
+    public abstract TemporalFileMetadata getMetadata(URI path) throws IOException, FileNotFoundException;
     public abstract boolean exists(URI path) throws IOException;
     public abstract boolean isDirectory(URI path) throws IOException, FileNotFoundException;
     public abstract boolean isFile(URI path) throws IOException, FileNotFoundException;
     
     public abstract Collection<URI> listDirectory(URI path) throws IOException, FileNotFoundException;
-    public abstract Collection<SourceFileMetadata> listDirectoryWithMetadata(URI path) throws IOException, FileNotFoundException;
+    public abstract Collection<TemporalFileMetadata> listDirectoryWithMetadata(URI path) throws IOException, FileNotFoundException;
+    
+    public abstract boolean makeDirs(URI path) throws IOException;
+    public abstract boolean remove(URI path) throws IOException, FileNotFoundException;
+    public abstract boolean removeDir(URI path, boolean recursive) throws IOException, FileNotFoundException;
     
     public abstract InputStream getInputStream(URI path) throws IOException, FileNotFoundException;
-    public abstract InputStream getInputStream(URI path, long offset, int size) throws IOException, FileNotFoundException;
+    public abstract OutputStream getOutputStream(URI path) throws IOException;
 }

@@ -96,25 +96,4 @@ public class HDFSSourceFileSystemDriverConfiguration extends ASourceFileSystemDr
     public Path getRootPath() {
         return this.rootPath;
     }
-    
-    @Override
-    public void setImmutable() {
-        super.setImmutable();
-    }
-    
-    @JsonIgnore
-    public synchronized String toJson() throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(this);
-    }
-    
-    @JsonIgnore
-    public synchronized void saveTo(File file) throws IOException {
-        if(file == null) {
-            throw new IllegalArgumentException("file is null");
-        }
-        
-        JsonSerializer serializer = new JsonSerializer();
-        serializer.toJsonFile(file, this);
-    }
 }

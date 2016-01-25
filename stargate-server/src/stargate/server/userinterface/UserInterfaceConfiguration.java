@@ -45,8 +45,6 @@ public class UserInterfaceConfiguration extends AImmutableConfiguration {
     
     private static final Log LOG = LogFactory.getLog(UserInterfaceConfiguration.class);
     
-    private static final String HADOOP_CONFIG_KEY = UserInterfaceConfiguration.class.getCanonicalName();
-    
     private List<DriverSetting> driverSetting = new ArrayList<DriverSetting>();
     
     public static UserInterfaceConfiguration createInstance(File file) throws IOException {
@@ -104,21 +102,5 @@ public class UserInterfaceConfiguration extends AImmutableConfiguration {
         for(DriverSetting setting : this.driverSetting) {
             setting.setImmutable();
         }
-    }
-    
-    @JsonIgnore
-    public synchronized String toJson() throws IOException {
-        JsonSerializer serializer = new JsonSerializer();
-        return serializer.toJson(this);
-    }
-    
-    @JsonIgnore
-    public synchronized void saveTo(File file) throws IOException {
-        if(file == null) {
-            throw new IllegalArgumentException("file is null");
-        }
-        
-        JsonSerializer serializer = new JsonSerializer();
-        serializer.toJsonFile(file, this);
     }
 }

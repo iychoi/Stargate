@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.server.recipe;
+package stargate.server.temporalstorage;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,31 +36,31 @@ import stargate.commons.drivers.DriverSetting;
  *
  * @author iychoi
  */
-public class RecipeGeneratorConfiguration extends AImmutableConfiguration {
+public class TemporalStorageConfiguration extends AImmutableConfiguration {
     
-    private static final Log LOG = LogFactory.getLog(RecipeGeneratorConfiguration.class);
+    private static final Log LOG = LogFactory.getLog(TemporalStorageConfiguration.class);
     
     private DriverSetting driverSetting;
     
-    public static RecipeGeneratorConfiguration createInstance(File file) throws IOException {
+    public static TemporalStorageConfiguration createInstance(File file) throws IOException {
         if(file == null) {
             throw new IllegalArgumentException("file is null");
         }
 
         JsonSerializer serializer = new JsonSerializer();
-        return (RecipeGeneratorConfiguration) serializer.fromJsonFile(file, RecipeGeneratorConfiguration.class);
+        return (TemporalStorageConfiguration) serializer.fromJsonFile(file, TemporalStorageConfiguration.class);
     }
     
-    public static RecipeGeneratorConfiguration createInstance(String json) throws IOException {
+    public static TemporalStorageConfiguration createInstance(String json) throws IOException {
         if(json == null || json.isEmpty()) {
             throw new IllegalArgumentException("json is empty or null");
         }
         
         JsonSerializer serializer = new JsonSerializer();
-        return (RecipeGeneratorConfiguration) serializer.fromJson(json, RecipeGeneratorConfiguration.class);
+        return (TemporalStorageConfiguration) serializer.fromJson(json, TemporalStorageConfiguration.class);
     }
     
-    public RecipeGeneratorConfiguration() {
+    public TemporalStorageConfiguration() {
     }
     
     @JsonProperty("driver_setting")

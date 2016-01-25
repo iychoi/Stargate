@@ -21,11 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.drivers.sourcefs.hdfs;
+package stargate.drivers.temporalstorage.hdfs;
 
 import java.io.FileNotFoundException;
+import stargate.drivers.sourcefs.hdfs.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,9 +38,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import stargate.commons.temporalstorage.APersistentTemporalStorageDriver;
+import stargate.commons.temporalstorage.APersistentTemporalStorageDriverConfiguration;
 import stargate.commons.drivers.ADriverConfiguration;
-import stargate.commons.sourcefs.ASourceFileSystemDriver;
-import stargate.commons.sourcefs.ASourceFileSystemDriverConfiguration;
 import stargate.commons.sourcefs.SourceFileMetadata;
 import stargate.commons.temporalstorage.TemporalFileMetadata;
 
@@ -46,40 +48,40 @@ import stargate.commons.temporalstorage.TemporalFileMetadata;
  *
  * @author iychoi
  */
-public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
+public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver {
 
-    private static final Log LOG = LogFactory.getLog(HDFSSourceFileSystemDriver.class);
+    private static final Log LOG = LogFactory.getLog(HDFSTemporalStorageDriver.class);
     
-    private HDFSSourceFileSystemDriverConfiguration config;
+    private HDFSTemporalStorageDriverConfiguration config;
     private Configuration hadoopConfig;
     private Path rootPath;
     private FileSystem filesystem;
     
-    public HDFSSourceFileSystemDriver(ADriverConfiguration config) {
+    public HDFSTemporalStorageDriver(ADriverConfiguration config) {
         if(config == null) {
             throw new IllegalArgumentException("config is null");
         }
         
-        if(!(config instanceof HDFSSourceFileSystemDriverConfiguration)) {
-            throw new IllegalArgumentException("config is not an instance of HDFSSourceFileSystemDriverConfiguration");
+        if(!(config instanceof HDFSTemporalStorageDriverConfiguration)) {
+            throw new IllegalArgumentException("config is not an instance of HDFSTemporalStorageDriverConfiguration");
         }
         
-        this.config = (HDFSSourceFileSystemDriverConfiguration) config;
+        this.config = (HDFSTemporalStorageDriverConfiguration) config;
     }
     
-    public HDFSSourceFileSystemDriver(ASourceFileSystemDriverConfiguration config) {
+    public HDFSTemporalStorageDriver(APersistentTemporalStorageDriverConfiguration config) {
         if(config == null) {
             throw new IllegalArgumentException("config is null");
         }
         
-        if(!(config instanceof HDFSSourceFileSystemDriverConfiguration)) {
-            throw new IllegalArgumentException("config is not an instance of HDFSSourceFileSystemDriverConfiguration");
+        if(!(config instanceof HDFSTemporalStorageDriverConfiguration)) {
+            throw new IllegalArgumentException("config is not an instance of HDFSTemporalStorageDriverConfiguration");
         }
         
-        this.config = (HDFSSourceFileSystemDriverConfiguration) config;
+        this.config = (HDFSTemporalStorageDriverConfiguration) config;
     }
     
-    public HDFSSourceFileSystemDriver(HDFSSourceFileSystemDriverConfiguration config) {
+    public HDFSTemporalStorageDriver(HDFSTemporalStorageDriverConfiguration config) {
         if(config == null) {
             throw new IllegalArgumentException("config is null");
         }
@@ -104,11 +106,11 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
     
     @Override
     public String getDriverName() {
-        return "HDFSSourceFileSystemDriver";
+        return "HDFSTemporalStorageDriver";
     }
 
     @Override
-    public SourceFileMetadata getMetadata(URI path) throws IOException, FileNotFoundException {
+    public TemporalFileMetadata getMetadata(URI path) throws IOException, FileNotFoundException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }
@@ -118,9 +120,9 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("file (" + hdfsPath.toString() + ") not exist");
         }
-        return new SourceFileMetadata(path, status.getLen(), status.getModificationTime());
+        return new TemporalFileMetadata(path, status.isDir(), status.getLen(), status.getModificationTime());
     }
-    
+
     @Override
     public boolean exists(URI path) throws IOException {
         if(path == null) {
@@ -181,9 +183,9 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
         
         return entries;
     }
-
+    
     @Override
-    public Collection<SourceFileMetadata> listDirectoryWithMetadata(URI path) throws IOException, FileNotFoundException {
+    public Collection<TemporalFileMetadata> listDirectoryWithMetadata(URI path) throws IOException, FileNotFoundException {
         if(path == null) {
             throw new IllegalArgumentException("path is null");
         }
@@ -194,15 +196,55 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
         }
         
         FileStatus[] listStatus = this.filesystem.listStatus(hdfsPath);
-        List<SourceFileMetadata> entries = new ArrayList<SourceFileMetadata>();
+        List<TemporalFileMetadata> entries = new ArrayList<TemporalFileMetadata>();
         if(listStatus != null && listStatus.length > 0) {
             for(FileStatus status : listStatus) {
-                SourceFileMetadata metadata = new SourceFileMetadata(path, status.getLen(), status.getModificationTime());
+                TemporalFileMetadata metadata = new TemporalFileMetadata(status.getPath().toUri(), status.isDir(), status.getLen(), status.getModificationTime());
                 entries.add(metadata);
             }
         }
         
         return entries;
+    }
+    
+    @Override
+    public boolean remove(URI path) throws IOException, FileNotFoundException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        return this.filesystem.delete(hdfsPath, true);
+    }
+
+    @Override
+    public boolean removeDir(URI path, boolean recursive) throws IOException, FileNotFoundException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        return this.filesystem.delete(hdfsPath, recursive);
+    }
+    
+    @Override
+    public boolean makeDirs(URI path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        return this.filesystem.mkdirs(hdfsPath);
+    }
+
+    @Override
+    public OutputStream getOutputStream(URI path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        Path hdfsPath = new Path(path);
+        return this.filesystem.create(hdfsPath, true);
     }
 
     @Override
@@ -221,31 +263,5 @@ public class HDFSSourceFileSystemDriver extends ASourceFileSystemDriver {
         }
         
         return this.filesystem.open(hdfsPath);
-    }
-
-    @Override
-    public InputStream getInputStream(URI path, long offset, int size) throws IOException, FileNotFoundException {
-        if(path == null) {
-            throw new IllegalArgumentException("path is null");
-        }
-        
-        if(offset < 0) {
-            throw new IllegalArgumentException("offset is invalid");
-        }
-        
-        if(size < 0) {
-            throw new IllegalArgumentException("size is invalid");
-        }
-        
-        Path hdfsPath = new Path(path);
-        FileStatus status = this.filesystem.getFileStatus(hdfsPath);
-        if(!this.filesystem.exists(hdfsPath)) {
-            throw new FileNotFoundException("file (" + hdfsPath.toString() + ") not exist");
-        }
-        if(status.isDir()) {
-            throw new IOException("cannot open a directory (" + hdfsPath.toString() + ")");
-        }
-        
-        return new HDFSChunkReader(this.filesystem, hdfsPath, offset, size);
     }
 }
