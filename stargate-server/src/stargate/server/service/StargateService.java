@@ -48,6 +48,7 @@ import stargate.commons.sourcefs.ASourceFileSystemDriver;
 import stargate.commons.transport.ATransportDriver;
 import stargate.commons.userinterface.AUserInterfaceDriver;
 import stargate.commons.utils.NodeUtils;
+import stargate.server.blockcache.BlockCacheManager;
 import stargate.server.cluster.ClusterManager;
 import stargate.server.cluster.LocalClusterManager;
 import stargate.server.temporalstorage.TemporalStorageManager;
@@ -80,6 +81,7 @@ public class StargateService extends AService {
     private List<ADriver> daemonDriver = new ArrayList<ADriver>();
     
     private TemporalStorageManager temporalStorageManager;
+    private BlockCacheManager blockCacheManager;
     private DataStoreManager dataStoreManager;
     private SourceFileSystemManager sourceFileSystemManager;
     private RecipeGeneratorManager recipeGeneratorManager;
@@ -147,6 +149,9 @@ public class StargateService extends AService {
         this.dataStoreManager = DataStoreManager.getInstance(dataStoreDriver);
         this.dataStoreManager.start();
 
+        // init block cache manager
+        this.blockCacheManager = BlockCacheManager.getInstance(this.temporalStorageManager, this.dataStoreManager);
+        
         // init source file system manager
         // init source file system driver
         ASourceFileSystemDriver sourceFileSystemDriver = (ASourceFileSystemDriver)DriverFactory.createDriver(this.config.getSourceFileSystemConfiguration().getDriverSetting());
@@ -203,7 +208,7 @@ public class StargateService extends AService {
         this.userInterfaceManager.start();
         
         // init volume manager
-        this.volumeManager = VolumeManager.getInstance(this.policyManager, this.dataStoreManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.transportManager);
+        this.volumeManager = VolumeManager.getInstance(this.policyManager, this.dataStoreManager, this.blockCacheManager, this.recipeGeneratorManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.transportManager);
         
         this.policyManager.addPolicy(this.config.getPolicy());
         this.clusterManager.addRemoteCluster(this.config.getRemoteCluster());
@@ -221,9 +226,6 @@ public class StargateService extends AService {
         this.userInterfaceManager.stop();
         this.userInterfaceManager = null;
         
-        this.temporalStorageManager.stop();
-        this.temporalStorageManager = null;
-        
         this.transportManager.stop();
         this.transportManager = null;
         
@@ -239,11 +241,15 @@ public class StargateService extends AService {
         this.dataStoreManager.stop();
         this.dataStoreManager = null;
         
+        this.temporalStorageManager.stop();
+        this.temporalStorageManager = null;
+        
         this.policyManager = null;
         this.clusterManager = null;
         this.dataExportManager = null;
         this.recipeManager = null;
         this.volumeManager = null;
+        this.blockCacheManager = null;
         
         for(ADriver driver : this.daemonDriver) {
             driver.stopDriver();
@@ -333,6 +339,14 @@ public class StargateService extends AService {
     public synchronized DataStoreManager getDataStoreManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.dataStoreManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
+    public synchronized BlockCacheManager getBlockCacheManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.blockCacheManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }

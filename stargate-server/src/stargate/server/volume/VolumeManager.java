@@ -24,6 +24,7 @@
 
 package stargate.server.volume;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,10 +46,13 @@ import stargate.commons.service.ServiceNotStartedException;
 import stargate.commons.transport.ATransportClient;
 import stargate.commons.utils.DateTimeUtils;
 import stargate.commons.volume.Directory;
+import stargate.server.blockcache.BlockCacheEntry;
+import stargate.server.blockcache.BlockCacheManager;
 import stargate.server.cluster.ClusterManager;
 import stargate.server.dataexport.DataExportManager;
 import stargate.server.datastore.DataStoreManager;
 import stargate.server.policy.PolicyManager;
+import stargate.server.recipe.RecipeGeneratorManager;
 import stargate.server.recipe.RecipeManager;
 import stargate.server.sourcefs.SourceFileSystemManager;
 import stargate.server.transport.TransportManager;
@@ -69,6 +73,8 @@ public class VolumeManager {
     
     private PolicyManager policyManager;
     private DataStoreManager dataStoreManager;
+    private BlockCacheManager blockCacheManager;
+    private RecipeGeneratorManager recipeGeneratorManager;
     private SourceFileSystemManager sourceFileSystemManager;
     private ClusterManager clusterManager;
     private DataExportManager dataExportManager;
@@ -80,10 +86,10 @@ public class VolumeManager {
     private DataExportChangedEventHandler dataExportChangedHandler;
     protected long lastUpdateTime;
     
-    public static VolumeManager getInstance(PolicyManager policyManager, DataStoreManager dataStoreManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
+    public static VolumeManager getInstance(PolicyManager policyManager, DataStoreManager dataStoreManager, BlockCacheManager blockCacheManager, RecipeGeneratorManager recipeGeneratorManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
         synchronized (VolumeManager.class) {
             if(instance == null) {
-                instance = new VolumeManager(policyManager, dataStoreManager, sourceFileSystemManager, clusterManager, dataExportManager, recipeManager, transportManager);
+                instance = new VolumeManager(policyManager, dataStoreManager, blockCacheManager, recipeGeneratorManager, sourceFileSystemManager, clusterManager, dataExportManager, recipeManager, transportManager);
             }
             return instance;
         }
@@ -98,13 +104,21 @@ public class VolumeManager {
         }
     }
     
-    VolumeManager(PolicyManager policyManager, DataStoreManager dataStoreManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
+    VolumeManager(PolicyManager policyManager, DataStoreManager dataStoreManager, BlockCacheManager blockCacheManager, RecipeGeneratorManager recipeGeneratorManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager, RecipeManager recipeManager, TransportManager transportManager) throws IOException {
         if(policyManager == null) {
             throw new IllegalArgumentException("policyManager is null");
         }
         
         if(dataStoreManager == null) {
             throw new IllegalArgumentException("datastoreManager is null");
+        }
+        
+        if(blockCacheManager == null) {
+            throw new IllegalArgumentException("blockCacheManager is null");
+        }
+        
+        if(recipeGeneratorManager == null) {
+            throw new IllegalArgumentException("recipeGeneratorManager is null");
         }
         
         if(sourceFileSystemManager == null) {
@@ -129,6 +143,8 @@ public class VolumeManager {
         
         this.policyManager = policyManager;
         this.dataStoreManager = dataStoreManager;
+        this.recipeGeneratorManager = recipeGeneratorManager;
+        this.blockCacheManager = blockCacheManager;
         this.sourceFileSystemManager = sourceFileSystemManager;
         this.clusterManager = clusterManager;
         this.dataExportManager = dataExportManager;
@@ -569,10 +585,47 @@ public class VolumeManager {
             throw new IOException("unable to find chunk for " + hash);
         } else {
             // remote
+            
+            // step 1. check out local recipe to check if a block exists locally
+            try {
+                Recipe recipe = this.recipeManager.getRecipe(hash);
+                if(recipe != null) {
+                    DataExportEntry dataExport = this.dataExportManager.getDataExport(recipe.getMetadata().getPath().getPath());
+                    if(dataExport != null) {
+                        for(RecipeChunk chunk : recipe.getChunk()) {
+                            if(chunk.hasHash(hash)) {
+                                URI resourcePath = dataExport.getResourcePath();
+                                return this.sourceFileSystemManager.getInputStream(resourcePath, chunk.getOffset(), chunk.getLength());
+                            }
+                        }
+                    }
+                }
+            } catch (IOException ex) {
+            }
+            
+            // step 2. check block-cache
+            try {
+                BlockCacheEntry blockCache = this.blockCacheManager.getBlockCacheEntry(hash);
+                if(blockCache != null) {
+                    byte[] blockData = blockCache.getBlockData();
+                    if(blockData != null) {
+                        ByteArrayInputStream bais = new ByteArrayInputStream(blockData);
+                        return bais;
+                    }
+                }
+            } catch (IOException ex) {
+            }
+            
+            // step 3. go remote
             RemoteCluster remoteCluster = this.clusterManager.getRemoteCluster(clusterName);
             if(remoteCluster != null) {
                 ATransportClient transportClient = this.transportManager.getTransportClient(remoteCluster);
-                return transportClient.getDataChunk(clusterName, hash);
+                InputStream dataChunkInputStream = transportClient.getDataChunk(clusterName, hash);
+                IInterceptableInputStreamHandler handler = new CachedInputStreamHandler(this.blockCacheManager, this.recipeGeneratorManager, hash);
+                
+                InterceptableInputStream iterceptableInputStream = new InterceptableInputStream(dataChunkInputStream, handler);
+                
+                return iterceptableInputStream;
             } else {
                 throw new IOException("unable to find a data chunk at a remote cluster for " + hash);
             }

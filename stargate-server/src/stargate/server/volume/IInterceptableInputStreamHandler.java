@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2015 iychoi.
+ * Copyright 2016 iychoi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.recipe;
-
-import java.io.IOException;
-import java.io.InputStream;
-import stargate.commons.drivers.ADriver;
+package stargate.server.volume;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ARecipeGeneratorDriver extends ADriver {
-    public abstract int getChunkSize();
-    public abstract String getHashAlgorithm();
-    public abstract String getHash(byte[] buffer) throws IOException;
-    public abstract Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException;
+public interface IInterceptableInputStreamHandler {
+    public void onRead(int b);
+    public void onRead(int readLen, byte[] buffer);
+    public void onRead(int readLen, byte[] buffer, int offset, int len);
 }

@@ -90,6 +90,10 @@ public class RecipeGeneratorManager {
         return this.driver.getHashAlgorithm();
     }
     
+    public synchronized String getHash(byte[] buffer) throws IOException {
+        return this.driver.getHash(buffer);
+    }
+    
     public synchronized Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException {
         return this.driver.getRecipe(metadata, is);
     }

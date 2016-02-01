@@ -150,7 +150,7 @@ public class HTTPChunkInputStream extends FSInputStream {
         try {
             InputStream dataChunkIS = this.httpUserInterfaceClient.getDataChunk(this.recipe.getMetadata().getPath().getClusterName(), chunk.getHashString());
             data = IOUtils.toByteArray(dataChunkIS);
-            dataChunkIS.close();
+            IOUtils.closeQuietly(dataChunkIS);
         } catch (Exception ex) {
             throw new IOException(ex);
         }

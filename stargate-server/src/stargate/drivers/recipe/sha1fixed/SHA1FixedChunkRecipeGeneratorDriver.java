@@ -38,6 +38,7 @@ import stargate.commons.recipe.ARecipeGeneratorDriverConfiguration;
 import stargate.commons.recipe.DataObjectMetadata;
 import stargate.commons.recipe.Recipe;
 import stargate.commons.recipe.RecipeChunk;
+import stargate.commons.utils.HexaUtils;
 
 /**
  *
@@ -109,6 +110,23 @@ public class SHA1FixedChunkRecipeGeneratorDriver extends ARecipeGeneratorDriver 
         return "SHA1FixedChunkRecipeGeneratorDriver";
     }
 
+    @Override
+    public String getHash(byte[] buffer) throws IOException {
+        if(buffer == null) {
+            throw new IllegalArgumentException("buffer is null");
+        }
+        
+        try {    
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            messageDigest.update(buffer);
+            
+            byte[] digest = messageDigest.digest();
+            return HexaUtils.toHexString(digest).toLowerCase();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IOException(ex);
+        }
+    }
+    
     @Override
     public synchronized Recipe getRecipe(DataObjectMetadata metadata, InputStream is) throws IOException {
         if(metadata == null || metadata.isEmpty()) {
