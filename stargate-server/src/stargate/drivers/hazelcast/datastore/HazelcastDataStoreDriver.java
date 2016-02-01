@@ -108,6 +108,19 @@ public class HazelcastDataStoreDriver extends ADataStoreDriver {
         
         return new HazelcastDistributedDataStore(this.driverGroup.getMap(name), valclass);
     }
+    
+    @Override
+    public ADistributedDataStore getPersistentDistributedDataStore(String name, Class valclass) {
+        if(name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+        
+        if(valclass == null) {
+            throw new IllegalArgumentException("valclass is null");
+        }
+        
+        return new HazelcastDistributedDataStore(this.driverGroup.getPersistentMap(name), valclass);
+    }
 
     @Override
     public synchronized AReplicatedDataStore getReplicatedDataStore(String name, Class valclass) {

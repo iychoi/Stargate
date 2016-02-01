@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2015 iychoi.
+ * Copyright 2016 iychoi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.datastore;
+package stargate.drivers.hazelcast;
 
-import stargate.commons.drivers.ADriver;
+import com.hazelcast.core.MapLoader;
+import com.hazelcast.core.MapStoreFactory;
+import java.util.Properties;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import stargate.server.temporalstorage.TemporalStorageManager;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ADataStoreDriver extends ADriver {
-    public abstract ADistributedDataStore getDistributedDataStore(String name, Class valclass);
-    public abstract ADistributedDataStore getPersistentDistributedDataStore(String name, Class valclass);
-    public abstract AReplicatedDataStore getReplicatedDataStore(String name, Class valclass);
+public class PersistentStoreFactory implements MapStoreFactory<String, String> {
+
+    private static final Log LOG = LogFactory.getLog(PersistentStoreFactory.class);
+    
+    private TemporalStorageManager temporalStorageManager;
+    
+    public PersistentStoreFactory(TemporalStorageManager temporalStorageManager) {
+        if(temporalStorageManager == null) {
+            throw new IllegalArgumentException("temporalStorageManager is null");
+        }
+        
+        this.temporalStorageManager = temporalStorageManager;
+    }
+
+    @Override
+    public MapLoader<String, String> newMapStore(String name, Properties props) {
+        return new PersistentMapStore(this.temporalStorageManager, name, props);
+    }
 }

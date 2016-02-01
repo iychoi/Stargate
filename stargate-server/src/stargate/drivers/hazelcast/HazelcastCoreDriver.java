@@ -24,8 +24,8 @@
 package stargate.drivers.hazelcast;
 
 import com.hazelcast.config.Config;
-import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.MapConfig;
+import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.config.ReplicatedMapConfig;
 import com.hazelcast.core.Hazelcast;
@@ -40,10 +40,9 @@ import org.apache.commons.logging.LogFactory;
 import stargate.commons.drivers.ADriver;
 import stargate.commons.drivers.ADriverConfiguration;
 import stargate.commons.drivers.DriverNotInstantiatedException;
-import stargate.server.recipe.RecipeManager;
 import stargate.server.service.StargateService;
 import stargate.server.service.StargateServiceConfiguration;
-import stargate.server.volume.VolumeManager;
+import stargate.server.temporalstorage.TemporalStorageManager;
 
 /**
  *
@@ -54,6 +53,7 @@ public class HazelcastCoreDriver extends ADriver {
     private static final Log LOG = LogFactory.getLog(HazelcastDataStoreDriver.class);
     
     private static final String HAZELCAST_GROUP_NAME_PREFIX = "Stargate_";
+    private static final String HAZELCAST_PERSISTENT_MAP_PREFIX = "PERSISTENT_";
     
     private static HazelcastCoreDriver instance;
     
@@ -134,12 +134,30 @@ public class HazelcastCoreDriver extends ADriver {
         network.setPortAutoIncrement(true);
         network.setPortCount(100);
         
+        StargateService service = getStargateService();
+        TemporalStorageManager temporalStorageManager = service.getTemporalStorageManager();
+        
+        PersistentStoreFactory persistentStoreFactory = new PersistentStoreFactory(temporalStorageManager);
+        
+        MapStoreConfig mapStoreConfig = new MapStoreConfig();
+        mapStoreConfig.setFactoryImplementation(persistentStoreFactory);
+        mapStoreConfig.setWriteDelaySeconds(0);
+        
+        MapConfig persistentMapConfig = new MapConfig();
+        persistentMapConfig.setName(HAZELCAST_PERSISTENT_MAP_PREFIX + "*");
+        persistentMapConfig.setBackupCount(2);
+        persistentMapConfig.getMaxSizeConfig().setSize(0);
+        persistentMapConfig.setTimeToLiveSeconds(0);
+        persistentMapConfig.setReadBackupData(true);
+        persistentMapConfig.setMapStoreConfig(mapStoreConfig);
+        
         MapConfig mapConfig = new MapConfig();
         mapConfig.setName("*");
         mapConfig.setBackupCount(2);
         mapConfig.getMaxSizeConfig().setSize(0);
         mapConfig.setTimeToLiveSeconds(0);
         mapConfig.setReadBackupData(true);
+        mapConfig.setMapStoreConfig(mapStoreConfig);
         
         config.addMapConfig(mapConfig);
         
@@ -177,6 +195,10 @@ public class HazelcastCoreDriver extends ADriver {
 
     public synchronized IMap<String, Object> getMap(String name) {
         return this.hazelcastInstance.getMap(name);
+    }
+    
+    public synchronized IMap<String, Object> getPersistentMap(String name) {
+        return this.hazelcastInstance.getMap(HAZELCAST_PERSISTENT_MAP_PREFIX + name);
     }
 
     public synchronized ReplicatedMap<String, Object> getReplicatedMap(String name) {

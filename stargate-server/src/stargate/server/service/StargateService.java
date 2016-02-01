@@ -79,6 +79,7 @@ public class StargateService extends AService {
     
     private List<ADriver> daemonDriver = new ArrayList<ADriver>();
     
+    private TemporalStorageManager temporalStorageManager;
     private DataStoreManager dataStoreManager;
     private SourceFileSystemManager sourceFileSystemManager;
     private RecipeGeneratorManager recipeGeneratorManager;
@@ -89,7 +90,6 @@ public class StargateService extends AService {
     private RecipeManager recipeManager;
     private TransportManager transportManager;
     private VolumeManager volumeManager;
-    private TemporalStorageManager temporalStorageManager;
     private UserInterfaceManager userInterfaceManager;
     
     public static StargateService getInstance(StargateServiceConfiguration config) throws Exception {
@@ -132,6 +132,13 @@ public class StargateService extends AService {
             
             this.daemonDriver.add(driverInstance);
         }
+        
+        // init temporal storage manager
+        // init temporal storage driver
+        APersistentTemporalStorageDriver temporalStorageDriver = (APersistentTemporalStorageDriver)DriverFactory.createDriver(this.config.getTemporalStorageConfiguration().getDriverSetting());
+        temporalStorageDriver.setService(this);
+        this.temporalStorageManager = TemporalStorageManager.getInstance(temporalStorageDriver);
+        this.temporalStorageManager.start();
         
         // init data store manager
         // init data store driver
@@ -182,13 +189,6 @@ public class StargateService extends AService {
         
         // setup cluster
         setupCluster(this.clusterManager);
-        
-        // init temporal storage manager
-        // init temporal storage driver
-        APersistentTemporalStorageDriver temporalStorageDriver = (APersistentTemporalStorageDriver)DriverFactory.createDriver(this.config.getTemporalStorageConfiguration().getDriverSetting());
-        temporalStorageDriver.setService(this);
-        this.temporalStorageManager = TemporalStorageManager.getInstance(temporalStorageDriver);
-        this.temporalStorageManager.start();
         
         // init user-interface manager
         // init user-interface driver
@@ -322,6 +322,14 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized TemporalStorageManager getTemporalStorageManager() throws ServiceNotStartedException {
+        if(this.serviceStarted) {
+            return this.temporalStorageManager;
+        } else {
+            throw new ServiceNotStartedException("Stargate service is not started");
+        }
+    }
+    
     public synchronized DataStoreManager getDataStoreManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.dataStoreManager;
@@ -389,14 +397,6 @@ public class StargateService extends AService {
     public synchronized VolumeManager getVolumeManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.volumeManager;
-        } else {
-            throw new ServiceNotStartedException("Stargate service is not started");
-        }
-    }
-    
-    public synchronized TemporalStorageManager getClusterCacheManager() throws ServiceNotStartedException {
-        if(this.serviceStarted) {
-            return this.temporalStorageManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }

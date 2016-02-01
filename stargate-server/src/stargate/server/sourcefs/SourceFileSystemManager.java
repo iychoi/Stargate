@@ -62,7 +62,7 @@ public class SourceFileSystemManager {
         }
     }
     
-    public SourceFileSystemManager(ASourceFileSystemDriver driver) {
+    SourceFileSystemManager(ASourceFileSystemDriver driver) {
         if(driver == null) {
             throw new IllegalArgumentException("driver is null");
         }

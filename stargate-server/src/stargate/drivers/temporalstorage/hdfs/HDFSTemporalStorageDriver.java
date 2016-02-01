@@ -24,7 +24,6 @@
 package stargate.drivers.temporalstorage.hdfs;
 
 import java.io.FileNotFoundException;
-import stargate.drivers.sourcefs.hdfs.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,7 +40,6 @@ import org.apache.hadoop.fs.Path;
 import stargate.commons.temporalstorage.APersistentTemporalStorageDriver;
 import stargate.commons.temporalstorage.APersistentTemporalStorageDriverConfiguration;
 import stargate.commons.drivers.ADriverConfiguration;
-import stargate.commons.sourcefs.SourceFileMetadata;
 import stargate.commons.temporalstorage.TemporalFileMetadata;
 
 /**
@@ -108,6 +106,10 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
     public String getDriverName() {
         return "HDFSTemporalStorageDriver";
     }
+    
+    protected Path getAbsPath(URI path) {
+        return new Path(this.rootPath, new Path(path));
+    }
 
     @Override
     public TemporalFileMetadata getMetadata(URI path) throws IOException, FileNotFoundException {
@@ -115,7 +117,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         FileStatus status = this.filesystem.getFileStatus(hdfsPath);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("file (" + hdfsPath.toString() + ") not exist");
@@ -129,7 +131,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         return this.filesystem.exists(hdfsPath);
     }
 
@@ -139,7 +141,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         FileStatus status = this.filesystem.getFileStatus(hdfsPath);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("directory (" + hdfsPath.toString() + ") not exist");
@@ -153,7 +155,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         FileStatus status = this.filesystem.getFileStatus(hdfsPath);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("file (" + hdfsPath.toString() + ") not exist");
@@ -167,7 +169,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("directory (" + hdfsPath.toString() + ") not exist");
         }
@@ -177,7 +179,9 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
         if(listStatus != null && listStatus.length > 0) {
             for(FileStatus status : listStatus) {
                 URI entryPath = status.getPath().toUri();
-                entries.add(entryPath);
+                URI relativePath = entryPath.relativize(this.rootPath.toUri());
+                
+                entries.add(relativePath);
             }
         }
         
@@ -190,7 +194,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("directory (" + hdfsPath.toString() + ") not exist");
         }
@@ -199,7 +203,10 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
         List<TemporalFileMetadata> entries = new ArrayList<TemporalFileMetadata>();
         if(listStatus != null && listStatus.length > 0) {
             for(FileStatus status : listStatus) {
-                TemporalFileMetadata metadata = new TemporalFileMetadata(status.getPath().toUri(), status.isDir(), status.getLen(), status.getModificationTime());
+                URI entryPath = status.getPath().toUri();
+                URI relativePath = entryPath.relativize(this.rootPath.toUri());
+                
+                TemporalFileMetadata metadata = new TemporalFileMetadata(relativePath, status.isDir(), status.getLen(), status.getModificationTime());
                 entries.add(metadata);
             }
         }
@@ -213,7 +220,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         return this.filesystem.delete(hdfsPath, true);
     }
 
@@ -223,7 +230,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         return this.filesystem.delete(hdfsPath, recursive);
     }
     
@@ -233,7 +240,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         return this.filesystem.mkdirs(hdfsPath);
     }
 
@@ -243,7 +250,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         return this.filesystem.create(hdfsPath, true);
     }
 
@@ -253,7 +260,7 @@ public class HDFSTemporalStorageDriver extends APersistentTemporalStorageDriver 
             throw new IllegalArgumentException("path is null");
         }
         
-        Path hdfsPath = new Path(path);
+        Path hdfsPath = getAbsPath(path);
         FileStatus status = this.filesystem.getFileStatus(hdfsPath);
         if(!this.filesystem.exists(hdfsPath)) {
             throw new FileNotFoundException("file (" + hdfsPath.toString() + ") not exist");

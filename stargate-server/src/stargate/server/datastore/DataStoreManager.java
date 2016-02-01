@@ -85,6 +85,10 @@ public class DataStoreManager {
         return this.driver.getDistributedDataStore(name, valclass);
     }
     
+    public ADistributedDataStore getPersistentDistributedDataStore(String name, Class valclass) {
+        return this.driver.getPersistentDistributedDataStore(name, valclass);
+    }
+    
     public AReplicatedDataStore getReplicatedDataStore(String name, Class valclass) {
         return this.driver.getReplicatedDataStore(name, valclass);
     }

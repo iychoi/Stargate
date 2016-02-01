@@ -86,7 +86,7 @@ public class RecipeManager {
         }
     }
     
-    public RecipeManager(DataStoreManager dataStoreManager, RecipeGeneratorManager recipeGeneratorManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager) {
+    RecipeManager(DataStoreManager dataStoreManager, RecipeGeneratorManager recipeGeneratorManager, SourceFileSystemManager sourceFileSystemManager, ClusterManager clusterManager, DataExportManager dataExportManager) {
         if(dataStoreManager == null) {
             throw new IllegalArgumentException("datastoreManager is null");
         }

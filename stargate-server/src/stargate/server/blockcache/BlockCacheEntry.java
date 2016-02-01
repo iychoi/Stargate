@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2015 iychoi.
+ * Copyright 2016 iychoi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package stargate.commons.datastore;
-
-import stargate.commons.drivers.ADriver;
+package stargate.server.blockcache;
 
 /**
  *
  * @author iychoi
  */
-public abstract class ADataStoreDriver extends ADriver {
-    public abstract ADistributedDataStore getDistributedDataStore(String name, Class valclass);
-    public abstract ADistributedDataStore getPersistentDistributedDataStore(String name, Class valclass);
-    public abstract AReplicatedDataStore getReplicatedDataStore(String name, Class valclass);
+public class BlockCacheEntry {
+    
+    private BlockCacheMetadata metadata;
+    private byte[] blockData;
+    
+    public BlockCacheEntry(BlockCacheMetadata metadata, byte[] blockdata) {
+        if(metadata == null || metadata.isEmpty()) {
+            throw new IllegalArgumentException("metadata is empty or null");
+        }
+        
+        this.metadata = metadata;
+        this.blockData = blockdata;
+    }
+
+    public BlockCacheMetadata getMetadata() {
+        return this.metadata;
+    }
+    
+    public byte[] getBlockData() {
+        return this.blockData;
+    }
+    
+    public boolean isEmpty() {
+        if(this.metadata.isEmpty() || this.blockData == null) {
+            return true;
+        }
+        return false;
+    }
 }
