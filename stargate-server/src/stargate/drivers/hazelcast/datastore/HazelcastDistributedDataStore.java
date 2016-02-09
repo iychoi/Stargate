@@ -67,6 +67,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
         
         this.serializer = new JsonSerializer();
         
+        /*
         this.internalMap.addEntryListener(new EntryListener() {
 
             @Override
@@ -99,6 +100,7 @@ public class HazelcastDistributedDataStore extends ADistributedDataStore {
                 LOG.info(me.toString());
             }
         }, true);
+        */
     }
     
     @Override

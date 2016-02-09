@@ -49,7 +49,7 @@ public class PersistentMapStore implements MapStore<String, String> {
     
     private static final Log LOG = LogFactory.getLog(PersistentMapStore.class);
     
-    private static final String BUCKET_ROOT = "bucket";
+    private static final String BUCKET_ROOT = "persistent";
     
     private TemporalStorageManager temporalStorageManager;
     private String mapName;
