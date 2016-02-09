@@ -33,7 +33,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import stargate.commons.dataexport.DataExportEntry;
-import stargate.commons.datastore.AReplicatedDataStore;
+import stargate.commons.datastore.ADistributedDataStore;
 import stargate.commons.service.ServiceNotStartedException;
 import stargate.commons.utils.DateTimeUtils;
 import stargate.server.datastore.DataStoreManager;
@@ -51,7 +51,7 @@ public class DataExportManager {
     
     private DataStoreManager datastoreManager;
 
-    private AReplicatedDataStore dataExport;
+    private ADistributedDataStore dataExport;
     private ArrayList<IDataExportEventHandler> eventHandlers = new ArrayList<IDataExportEventHandler>();
     protected long lastUpdateTime;
     
@@ -80,7 +80,7 @@ public class DataExportManager {
         
         this.datastoreManager = datastoreManager;
         
-        this.dataExport = this.datastoreManager.getReplicatedDataStore(DATAEXPORTMANAGER_MAP_ID, DataExportEntry.class);
+        this.dataExport = this.datastoreManager.getPersistentDistributedDataStore(DATAEXPORTMANAGER_MAP_ID, DataExportEntry.class);
     }
     
     public synchronized int getDataExportCount() {

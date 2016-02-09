@@ -32,7 +32,6 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import stargate.commons.datastore.ADistributedDataStore;
-import stargate.commons.datastore.AReplicatedDataStore;
 import stargate.commons.recipe.DataObjectPath;
 import stargate.commons.recipe.Recipe;
 import stargate.commons.recipe.RecipeChunk;
@@ -62,7 +61,7 @@ public class RecipeManager {
     private SourceFileSystemManager sourceFileSystemManager;
     private DataExportManager dataExportManager;
     
-    private AReplicatedDataStore recipe;
+    private ADistributedDataStore recipe;
     private ADistributedDataStore hash;
     
     private DataExportChangedEventHandler dataExportChangedHandler;
@@ -113,8 +112,8 @@ public class RecipeManager {
         this.clusterManager = clusterManager;
         this.dataExportManager = dataExportManager;
         
-        this.recipe = this.dataStoreManager.getReplicatedDataStore(RECIPEMANAGER_RECIPE_MAP_ID, Recipe.class);
-        this.hash = this.dataStoreManager.getDistributedDataStore(RECIPEMANAGER_HASH_MAP_ID, RecipeList.class);
+        this.recipe = this.dataStoreManager.getPersistentDistributedDataStore(RECIPEMANAGER_RECIPE_MAP_ID, Recipe.class);
+        this.hash = this.dataStoreManager.getPersistentDistributedDataStore(RECIPEMANAGER_HASH_MAP_ID, RecipeList.class);
         
         this.dataExportChangedHandler = new DataExportChangedEventHandler(this.sourceFileSystemManager, this.recipeGeneratorManager, this.clusterManager, this);
         this.dataExportManager.addEventHandler(this.dataExportChangedHandler);

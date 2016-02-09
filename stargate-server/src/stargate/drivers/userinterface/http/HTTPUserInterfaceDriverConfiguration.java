@@ -63,7 +63,6 @@ public class HTTPUserInterfaceDriverConfiguration extends AUserInterfaceDriverCo
     }
     
     public HTTPUserInterfaceDriverConfiguration() {
-        this.servicePort = DEFAULT_SERVICE_PORT;
     }
     
     @JsonProperty("service_port")

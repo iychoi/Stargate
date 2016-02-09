@@ -42,6 +42,22 @@ import stargate.commons.common.AImmutableConfiguration;
 import stargate.commons.common.JsonSerializer;
 import stargate.commons.dataexport.DataExportEntry;
 import stargate.commons.drivers.DriverSetting;
+import stargate.drivers.hazelcast.HazelcastCoreDriver;
+import stargate.drivers.hazelcast.HazelcastCoreDriverConfiguration;
+import stargate.drivers.hazelcast.datastore.HazelcastDataStoreDriver;
+import stargate.drivers.hazelcast.datastore.HazelcastDataStoreDriverConfiguration;
+import stargate.drivers.hazelcast.schedule.HazelcastScheduleDriver;
+import stargate.drivers.hazelcast.schedule.HazelcastScheduleDriverConfiguration;
+import stargate.drivers.recipe.sha1fixed.SHA1FixedChunkRecipeGeneratorDriver;
+import stargate.drivers.recipe.sha1fixed.SHA1FixedChunkRecipeGeneratorDriverConfiguration;
+import stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriver;
+import stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriverConfiguration;
+import stargate.drivers.temporalstorage.hdfs.HDFSTemporalStorageDriver;
+import stargate.drivers.temporalstorage.hdfs.HDFSTemporalStorageDriverConfiguration;
+import stargate.drivers.transport.http.HTTPTransportDriver;
+import stargate.drivers.transport.http.HTTPTransportDriverConfiguration;
+import stargate.drivers.userinterface.http.HTTPUserInterfaceDriver;
+import stargate.drivers.userinterface.http.HTTPUserInterfaceDriverConfiguration;
 import stargate.server.temporalstorage.TemporalStorageConfiguration;
 import stargate.server.datastore.DataStoreConfiguration;
 import stargate.server.recipe.RecipeGeneratorConfiguration;
@@ -60,7 +76,7 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     
     private List<DriverSetting> daemonDriverSetting = new ArrayList<DriverSetting>();
     
-    private String serviceName;
+    private String serviceName = "StargateDefault";
     private List<Node> node = new ArrayList<Node>();
     private DataStoreConfiguration datastoreConfiguration;
     private SourceFileSystemConfiguration sourceFileSystemConfiguration;
@@ -92,6 +108,18 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     }
     
     public StargateServiceConfiguration() {
+        initDefaults();
+    }
+    
+    protected void initDefaults() {
+        initDefaultDaemonDriverConfiguration();
+        initDefaultTemporalStorageConfiguration();
+        initDefaultDataStoreConfiguration();
+        initDefaultSourceFileSystemConfiguration();
+        initDefaultRecipeGeneratorConfiguration();
+        initDefaultScheduleConfiguration();
+        initDefaultTransportConfiguration();
+        initDefaultUserInterfaceConfiguration();
     }
     
     @JsonProperty("daemon_driver_setting")
@@ -356,5 +384,105 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
         this.transportConfiguration.setImmutable();
         this.temporalStorageConfiguration.setImmutable();
         this.userInterfaceConfiguration.setImmutable();
+    }
+    
+    private void initDefaultDaemonDriverConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HazelcastCoreDriver.class);
+        
+        HazelcastCoreDriverConfiguration driverConfiguration = new HazelcastCoreDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        this.daemonDriverSetting.add(driverSetting);
+    }
+    
+    private void initDefaultTemporalStorageConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HDFSTemporalStorageDriver.class);
+        
+        HDFSTemporalStorageDriverConfiguration driverConfiguration = new HDFSTemporalStorageDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        TemporalStorageConfiguration temporalStorageConfiguration = new TemporalStorageConfiguration();
+        temporalStorageConfiguration.setDriverSetting(driverSetting);
+        
+        this.temporalStorageConfiguration = temporalStorageConfiguration;
+    }
+    
+    private void initDefaultDataStoreConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HazelcastDataStoreDriver.class);
+        
+        HazelcastDataStoreDriverConfiguration driverConfiguration = new HazelcastDataStoreDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        DataStoreConfiguration datastoreConfiguration = new DataStoreConfiguration();
+        datastoreConfiguration.setDriverSetting(driverSetting);
+        
+        this.datastoreConfiguration = datastoreConfiguration;
+    }
+
+    private void initDefaultSourceFileSystemConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HDFSSourceFileSystemDriver.class);
+        
+        HDFSSourceFileSystemDriverConfiguration driverConfiguration = new HDFSSourceFileSystemDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        SourceFileSystemConfiguration sourceFileSystemConfiguration = new SourceFileSystemConfiguration();
+        sourceFileSystemConfiguration.setDriverSetting(driverSetting);
+        
+        this.sourceFileSystemConfiguration = sourceFileSystemConfiguration;
+    }
+
+    private void initDefaultRecipeGeneratorConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(SHA1FixedChunkRecipeGeneratorDriver.class);
+        
+        SHA1FixedChunkRecipeGeneratorDriverConfiguration driverConfiguration = new SHA1FixedChunkRecipeGeneratorDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        RecipeGeneratorConfiguration recipeGeneratorConfiguration = new RecipeGeneratorConfiguration();
+        recipeGeneratorConfiguration.setDriverSetting(driverSetting);
+        
+        this.recipeGeneratorConfiguration = recipeGeneratorConfiguration;
+    }
+
+    private void initDefaultScheduleConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HazelcastScheduleDriver.class);
+        
+        HazelcastScheduleDriverConfiguration driverConfiguration = new HazelcastScheduleDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        ScheduleConfiguration scheduleConfiguration = new ScheduleConfiguration();
+        scheduleConfiguration.setDriverSetting(driverSetting);
+        
+        this.scheduleConfiguration = scheduleConfiguration;
+    }
+
+    private void initDefaultTransportConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HTTPTransportDriver.class);
+        
+        HTTPTransportDriverConfiguration driverConfiguration = new HTTPTransportDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        TransportConfiguration transportConfiguration = new TransportConfiguration();
+        transportConfiguration.setDriverSetting(driverSetting);
+        
+        this.transportConfiguration = transportConfiguration;
+    }
+
+    private void initDefaultUserInterfaceConfiguration() {
+        DriverSetting driverSetting = new DriverSetting();
+        driverSetting.setDriverClass(HTTPUserInterfaceDriver.class);
+        
+        HTTPUserInterfaceDriverConfiguration driverConfiguration = new HTTPUserInterfaceDriverConfiguration();
+        driverSetting.setDriverConfiguration(driverConfiguration);
+        
+        UserInterfaceConfiguration userInterfaceConfiguration = new UserInterfaceConfiguration();
+        userInterfaceConfiguration.addDriverSetting(driverSetting);
+        
+        this.userInterfaceConfiguration = userInterfaceConfiguration;
     }
 }

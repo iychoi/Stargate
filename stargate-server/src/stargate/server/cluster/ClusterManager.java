@@ -33,7 +33,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import stargate.commons.cluster.RemoteCluster;
-import stargate.commons.datastore.AReplicatedDataStore;
+import stargate.commons.datastore.ADistributedDataStore;
 import stargate.commons.service.ServiceNotStartedException;
 import stargate.commons.utils.DateTimeUtils;
 import stargate.server.datastore.DataStoreManager;
@@ -53,7 +53,7 @@ public class ClusterManager {
     private DataStoreManager datastoreManager;
     
     private LocalClusterManager localClusterManager;
-    private AReplicatedDataStore remoteCluster;
+    private ADistributedDataStore remoteCluster;
     private ArrayList<IRemoteClusterEventHandler> eventHandlers = new ArrayList<IRemoteClusterEventHandler>();
     protected long lastUpdateTime;
     
@@ -83,7 +83,7 @@ public class ClusterManager {
         this.datastoreManager = datastoreManager;
         
         this.localClusterManager = LocalClusterManager.getInstance(this.datastoreManager);
-        this.remoteCluster = this.datastoreManager.getReplicatedDataStore(CLUSTERMANAGER_REMOTE_CLUSTER_MAP_ID, RemoteCluster.class);
+        this.remoteCluster = this.datastoreManager.getPersistentDistributedDataStore(CLUSTERMANAGER_REMOTE_CLUSTER_MAP_ID, RemoteCluster.class);
     }
     
     public synchronized LocalClusterManager getLocalClusterManager() {

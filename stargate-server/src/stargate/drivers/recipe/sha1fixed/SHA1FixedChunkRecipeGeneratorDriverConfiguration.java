@@ -63,7 +63,6 @@ public class SHA1FixedChunkRecipeGeneratorDriverConfiguration extends ARecipeGen
     }
     
     public SHA1FixedChunkRecipeGeneratorDriverConfiguration() {
-        this.chunkSize = DEFAULT_CHUNK_SIZE;
     }
     
     @JsonProperty("chunk_size")

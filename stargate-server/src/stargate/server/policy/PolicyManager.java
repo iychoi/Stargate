@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import stargate.commons.datastore.AReplicatedDataStore;
+import stargate.commons.datastore.ADistributedDataStore;
 import stargate.commons.policy.APolicy;
 import stargate.commons.policy.ClusterPolicy;
 import stargate.commons.policy.VolumePolicy;
@@ -50,7 +50,7 @@ public class PolicyManager {
     
     private DataStoreManager datastoreManager;
     
-    private AReplicatedDataStore policy;
+    private ADistributedDataStore policy;
     protected long lastUpdateTime;
     
     public static PolicyManager getInstance(DataStoreManager datastoreManager) {
@@ -78,7 +78,7 @@ public class PolicyManager {
         
         this.datastoreManager = datastoreManager;
         
-        this.policy = this.datastoreManager.getReplicatedDataStore(POLICYMANAGER_MAP_ID, String.class);
+        this.policy = this.datastoreManager.getPersistentDistributedDataStore(POLICYMANAGER_MAP_ID, String.class);
     }
     
     public synchronized int getPolicyCount() {

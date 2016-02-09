@@ -62,7 +62,6 @@ public class HazelcastScheduleDriverConfiguration extends AScheduleDriverConfigu
     }
     
     public HazelcastScheduleDriverConfiguration() {
-        this.taskThreads = DEFAULT_SCHEDULE_TASK_THREADS;
     }
     
     @JsonProperty("task_threads")

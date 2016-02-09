@@ -45,20 +45,24 @@ public class StargateServer {
             LocalResourceLocator rl = new LocalResourceLocator();
             
             File configFile = null;
-            if(args.length == 0) {
-                configFile = rl.getResourceLocation("stargate.json");
+            if(args.length != 0) {
+                if(args[0] != null && !args[0].isEmpty()) {
+                    configFile = rl.getResourceLocation(args[0]);
+                    if (!configFile.exists()) {
+                        System.err.println("configuration file (" + configFile.getAbsolutePath() + ") not found");
+                        return;
+                    }
+                }
+            }
+            
+            StargateServiceConfiguration serviceConfiguration;
+            if(configFile != null) {
+                serviceConfiguration = StargateServiceConfiguration.createInstance(configFile);
             } else {
-                configFile = rl.getResourceLocation(args[0]);
+                serviceConfiguration = new StargateServiceConfiguration();
             }
             
-            if (!configFile.exists()) {
-                System.err.println("configuration file (" + configFile.getAbsolutePath() + ") not found");
-                return;
-            }
-            
-            StargateServiceConfiguration conf = StargateServiceConfiguration.createInstance(configFile);
-            
-            StargateService instance = StargateService.getInstance(conf);
+            StargateService instance = StargateService.getInstance(serviceConfiguration);
             instance.start();
             
             LocalClusterManager localClusterManager = instance.getClusterManager().getLocalClusterManager();

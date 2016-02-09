@@ -67,8 +67,6 @@ public class HTTPTransportDriverConfiguration extends ATransportDriverConfigurat
     }
     
     public HTTPTransportDriverConfiguration() {
-        this.servicePort = DEFAULT_SERVICE_PORT;
-        this.threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     }
     
     @JsonProperty("service_host_name_pattern")

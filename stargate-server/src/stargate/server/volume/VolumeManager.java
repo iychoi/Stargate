@@ -151,7 +151,7 @@ public class VolumeManager {
         this.recipeManager = recipeManager;
         this.transportManager = transportManager;
 
-        this.directoryHierarchy = this.dataStoreManager.getDistributedDataStore(VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID, Directory.class);
+        this.directoryHierarchy = this.dataStoreManager.getPersistentDistributedDataStore(VOLUMEMANAGER_DIRECTORY_HIERARCHY_MAP_ID, Directory.class);
         
         // make local cluster root
         Directory localClusterRootDir = makeLocalClusterRootDirectory();

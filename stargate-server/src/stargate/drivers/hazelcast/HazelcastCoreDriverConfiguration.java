@@ -47,9 +47,9 @@ public class HazelcastCoreDriverConfiguration extends ADriverConfiguration {
     
     private static final int DEFAULT_SERVICE_PORT = 21010;
     
-    private String serviceName;
+    private String serviceName = "StargateDefault";
     private List<String> knownHostAddr = new ArrayList<String>();
-    private String myHostAddr;
+    private String myHostAddr = "localhost";
     private int port = DEFAULT_SERVICE_PORT;
     
     public static HazelcastCoreDriverConfiguration createInstance(File file) throws IOException {
