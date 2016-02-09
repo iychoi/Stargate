@@ -38,6 +38,7 @@ import java.util.Properties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import stargate.commons.utils.PathUtils;
 import stargate.server.temporalstorage.TemporalStorageManager;
 
 /**
@@ -52,6 +53,7 @@ public class PersistentMapStore implements MapStore<String, String> {
     
     private TemporalStorageManager temporalStorageManager;
     private String mapName;
+    private String refinedMapName;
     private Properties properties;
     
     public PersistentMapStore(TemporalStorageManager temporalStorageManager, String name, Properties props) {
@@ -65,6 +67,11 @@ public class PersistentMapStore implements MapStore<String, String> {
         
         this.temporalStorageManager = temporalStorageManager;
         this.mapName = name;
+        if(name.startsWith(HazelcastCoreDriver.HAZELCAST_PERSISTENT_MAP_PREFIX)) {
+            this.refinedMapName = name.substring(HazelcastCoreDriver.HAZELCAST_PERSISTENT_MAP_PREFIX.length());
+        } else {
+            this.refinedMapName = name;
+        }
         this.properties = props;
         
         prepareBucket(name);
@@ -86,11 +93,11 @@ public class PersistentMapStore implements MapStore<String, String> {
     }
     
     private URI getBucketPath() throws URISyntaxException {
-        return new URI(BUCKET_ROOT + "/" + this.mapName);
+        return new URI(BUCKET_ROOT + "/" + this.refinedMapName);
     }
     
     private URI getEntryFilePath(String key) throws URISyntaxException {
-        return new URI(BUCKET_ROOT + "/" + this.mapName + "/" + key);
+        return new URI(BUCKET_ROOT + "/" + this.refinedMapName + "/" + PathUtils.encodeHadoopFilename(key));
     }
     
     @Override
@@ -196,7 +203,7 @@ public class PersistentMapStore implements MapStore<String, String> {
                     for(URI entry : entries) {
                         URI relativePath = bucketPath.relativize(entry);
                         String path = relativePath.getPath();
-                        arr.add(path);
+                        arr.add(PathUtils.decodeHadoopFilename(path));
                     }
                 }
             }

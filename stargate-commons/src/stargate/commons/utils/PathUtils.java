@@ -88,4 +88,16 @@ public class PathUtils {
         
         return sb.toString();
     }
+    
+    public static String encodeHadoopFilename(String name) {
+        Base64UrlSafe urlSafe = new Base64UrlSafe();
+        byte[] encode = urlSafe.encode(name.getBytes());
+        return new String(encode);
+    }
+    
+    public static String decodeHadoopFilename(String name) {
+        Base64UrlSafe urlSafe = new Base64UrlSafe();
+        byte[] decode = urlSafe.decode(name.getBytes());
+        return new String(decode);
+    }
 }

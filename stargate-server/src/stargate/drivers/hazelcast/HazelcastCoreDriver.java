@@ -53,7 +53,7 @@ public class HazelcastCoreDriver extends ADriver {
     private static final Log LOG = LogFactory.getLog(HazelcastDataStoreDriver.class);
     
     private static final String HAZELCAST_GROUP_NAME_PREFIX = "Stargate_";
-    private static final String HAZELCAST_PERSISTENT_MAP_PREFIX = "PERSISTENT_";
+    public static final String HAZELCAST_PERSISTENT_MAP_PREFIX = "PERSISTENT_";
     
     private static HazelcastCoreDriver instance;
     
