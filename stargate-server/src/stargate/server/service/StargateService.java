@@ -328,12 +328,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized PolicyManager getPolicyManagerNoException() {
+        return this.policyManager;
+    }
+    
     public synchronized TemporalStorageManager getTemporalStorageManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.temporalStorageManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized TemporalStorageManager getTemporalStorageManagerNoException() {
+        return this.temporalStorageManager;
     }
     
     public synchronized DataStoreManager getDataStoreManager() throws ServiceNotStartedException {
@@ -344,12 +352,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized DataStoreManager getDataStoreManagerNoException() {
+        return this.dataStoreManager;
+    }
+    
     public synchronized BlockCacheManager getBlockCacheManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.blockCacheManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized BlockCacheManager getBlockCacheManagerNoException() {
+        return this.blockCacheManager;
     }
     
     public synchronized SourceFileSystemManager getSourceFileSystemManager() throws ServiceNotStartedException {
@@ -360,12 +376,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized SourceFileSystemManager getSourceFileSystemManagerNoException() {
+        return this.sourceFileSystemManager;
+    }
+    
     public synchronized RecipeGeneratorManager getRecipeGeneratorManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.recipeGeneratorManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized RecipeGeneratorManager getRecipeGeneratorManagerNoException() {
+        return this.recipeGeneratorManager;
     }
     
     public synchronized ScheduleManager getScheduleManager() throws ServiceNotStartedException {
@@ -376,12 +400,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized ScheduleManager getScheduleManagerNoException() {
+        return this.scheduleManager;
+    }
+    
     public synchronized ClusterManager getClusterManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.clusterManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized ClusterManager getClusterManagerNoException() {
+        return this.clusterManager;
     }
     
     public synchronized DataExportManager getDataExportManager() throws ServiceNotStartedException {
@@ -392,12 +424,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized DataExportManager getDataExportManagerNoException() {
+        return this.dataExportManager;
+    }
+    
     public synchronized RecipeManager getRecipeManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.recipeManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized RecipeManager getRecipeManagerNoException() {
+        return this.recipeManager;
     }
     
     public synchronized TransportManager getTransportManager() throws ServiceNotStartedException {
@@ -408,6 +448,10 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized TransportManager getTransportManagerNoException() {
+        return this.transportManager;
+    }
+    
     public synchronized VolumeManager getVolumeManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.volumeManager;
@@ -416,12 +460,20 @@ public class StargateService extends AService {
         }
     }
     
+    public synchronized VolumeManager getVolumeManagerNoException() {
+        return this.volumeManager;
+    }
+    
     public synchronized UserInterfaceManager getUserInterfaceManager() throws ServiceNotStartedException {
         if(this.serviceStarted) {
             return this.userInterfaceManager;
         } else {
             throw new ServiceNotStartedException("Stargate service is not started");
         }
+    }
+    
+    public synchronized UserInterfaceManager getUserInterfaceManagerNoException() {
+        return this.userInterfaceManager;
     }
     
     public synchronized StargateServiceConfiguration getConfiguration() {

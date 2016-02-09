@@ -40,12 +40,20 @@ public class PersistentStoreFactory implements MapStoreFactory<String, String> {
     
     private TemporalStorageManager temporalStorageManager;
     
-    public PersistentStoreFactory(TemporalStorageManager temporalStorageManager) {
+    public PersistentStoreFactory() {
+        
+    }
+    
+    public void setTemporalStorageManager(TemporalStorageManager temporalStorageManager) {
         if(temporalStorageManager == null) {
             throw new IllegalArgumentException("temporalStorageManager is null");
         }
         
         this.temporalStorageManager = temporalStorageManager;
+    }
+    
+    public TemporalStorageManager getTemporalStorageManager() {
+        return this.temporalStorageManager;
     }
 
     @Override

@@ -1,0 +1,38 @@
+{
+  "name" : "StargateTestService",
+  "node" : [ {
+    "name" : "node1",
+    "transport_service_info" : {
+      "driver_class" : "stargate.drivers.transport.http.HTTPTransportDriver",
+      "connection_uri" : "http://128.196.64.236:31010"
+    },
+    "hostname" : ["172.30.35.4", "128.196.64.236"]
+  } ],
+  "daemon_driver_setting" : [ {
+    "driver_class" : "stargate.drivers.hazelcast.HazelcastCoreDriver",
+    "driver_configuration" : {
+      "@class" : "stargate.drivers.hazelcast.HazelcastCoreDriverConfiguration",
+      "port" : 21010,
+      "known_host" : [ ],
+      "my_host" : "172.30.35.4"
+    }
+  } ],
+  "source_filesystem" : {
+    "driver_setting" : {
+      "driver_class" : "stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriver",
+      "driver_configuration" : {
+        "@class" : "stargate.drivers.sourcefs.hdfs.HDFSSourceFileSystemDriverConfiguration",
+        "root_path" : "hdfs://172.30.35.4:8020/"
+      }
+    }
+  },
+  "temporal_storage" : {
+    "driver_setting" : {
+      "driver_class" : "stargate.drivers.temporalstorage.hdfs.HDFSTemporalStorageDriver",
+      "driver_configuration" : {
+        "@class" : "stargate.drivers.temporalstorage.hdfs.HDFSTemporalStorageDriverConfiguration",
+        "root_path" : "hdfs://172.30.35.4:8020/"
+      }
+    }
+  }
+}

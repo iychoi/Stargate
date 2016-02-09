@@ -60,6 +60,8 @@ public class HazelcastCoreDriver extends ADriver {
     private HazelcastCoreDriverConfiguration config;
     private HazelcastInstance hazelcastInstance;
     
+    private PersistentStoreFactory persistentStoreFactory;
+    
     public static HazelcastCoreDriver getInstance() throws DriverNotInstantiatedException {
         synchronized (HazelcastCoreDriver.class) {
             if(instance == null) {
@@ -134,13 +136,10 @@ public class HazelcastCoreDriver extends ADriver {
         network.setPortAutoIncrement(true);
         network.setPortCount(100);
         
-        StargateService service = getStargateService();
-        TemporalStorageManager temporalStorageManager = service.getTemporalStorageManager();
-        
-        PersistentStoreFactory persistentStoreFactory = new PersistentStoreFactory(temporalStorageManager);
+        this.persistentStoreFactory = new PersistentStoreFactory();
         
         MapStoreConfig mapStoreConfig = new MapStoreConfig();
-        mapStoreConfig.setFactoryImplementation(persistentStoreFactory);
+        mapStoreConfig.setFactoryImplementation(this.persistentStoreFactory);
         mapStoreConfig.setWriteDelaySeconds(0);
         
         MapConfig persistentMapConfig = new MapConfig();
@@ -193,11 +192,24 @@ public class HazelcastCoreDriver extends ADriver {
         return "HazelcastDriverGroup";
     }
 
+    private synchronized void ensureTemporalStorageManagerLoaded() {
+        if(this.persistentStoreFactory.getTemporalStorageManager() == null) {
+            try {
+                StargateService service = getStargateService();
+                TemporalStorageManager temporalStorageManager = service.getTemporalStorageManagerNoException();
+                this.persistentStoreFactory.setTemporalStorageManager(temporalStorageManager);
+            } catch (Exception ex) {
+                LOG.error("unable to get a service", ex);
+            }
+        }
+    }
+    
     public synchronized IMap<String, Object> getMap(String name) {
         return this.hazelcastInstance.getMap(name);
     }
     
     public synchronized IMap<String, Object> getPersistentMap(String name) {
+        ensureTemporalStorageManagerLoaded();
         return this.hazelcastInstance.getMap(HAZELCAST_PERSISTENT_MAP_PREFIX + name);
     }
 
