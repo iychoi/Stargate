@@ -128,13 +128,25 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     }
     
     @JsonProperty("daemon_driver_setting")
+    public void setDaemonDriverSetting(Collection<DriverSetting> driverSetting) {
+        if(driverSetting == null) {
+            throw new IllegalArgumentException("driverSetting is null");
+        }
+        
+        super.verifyMutable();
+    
+        this.daemonDriverSetting.clear();
+        this.daemonDriverSetting.addAll(driverSetting);
+    }
+    
+    @JsonIgnore
     public void addDaemonDriverSetting(Collection<DriverSetting> driverSetting) {
         if(driverSetting == null) {
             throw new IllegalArgumentException("driverSetting is null");
         }
         
         super.verifyMutable();
-        
+    
         this.daemonDriverSetting.addAll(driverSetting);
     }
     
@@ -171,6 +183,18 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     }
     
     @JsonProperty("node")
+    public void setNode(Collection<Node> node) {
+        if(node == null) {
+            throw new IllegalArgumentException("node is null");
+        }
+        
+        super.verifyMutable();
+        
+        this.node.clear();
+        this.node.addAll(node);
+    }
+    
+    @JsonIgnore
     public void addNode(Collection<Node> node) {
         if(node == null) {
             throw new IllegalArgumentException("node is null");
@@ -310,6 +334,18 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     }
     
     @JsonProperty("remote_cluster")
+    public void setRemoteCluster(Collection<RemoteCluster> cluster) {
+        if(cluster == null) {
+            throw new IllegalArgumentException("cluster is null");
+        }
+        
+        super.verifyMutable();
+        
+        this.remoteCluster.clear();
+        this.remoteCluster.addAll(cluster);
+    }
+    
+    @JsonIgnore
     public void addRemoteCluster(Collection<RemoteCluster> cluster) {
         if(cluster == null) {
             throw new IllegalArgumentException("cluster is null");
@@ -337,6 +373,18 @@ public class StargateServiceConfiguration extends AImmutableConfiguration {
     }
     
     @JsonProperty("data_export")
+    public void setDataExport(Collection<DataExportEntry> entry) {
+        if(entry == null) {
+            throw new IllegalArgumentException("entry is null");
+        }
+        
+        super.verifyMutable();
+        
+        this.dataExport.clear();
+        this.dataExport.addAll(entry);
+    }
+    
+    @JsonIgnore
     public void addDataExport(Collection<DataExportEntry> entry) {
         if(entry == null) {
             throw new IllegalArgumentException("entry is null");
