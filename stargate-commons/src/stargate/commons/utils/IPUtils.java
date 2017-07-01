@@ -36,7 +36,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
@@ -217,5 +219,57 @@ public class IPUtils {
         }
         
         return false;
+    }
+    
+    public static boolean isLocalIPAddress(String address) {
+        Collection<String> localhostAddress = IPUtils.getHostAddress();
+        Set<String> localhostAddrSet = new HashSet<String>();
+        localhostAddrSet.addAll(localhostAddress);
+        
+        String hostname = address;
+        int pos = hostname.indexOf(":");
+        if(pos > 0) {
+            hostname = hostname.substring(0, pos);
+}
+
+        if(hostname.equalsIgnoreCase("localhost") || hostname.equals("127.0.0.1")) {
+            // localloop
+            return true;
+        }
+
+        if(localhostAddrSet.contains(hostname)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public static String selectLocalIPAddress(List<String> addresses) {
+        return selectLocalIPAddress(addresses.toArray(new String[0]));
+    }
+    
+    public static String selectLocalIPAddress(String[] addresses) {
+        Collection<String> localhostAddress = IPUtils.getHostAddress();
+        Set<String> localhostAddrSet = new HashSet<String>();
+        localhostAddrSet.addAll(localhostAddress);
+        
+        for(String addr: addresses) {
+            String hostname = addr;
+            int pos = hostname.indexOf(":");
+            if(pos > 0) {
+                hostname = hostname.substring(0, pos);
+            }
+            
+            if(hostname.equalsIgnoreCase("localhost") || hostname.equals("127.0.0.1")) {
+                // localloop
+                return addr;
+            }
+            
+            if(localhostAddrSet.contains(hostname)) {
+                return addr;
+            }
+        }
+        
+        return null;
     }
 }

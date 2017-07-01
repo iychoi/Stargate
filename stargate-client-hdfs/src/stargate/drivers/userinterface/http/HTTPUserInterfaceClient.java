@@ -248,6 +248,33 @@ public class HTTPUserInterfaceClient extends AUserInterfaceClient {
             throw ex;
         }
     }
+    
+    @Override
+    public boolean schedulePreloadFile(DataObjectPath path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        LOG.info("schedulePreloadFile : " + path.toString());
+        
+        RestfulResponse<Boolean> response;
+        try {
+            WebParamBuilder builder = new WebParamBuilder(getResourcePath(HTTPUserInterfaceRestfulConstants.RESTFUL_SCHEDULE_PRELOAD_PATH));
+            builder.addParam("path", path.toString());
+            String url = builder.build();
+            // should be post
+            response = (RestfulResponse<Boolean>) this.restfulClient.get(url, new GenericType<RestfulResponse<Boolean>>(){});
+        } catch (IOException ex) {
+            LOG.error("Exception occurred while calling Restful operation", ex);
+            throw ex;
+        }
+        
+        if(response.getException() != null) {
+            throw new IOException(response.getException());
+        } else {
+            return response.getResponse();
+        }
+    }
 
     @Override
     public URI getLocalResourcePath(DataObjectPath path) throws IOException {

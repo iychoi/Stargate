@@ -306,7 +306,45 @@ public class HTTPUserInterfaceServlet extends AUserInterfaceServer {
             throw new IOException(ex);
         }
     }
+    
+    @GET
+    @Path(HTTPUserInterfaceRestfulConstants.RESTFUL_SCHEDULE_PRELOAD_PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response schedulePreloadScheduleRestful(
+        @DefaultValue("") @QueryParam("path") String path) {
+        try {
+            RestfulResponse<Boolean> rres = new RestfulResponse<Boolean>(schedulePreloadSchedule(path));
+            return Response.status(Response.Status.OK).entity(rres).build();
+        } catch(Exception ex) {
+            RestfulResponse<Boolean> rres = new RestfulResponse<Boolean>(ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(rres).build();
+        }
+    }
+    
+    private boolean schedulePreloadSchedule(String path) throws IOException {
+        if(path == null || path.isEmpty()) {
+            throw new IllegalArgumentException("path is null or empty");
+        }
+        
+        DataObjectPath objectPath = new DataObjectPath(path);
+        return schedulePreloadFile(objectPath);
+    }
 
+    @Override
+    public boolean schedulePreloadFile(DataObjectPath path) throws IOException {
+        if(path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+        
+        try {
+            StargateService service = StargateService.getInstance();
+            service.getVolumeManager().schedulePreloadFile(path);
+            return true;
+        } catch (ServiceNotStartedException ex) {
+            throw new IOException(ex);
+        }
+    }
+    
     @GET
     @Path(HTTPUserInterfaceRestfulConstants.RESTFUL_LOCAL_CLUSTER_RESOURCE_PATH)
     @Produces(MediaType.APPLICATION_JSON)

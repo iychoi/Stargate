@@ -21,52 +21,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package stargate.server.tasks;
 
-package stargate.commons.common;
-
-import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import stargate.commons.schedule.AScheduledLeaderTask;
+import stargate.server.transport.TransportManager;
 
 /**
  *
  * @author iychoi
  */
-public class JsonSerializer {
+public class WakeupPreloadTask extends AScheduledLeaderTask {
+
+    private static final Log LOG = LogFactory.getLog(WakeupPreloadTask.class);
     
-    private ObjectMapper mapper;
-            
-    public JsonSerializer() {
-        this.mapper = new ObjectMapper();
-    }
+    private TransportManager transportManager;
     
-    public JsonSerializer(boolean prettyformat) {
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, prettyformat);
-    }
-    
-    public String toJson(Object obj) throws IOException {
-        StringWriter writer = new StringWriter();
-        this.mapper.writeValue(writer, obj);
-        return writer.getBuffer().toString();
-    }
-    
-    public void toJsonFile(File f, Object obj) throws IOException {
-        this.mapper.writeValue(f, obj);
-    }
-    
-    public Object fromJson(String json, Class<?> cls) throws IOException {
-        if(json == null) {
-            return null;
+    public WakeupPreloadTask(TransportManager transportManager) throws IOException {
+        if(transportManager == null) {
+            throw new IllegalArgumentException("transportManager is null");
         }
-        StringReader reader = new StringReader(json);
-        return this.mapper.readValue(reader, cls);
+        
+        this.transportManager = transportManager;
     }
     
-    public Object fromJsonFile(File f, Class<?> cls) throws IOException {
-        return this.mapper.readValue(f, cls);
+    @Override
+    public void run() {
+        this.transportManager.wakeupPreloadTask();
+    }
+    
+    @Override
+    public String getName() {
+        return "WakeupPreloadTask";
+    }
+
+    @Override
+    public boolean isRepeatedTask() {
+        return true;
+    }
+
+    @Override
+    public long getDelay() {
+        return 0;
+    }
+
+    @Override
+    public long getInterval() {
+        return 1000;
     }
 }

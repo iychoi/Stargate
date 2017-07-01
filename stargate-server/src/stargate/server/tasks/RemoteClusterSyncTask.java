@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import stargate.commons.cluster.RemoteCluster;
 import stargate.commons.schedule.AScheduledLeaderTask;
-import stargate.commons.transport.ATransportClient;
 import stargate.server.cluster.ClusterManager;
 import stargate.server.policy.PolicyManager;
 import stargate.server.transport.TransportManager;
@@ -76,11 +75,8 @@ public class RemoteClusterSyncTask extends AScheduledLeaderTask {
             Collection<RemoteCluster> clusters = this.clusterManager.getRemoteCluster();
             for(RemoteCluster cluster : clusters) {
                 try {
-                    ATransportClient tclient = this.transportManager.getTransportClient(cluster);
-                    if(tclient != null) {
-                        RemoteCluster remoteCluster = tclient.getCluster();
-                        this.clusterManager.updateRemoteCluster(cluster.getName(), remoteCluster);
-                    }
+                    RemoteCluster remoteCluster = this.transportManager.getClusterInfo(cluster);
+                    this.clusterManager.updateRemoteCluster(cluster.getName(), remoteCluster);
                 } catch (IOException ex) {
                     LOG.error("Exception occurred while synchronizing remote clusters", ex);
                 }

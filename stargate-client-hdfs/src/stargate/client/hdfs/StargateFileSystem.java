@@ -213,6 +213,7 @@ public class StargateFileSystem {
         DataObjectPath path = makeDataObjectPath(resourceURI);
         Recipe recipe = this.userInterfaceClient.getRecipe(path);
         if(recipe != null) {
+            this.userInterfaceClient.schedulePreloadFile(path);
             return new FSDataInputStream(new HTTPChunkInputStream(this.userInterfaceClient, recipe));
         } else {
             throw new IOException("unable to retrieve a recipe of " + path.getPath());

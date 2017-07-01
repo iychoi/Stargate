@@ -38,4 +38,5 @@ public abstract class HTTPUserInterfaceRestfulConstants {
     public static final String RESTFUL_RECIPE_PATH = "recipe";
     public static final String RESTFUL_DATACHUNK_PATH = "datachunk";
     public static final String RESTFUL_LOCAL_CLUSTER_RESOURCE_PATH = "localpath";
+    public static final String RESTFUL_SCHEDULE_PRELOAD_PATH = "preload";
 }

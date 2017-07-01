@@ -165,7 +165,7 @@ public class StargateService extends AService {
         recipeGeneratorDriver.setService(this);
         this.recipeGeneratorManager = RecipeGeneratorManager.getInstance(recipeGeneratorDriver);
         this.recipeGeneratorManager.start();
-        
+
         // init schedule manager
         // init schedule driver
         AScheduleDriver scheduleDriver = (AScheduleDriver)DriverFactory.createDriver(this.config.getScheduleConfiguration().getDriverSetting());
@@ -189,7 +189,7 @@ public class StargateService extends AService {
         // init transport driver
         ATransportDriver transportDriver = (ATransportDriver)DriverFactory.createDriver(this.config.getTransportConfiguration().getDriverSetting());
         transportDriver.setService(this);
-        this.transportManager = TransportManager.getInstance(transportDriver);
+        this.transportManager = TransportManager.getInstance(transportDriver, this.dataStoreManager, this.recipeManager, this.recipeGeneratorManager, this.sourceFileSystemManager, this.dataExportManager, this.blockCacheManager);
         this.transportManager.start();
         
         // setup cluster
@@ -208,7 +208,7 @@ public class StargateService extends AService {
         this.userInterfaceManager.start();
         
         // init volume manager
-        this.volumeManager = VolumeManager.getInstance(this.policyManager, this.dataStoreManager, this.blockCacheManager, this.recipeGeneratorManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.transportManager);
+        this.volumeManager = VolumeManager.getInstance(this.policyManager, this.dataStoreManager, this.sourceFileSystemManager, this.clusterManager, this.dataExportManager, this.recipeManager, this.transportManager);
         
         this.policyManager.addPolicy(this.config.getPolicy());
         this.clusterManager.addRemoteCluster(this.config.getRemoteCluster());

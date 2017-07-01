@@ -47,5 +47,6 @@ public abstract class AUserInterfaceAPI {
     public abstract Recipe getRecipe(DataObjectPath path) throws IOException;
     public abstract Collection<DataObjectMetadata> listDataObjectMetadata(DataObjectPath path) throws IOException;
     public abstract InputStream getDataChunk(String clusterName, String hash) throws IOException;
+    public abstract boolean schedulePreloadFile(DataObjectPath path) throws IOException;
     public abstract URI getLocalResourcePath(DataObjectPath path) throws IOException;
 }
